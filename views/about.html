@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giới Thiệu - HomeRent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <header class="header sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <i class="fas fa-home text-primary fs-3 me-2"></i>
+                    <span class="fw-bold text-primary">HomeRent</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/properties">Tìm phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/about">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/contact">Liên hệ</a>
+                        </li>
+                        <li class="nav-item ms-lg-3">
+                            <a class="btn btn-outline-primary btn-sm" href="/login">
+                                <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+                            </a>
+                        </li>
+                        <li class="nav-item ms-2">
+                            <a class="btn btn-primary btn-sm" href="/register">
+                                <i class="fas fa-user-plus me-1"></i>Đăng ký
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="py-5 bg-light hero-section" style="min-height:auto;">
+        <div class="hero-overlay"></div>
+        <div class="container position-relative">
+            <div class="row align-items-center py-5">
+                <div class="col-lg-8 mx-auto text-center text-white">
+                    <h1 class="display-5 fw-bold mb-3 animate-fade-in">Về HomeRent</h1>
+                    <p class="lead animate-fade-in-delay">Nền tảng cho thuê nhà/phòng trọ thông minh, minh bạch và an toàn.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <h2 class="fw-bold mb-3">Chúng tôi là ai?</h2>
+                    <p class="text-muted">
+                        HomeRent là nền tảng kết nối giữa người cho thuê và người tìm thuê, ứng dụng công nghệ AI để tối ưu
+                        trải nghiệm tìm kiếm và quản lý bất động sản. Chúng tôi cam kết mang lại thông tin minh bạch,
+                        giao dịch an toàn và quy trình đơn giản cho mọi người.
+                    </p>
+                    <ul class="list-unstyled mt-3">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Gợi ý thông minh theo nhu cầu</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hệ thống đánh giá tin cậy</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Xác thực ảnh, hạn chế tin giả</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6">
+                    <img src="/images/about-hero.jpg" class="rounded-3 shadow-lg" alt="Về HomeRent">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-bullseye fa-2x text-primary me-3"></i>
+                            <h4 class="mb-0">Sứ mệnh</h4>
+                        </div>
+                        <p class="text-muted mb-0">
+                            Tạo ra một hệ sinh thái cho thuê minh bạch, thuận tiện và hiệu quả, giúp hàng triệu người
+                            tìm được nơi ở phù hợp một cách nhanh chóng.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-eye fa-2x text-success me-3"></i>
+                            <h4 class="mb-0">Tầm nhìn</h4>
+                        </div>
+                        <p class="text-muted mb-0">
+                            Trở thành nền tảng cho thuê số 1 tại Việt Nam, dẫn đầu về công nghệ và trải nghiệm người dùng.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Giá trị cốt lõi</h2>
+                <p class="text-muted">Những nguyên tắc định hình cách chúng tôi xây dựng sản phẩm</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3 col-6">
+                    <div class="text-center p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <i class="fas fa-shield-alt fa-3x text-danger mb-3"></i>
+                        <h6 class="fw-bold">An toàn</h6>
+                        <p class="text-muted small mb-0">Bảo mật dữ liệu và xác thực thông tin rõ ràng.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-center p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Thông minh</h6>
+                        <p class="text-muted small mb-0">AI gợi ý phù hợp theo nhu cầu và hành vi.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-center p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <i class="fas fa-users fa-3x text-info mb-3"></i>
+                        <h6 class="fw-bold">Cộng đồng</h6>
+                        <p class="text-muted small mb-0">Đánh giá từ người dùng thực, minh bạch.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="text-center p-4 border rounded-3 h-100 shadow-sm hover-lift">
+                        <i class="fas fa-handshake fa-3x text-success mb-3"></i>
+                        <h6 class="fw-bold">Tin cậy</h6>
+                        <p class="text-muted small mb-0">Quy trình rõ ràng, hỗ trợ tận tâm.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section py-5 text-white">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <h2 class="fw-bold mb-2" data-count="5000">0</h2>
+                        <p class="mb-0">Phòng cho thuê</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <h2 class="fw-bold mb-2" data-count="10000">0</h2>
+                        <p class="mb-0">Người dùng</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <h2 class="fw-bold mb-2" data-count="8500">0</h2>
+                        <p class="mb-0">Giao dịch thành công</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <h2 class="fw-bold mb-2">4.8<span class="fs-4">/5</span></h2>
+                        <p class="mb-0">Đánh giá trung bình</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Đội ngũ</h2>
+                <p class="text-muted">Những con người đứng sau HomeRent</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 text-center p-4 hover-lift">
+                        <img src="/images/user-1.jpg" alt="Founder" class="rounded-circle mx-auto mb-3" width="100" height="100">
+                        <h6 class="fw-bold mb-1">Nguyễn Văn A</h6>
+                        <p class="text-muted small mb-2">Founder & CEO</p>
+                        <p class="text-muted small">10+ năm kinh nghiệm trong lĩnh vực công nghệ và bất động sản.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 text-center p-4 hover-lift">
+                        <img src="/images/user-2.jpg" alt="CTO" class="rounded-circle mx-auto mb-3" width="100" height="100">
+                        <h6 class="fw-bold mb-1">Trần Thị B</h6>
+                        <p class="text-muted small mb-2">Co-founder & CTO</p>
+                        <p class="text-muted small">Chuyên gia AI/ML, dẫn dắt phát triển hệ thống thông minh.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 text-center p-4 hover-lift">
+                        <img src="/images/user-3.jpg" alt="Head of Product" class="rounded-circle mx-auto mb-3" width="100" height="100">
+                        <h6 class="fw-bold mb-1">Lê Văn C</h6>
+                        <p class="text-muted small mb-2">Head of Product</p>
+                        <p class="text-muted small">Tập trung vào trải nghiệm người dùng và tăng trưởng sản phẩm.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Câu hỏi thường gặp</h2>
+                <p class="text-muted">Một số câu hỏi phổ biến về HomeRent</p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq1">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                    HomeRent có miễn phí không?
+                                </button>
+                            </h2>
+                            <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Người thuê sử dụng hoàn toàn miễn phí. Chủ nhà có gói miễn phí và trả phí với nhiều tiện ích nâng cao.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                    Làm sao để đảm bảo thông tin đăng tin là thật?
+                                </button>
+                            </h2>
+                            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Chúng tôi áp dụng công nghệ xác thực ảnh và cơ chế đánh giá cộng đồng để giảm thiểu tin giả.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                    Tôi có thể liên hệ hỗ trợ như thế nào?
+                                </button>
+                            </h2>
+                            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Bạn có thể gửi email đến info@homerent.vn hoặc sử dụng chatbot hỗ trợ 24/7.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section py-5 bg-gradient">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 text-white">
+                    <h2 class="fw-bold mb-3">Bạn là chủ nhà?</h2>
+                    <p class="lead mb-0">Đăng tin cho thuê miễn phí, tiếp cận hàng ngàn khách hàng tiềm năng!</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="/post-property" class="btn btn-light btn-lg">
+                        <i class="fas fa-plus-circle me-2"></i>Đăng Tin Ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer bg-dark text-white pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-home me-2"></i>HomeRent
+                    </h5>
+                    <p class="text-muted">
+                        Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI,
+                        giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-youtube fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Kết</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="/properties" class="text-muted text-decoration-none">Tìm phòng</a></li>
+                        <li class="mb-2"><a href="/about" class="text-muted text-decoration-none">Giới thiệu</a></li>
+                        <li class="mb-2"><a href="/contact" class="text-muted text-decoration-none">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/faq" class="text-muted text-decoration-none">Câu hỏi thường gặp</a></li>
+                        <li class="mb-2"><a href="/terms" class="text-muted text-decoration-none">Điều khoản</a></li>
+                        <li class="mb-2"><a href="/privacy" class="text-muted text-decoration-none">Bảo mật</a></li>
+                        <li class="mb-2"><a href="/guide" class="text-muted text-decoration-none">Hướng dẫn</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            123 Đường ABC, Quận 1, TP.HCM
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-phone me-2"></i>
+                            <a href="tel:0123456789" class="text-muted text-decoration-none">0123 456 789</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-envelope me-2"></i>
+                            <a href="mailto:info@homerent.vn" class="text-muted text-decoration-none">info@homerent.vn</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <div class="text-center text-muted">
+                <p class="mb-0">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with
+                    <i class="fas fa-heart text-danger"></i> by Your Team
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <button class="btn btn-primary btn-floating" id="chatBtn">
+        <i class="fas fa-comments fa-lg"></i>
+    </button>
+    <button class="btn btn-secondary btn-scroll-top" id="scrollTopBtn">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/about.js"></script></body>
+</html>
