@@ -215,3 +215,32 @@ const sendTokenResponse = (user, statusCode, res) => {
       }
     });
 };
+
+/**
+ * @desc    Đăng nhập bằng Google - Callback
+ * @route   GET /api/auth/google/callback
+ * @access  Public
+ */
+exports.googleCallback = async (req, res, next) => {
+  try {
+    // User đã được authenticate bởi Passport
+    const user = req.user;
+    
+    // Tạo token
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Đăng nhập bằng Google - Thất bại
+ * @route   GET /api/auth/google/failure
+ * @access  Public
+ */
+exports.googleFailure = (req, res) => {
+  res.status(401).json({
+    success: false,
+    error: 'Đăng nhập Google thất bại'
+  });
+};

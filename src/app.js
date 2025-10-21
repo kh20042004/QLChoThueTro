@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const path = require('path');
+const passport = require('./config/passport');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -28,7 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie parser
 app.use(cookieParser());
 
-// Session
+// Session (phải đặt trước passport)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-session-secret',
   resave: false,
@@ -39,6 +40,10 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// Khởi tạo Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Compression
 app.use(compression());
@@ -96,8 +101,13 @@ app.get('/auth/register', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/auth/register.html'));
 });
  
- // 404 handler
+// 404 handler - chỉ cho các route HTML, bỏ qua static files
 app.use((req, res, next) => {
+  // Bỏ qua các request cho static files (css, js, images, fonts)
+  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return res.status(404).end();
+  }
+  
   const error = new Error('Không tìm thấy trang');
   error.status = 404;
   next(error);

@@ -38,6 +38,12 @@ const User = sequelize.define('User', {
       isEmail: { msg: 'Email không hợp lệ' }
     }
   },
+  google_id: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    unique: true,
+    comment: 'Google OAuth ID'
+  },
   phone: {
     type: DataTypes.STRING(15),
     allowNull: false,

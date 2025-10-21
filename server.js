@@ -1,10 +1,10 @@
 require('dotenv').config();
 const app = require('./src/app');
-const { connectDB } = require('./src/config/database');
+// const { connectDB } = require('./src/config/database');
 const colors = require('./src/config/colors');
 
-// Kết nối database
-connectDB();
+// Kết nối database - Tạm thời comment để test routing
+// connectDB();
 
 const PORT = process.env.PORT || 3000;
 
