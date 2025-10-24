@@ -120,16 +120,83 @@ exports.getProperty = async (req, res, next) => {
  */
 exports.createProperty = async (req, res, next) => {
   try {
-    // Add user to req.body
-    req.body.landlord = req.user.id;
+    // Validate required fields
+    const { type, title, description, price, area, bedrooms, bathrooms, street, province, district, ward, contactName, contactPhone } = req.body;
 
-    const property = await Property.create(req.body);
+    if (!type || !title || !description || !price || !area || !bedrooms || !bathrooms) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng nhập đầy đủ thông tin'
+      });
+    }
+
+    // Prepare property data
+    const propertyData = {
+      property_type: type,
+      title: title,
+      description: description,
+      price: parseFloat(price),
+      area: parseFloat(area),
+      bedrooms: parseInt(bedrooms),
+      bathrooms: parseInt(bathrooms),
+      address_street: street,
+      address_city: province,
+      address_district: district,
+      address_ward: ward,
+      landlord_id: req.user.id,
+      status: 'pending' // Chờ duyệt
+    };
+
+    // Handle amenities
+    if (req.body.amenities) {
+      try {
+        propertyData.amenities = JSON.parse(req.body.amenities);
+      } catch (e) {
+        propertyData.amenities = [];
+      }
+    }
+
+    // Handle images
+    if (req.files && req.files.length > 0) {
+      propertyData.images = req.files.map((file, index) => ({
+        url: `/uploads/${file.filename}`,
+        name: file.originalname,
+        size: file.size,
+        uploadedAt: new Date(),
+        isPrimary: index === 0 // Ảnh đầu tiên là ảnh chính
+      }));
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng tải lên ít nhất 1 ảnh'
+      });
+    }
+
+    // Create property
+    const property = await Property.create(propertyData);
+
+    // Log the action
+    console.log(`Người dùng ${req.user.id} vừa tạo tin đăng ${property.id}`);
 
     res.status(201).json({
       success: true,
+      message: 'Đăng tin thành công! Tin đăng của bạn đang chờ duyệt.',
       data: property
     });
   } catch (error) {
+    // Delete uploaded files if property creation fails
+    if (req.files && req.files.length > 0) {
+      const fs = require('fs');
+      const path = require('path');
+      req.files.forEach(file => {
+        const filePath = path.join(__dirname, '../../public/uploads', file.filename);
+        fs.unlink(filePath, (err) => {
+          if (err) console.error('Lỗi xóa file:', err);
+        });
+      });
+    }
+
+    console.error('Lỗi tạo property:', error);
     next(error);
   }
 };

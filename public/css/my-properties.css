@@ -1,0 +1,39 @@
+/* ===================================
+   MY-PROPERTIES.CSS - Quản lý bài đăng
+   =================================== */
+
+.property-item {
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.property-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #0d6efd;
+}
+
+.property-item img {
+    height: 200px;
+    object-fit: cover;
+}
+
+.property-item .btn-group-vertical {
+    gap: 0.5rem;
+}
+
+.property-item .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+}
+
+@media (max-width: 768px) {
+    .property-item .row {
+        flex-direction: column;
+    }
+    
+    .property-item img {
+        height: 200px;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+}

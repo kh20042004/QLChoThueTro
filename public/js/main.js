@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initPropertyCards();
     initNavbarScroll();
     initImagePlaceholders();
+    initUserNavbar(); // Khởi tạo navbar người dùng
     // JS trang Liên hệ đã tách riêng trong /js/contact.js
 });
 
@@ -455,7 +456,140 @@ function validatePhone(phone) {
 }
 
 // ===================================
-// 12. EXPORT - Xuất các hàm để sử dụng
+// 12. USER NAVBAR - Quản lý navbar người dùng
+// ===================================
+function initUserNavbar() {
+    // Kiểm tra xem có navbar elements không
+    const guestNav = document.getElementById('navbarGuest');
+    const userNav = document.getElementById('navbarUser');
+    
+    // Nếu không có elements navbar, bỏ qua
+    if (!guestNav && !userNav) {
+        console.log('⚠️ No navbar elements found, skipping navbar initialization');
+        return;
+    }
+
+    // Kiểm tra token từ localStorage hoặc cookie
+    const token = localStorage.getItem('token') || getCookie('token');
+    const userData = localStorage.getItem('userData');
+    
+    if (token && userData) {
+        // Người dùng đã đăng nhập
+        try {
+            const user = JSON.parse(userData);
+            showUserNavbar(user);
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            showGuestNavbar();
+        }
+    } else {
+        // Người dùng chưa đăng nhập
+        showGuestNavbar();
+    }
+}
+
+/**
+ * Hiển thị navbar cho người dùng đã đăng nhập
+ */
+function showUserNavbar(user) {
+    const guestNav = document.getElementById('navbarGuest');
+    const userNav = document.getElementById('navbarUser');
+    
+    if (guestNav) guestNav.style.display = 'none';
+    if (userNav) {
+        userNav.style.display = 'flex';
+        
+        // Cập nhật thông tin người dùng
+        updateUserInfo(user);
+    }
+}
+
+/**
+ * Hiển thị navbar cho khách (chưa đăng nhập)
+ */
+function showGuestNavbar() {
+    const guestNav = document.getElementById('navbarGuest');
+    const userNav = document.getElementById('navbarUser');
+    
+    if (guestNav) guestNav.style.display = 'flex';
+    if (userNav) userNav.style.display = 'none';
+}
+
+/**
+ * Cập nhật thông tin người dùng trong navbar
+ */
+function updateUserInfo(user) {
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (userName) userName.textContent = user.name || 'Người dùng';
+    if (userEmail) userEmail.textContent = user.email || 'user@example.com';
+    
+    // Cập nhật avatar nếu có
+    if (user.avatar && userAvatar) {
+        userAvatar.src = user.avatar;
+    } else if (userAvatar) {
+        // Tạo avatar từ chữ cái đầu của tên
+        const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
+        const colors = ['0d6efd', '6f42c1', 'dc3545', 'fd7e14', '198754'];
+        const bgColor = colors[Math.floor(Math.random() * colors.length)];
+        userAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=${bgColor}&color=fff`;
+    }
+}
+
+/**
+ * Lấy giá trị cookie theo tên
+ */
+function getCookie(name) {
+    const nameEQ = name + '=';
+    const cookies = document.cookie.split(';');
+    
+    for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i].trim();
+        if (cookie.indexOf(nameEQ) === 0) {
+            return cookie.substring(nameEQ.length);
+        }
+    }
+    return null;
+}
+
+/**
+ * Xử lý đăng xuất
+ */
+function handleLogout(event) {
+    event.preventDefault();
+    
+    // Xóa dữ liệu từ localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    
+    // Xóa cookie token
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    
+    // Hiển thị navbar khách
+    showGuestNavbar();
+    
+    // Chuyển hướng về trang chủ
+    window.location.href = '/';
+}
+
+/**
+ * Hàm để cập nhật navbar sau khi đăng nhập
+ * Sử dụng từ trang đăng nhập
+ */
+function updateNavbarAfterLogin(userData) {
+    // Lưu thông tin người dùng vào localStorage
+    localStorage.setItem('userData', JSON.stringify(userData));
+    
+    // Cập nhật navbar
+    showUserNavbar(userData);
+    
+    console.log('✅ Navbar updated after login');
+}
+
+// ===================================
+// 13. EXPORT - Xuất các hàm để sử dụng
 // ===================================
 // Các hàm có thể được gọi từ file khác
 window.HomeRent = {
@@ -467,11 +601,15 @@ window.HomeRent = {
     validateEmail,
     validatePhone,
     debounce,
-    throttle
+    throttle,
+    updateNavbarAfterLogin,
+    handleLogout,
+    showUserNavbar,
+    showGuestNavbar
 };
 
 // ===================================
-// 13. ERROR HANDLING - Xử lý lỗi toàn cục
+// 14. ERROR HANDLING - Xử lý lỗi toàn cục
 // ===================================
 window.addEventListener('error', function(e) {
     console.error('Global error:', e.error);
@@ -484,7 +622,7 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 // ===================================
-// 14. PERFORMANCE - Theo dõi performance
+// 15. PERFORMANCE - Theo dõi performance
 // ===================================
 if ('performance' in window) {
     window.addEventListener('load', function() {

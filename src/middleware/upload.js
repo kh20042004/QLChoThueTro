@@ -45,16 +45,4 @@ const upload = multer({
 });
 
 // Export các middleware
-module.exports = {
-  // Upload single file
-  uploadSingle: upload.single('image'),
-  
-  // Upload multiple files
-  uploadMultiple: upload.array('images', 10),
-  
-  // Upload với field names khác nhau
-  uploadFields: upload.fields([
-    { name: 'avatar', maxCount: 1 },
-    { name: 'images', maxCount: 10 }
-  ])
-};
+module.exports = upload;

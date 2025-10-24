@@ -15,10 +15,17 @@ const {
   getMe,
   updateDetails,
   updatePassword,
+  updateProfile,
+  updateAddress,
+  changePassword,
+  updatePreferences,
+  uploadAvatar,
+  deleteAccount,
   googleCallback,
   googleFailure
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // Public routes
 router.post('/register', register);
@@ -48,5 +55,13 @@ router.get('/me', protect, getMe);
 router.get('/logout', protect, logout);
 router.put('/updatedetails', protect, updateDetails);
 router.put('/updatepassword', protect, updatePassword);
+
+// Profile routes
+router.put('/profile', protect, updateProfile);
+router.put('/address', protect, updateAddress);
+router.post('/change-password', protect, changePassword);
+router.put('/preferences', protect, updatePreferences);
+router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+router.delete('/delete-account', protect, deleteAccount);
 
 module.exports = router;

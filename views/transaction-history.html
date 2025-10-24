@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Giao Dịch - HomeRent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/transaction-history.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <i class="fas fa-home text-primary fs-3 me-2"></i>
+                    <span class="fw-bold text-primary">HomeRent</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center" id="navbarUser">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/properties">Tìm phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/contact">Liên hệ</a>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                                <i class="fas fa-bell text-muted"></i>
+                                <span class="badge bg-danger badge-notification">3</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                                <i class="fas fa-heart text-muted"></i>
+                                <span class="badge bg-danger badge-notification">2</span>
+                            </button>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-danger btn-sm" href="/property/create">
+                                <i class="fas fa-plus me-1"></i>Đăng tin
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-lg-3">
+                            <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                                <span class="text-dark" id="userName">Người dùng</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                                <li><a class="dropdown-item" href="/recharge-history"><i class="fas fa-wallet me-2"></i>Lịch sử nạp tiền</a></li>
+                                <li><a class="dropdown-item" href="/transaction-history"><i class="fas fa-exchange-alt me-2"></i>Lịch sử giao dịch</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-light py-3 mb-4">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                    <li class="breadcrumb-item active">Lịch sử giao dịch</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container pb-5">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Lịch Sử Giao Dịch</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Summary Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-value text-success">12</div>
+                                    <div class="stat-label">Giao dịch thành công</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-value text-warning">2</div>
+                                    <div class="stat-label">Chờ xác nhận</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-value text-danger">1</div>
+                                    <div class="stat-label">Giao dịch thất bại</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <select class="form-select" id="typeFilter">
+                                    <option value="">Tất cả loại giao dịch</option>
+                                    <option value="recharge">Nạp tiền</option>
+                                    <option value="post">Đăng tin</option>
+                                    <option value="upgrade">Nâng cấp tin</option>
+                                    <option value="refund">Hoàn tiền</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="success">Thành công</option>
+                                    <option value="pending">Chờ xác nhận</option>
+                                    <option value="failed">Thất bại</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="dateFilter" placeholder="Chọn ngày">
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-search me-1"></i>Tìm kiếm
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Loại giao dịch</th>
+                                        <th>Chi tiết</th>
+                                        <th>Số tiền</th>
+                                        <th>Ngày giao dịch</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>
+                                            <span class="badge bg-info"><i class="fas fa-arrow-down me-1"></i>Nạp tiền</span>
+                                        </td>
+                                        <td>Nạp tiền qua thẻ ngân hàng</td>
+                                        <td><strong class="text-success">+500.000 VNĐ</strong></td>
+                                        <td>2025-10-24 14:30</td>
+                                        <td>
+                                            <span class="badge bg-success">Thành công</span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="text-primary me-2" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>
+                                            <span class="badge bg-secondary"><i class="fas fa-newspaper me-1"></i>Đăng tin</span>
+                                        </td>
+                                        <td>Đăng tin bài "Phòng trọ 30m2 gần BV"</td>
+                                        <td><strong class="text-danger">-50.000 VNĐ</strong></td>
+                                        <td>2025-10-23 09:15</td>
+                                        <td>
+                                            <span class="badge bg-success">Thành công</span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="text-primary me-2" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>
+                                            <span class="badge bg-warning"><i class="fas fa-star me-1"></i>Nâng cấp tin</span>
+                                        </td>
+                                        <td>Nâng cấp tin lên "Tin VIP" 7 ngày</td>
+                                        <td><strong class="text-danger">-100.000 VNĐ</strong></td>
+                                        <td>2025-10-22 16:45</td>
+                                        <td>
+                                            <span class="badge bg-success">Thành công</span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="text-primary me-2" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>
+                                            <span class="badge bg-danger"><i class="fas fa-undo me-1"></i>Hoàn tiền</span>
+                                        </td>
+                                        <td>Hoàn tiền vì hủy bài đăng</td>
+                                        <td><strong class="text-success">+25.000 VNĐ</strong></td>
+                                        <td>2025-10-20 11:20</td>
+                                        <td>
+                                            <span class="badge bg-success">Thành công</span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="text-primary me-2" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>
+                                            <span class="badge bg-info"><i class="fas fa-arrow-down me-1"></i>Nạp tiền</span>
+                                        </td>
+                                        <td>Nạp tiền qua ví điện tử</td>
+                                        <td><strong class="text-success">+1.000.000 VNĐ</strong></td>
+                                        <td>2025-10-18 10:00</td>
+                                        <td>
+                                            <span class="badge bg-warning">Chờ xác nhận</span>
+                                        </td>
+                                        <td>
+                                            <a href="#" class="text-primary me-2" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav aria-label="Pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">Sau</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer bg-dark text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-home me-2"></i>HomeRent
+                    </h5>
+                    <p class="text-muted">
+                        Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI.
+                    </p>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Kết</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="/properties" class="text-muted text-decoration-none">Tìm phòng</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/transaction-history.js"></script>
+</body>
+</html>

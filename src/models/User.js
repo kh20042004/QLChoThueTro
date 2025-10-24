@@ -12,52 +12,39 @@ const jwt = require('jsonwebtoken');
 
 const User = sequelize.define('User', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
+    field: 'Id'
   },
   name: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(100),
     allowNull: false,
+    field: 'HoTen',
     validate: {
       notEmpty: { msg: 'Vui lòng nhập tên' },
       len: {
-        args: [1, 50],
-        msg: 'Tên không được quá 50 ký tự'
+        args: [1, 100],
+        msg: 'Tên không được quá 100 ký tự'
       }
     }
   },
   email: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING(150),
     allowNull: false,
     unique: {
       msg: 'Email đã được sử dụng'
     },
+    field: 'Email',
     validate: {
       notEmpty: { msg: 'Vui lòng nhập email' },
       isEmail: { msg: 'Email không hợp lệ' }
     }
   },
-  google_id: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    unique: true,
-    comment: 'Google OAuth ID'
-  },
-  phone: {
-    type: DataTypes.STRING(15),
-    allowNull: false,
-    validate: {
-      notEmpty: { msg: 'Vui lòng nhập số điện thoại' },
-      is: {
-        args: /^[0-9]{10,11}$/,
-        msg: 'Số điện thoại không hợp lệ'
-      }
-    }
-  },
   password: {
     type: DataTypes.STRING(255),
     allowNull: false,
+    field: 'MatKhau',
     validate: {
       notEmpty: { msg: 'Vui lòng nhập mật khẩu' },
       len: {
@@ -66,42 +53,54 @@ const User = sequelize.define('User', {
       }
     }
   },
-  role: {
-    type: DataTypes.ENUM('user', 'landlord', 'admin'),
-    defaultValue: 'user'
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    field: 'SoDienThoai',
+    validate: {
+      is: {
+        args: /^[0-9]{10,11}$/,
+        msg: 'Số điện thoại không hợp lệ'
+      }
+    }
   },
   avatar: {
     type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'AnhDaiDien',
     defaultValue: '/images/default-avatar.png'
   },
-  address_street: {
-    type: DataTypes.STRING(255)
+  role_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'VaiTroId',
+    defaultValue: 1,
+    references: {
+      model: 'vaitro',
+      key: 'Id'
+    }
   },
-  address_city: {
-    type: DataTypes.STRING(100)
+  status: {
+    type: DataTypes.ENUM('HoatDong', 'Khoa'),
+    defaultValue: 'HoatDong',
+    field: 'TrangThai'
   },
-  address_district: {
-    type: DataTypes.STRING(100)
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'NgayTao'
   },
-  address_ward: {
-    type: DataTypes.STRING(100)
-  },
-  verified: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  verification_token: {
-    type: DataTypes.STRING(255)
-  },
-  reset_password_token: {
-    type: DataTypes.STRING(255)
-  },
-  reset_password_expire: {
-    type: DataTypes.DATE
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'NgayCapNhat'
   }
 }, {
-  tableName: 'users',
+  tableName: 'nguoidung',
   timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     // Hash password trước khi save
     beforeCreate: async (user) => {

@@ -1,0 +1,497 @@
+/* ===================================
+   PROPERTY-CREATE.CSS - Stylesheet cho trang đăng tin
+   Hệ thống cho thuê nhà/phòng trọ
+   =================================== */
+
+/* ===================================
+   1. CARD STYLING - Thẻ chính
+   =================================== */
+.property-create-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.property-create-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    padding: 2rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-header h4 {
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-header small {
+    display: block;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* ===================================
+   2. FORM STEPS - Các bước biểu mẫu
+   =================================== */
+.form-step {
+    animation: fadeIn 0.3s ease;
+}
+
+.form-step.d-none {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-step h5 {
+    font-weight: 600;
+    color: var(--dark-color);
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 1rem;
+}
+
+.form-step h5 i {
+    color: var(--primary-color);
+}
+
+/* ===================================
+   3. FORM ELEMENTS - Phần tử biểu mẫu
+   =================================== */
+.form-label {
+    font-weight: 500;
+    color: var(--dark-color);
+    margin-bottom: 0.75rem;
+}
+
+.form-label .text-danger {
+    margin-left: 0.25rem;
+}
+
+.form-control,
+.form-select {
+    border: 1.5px solid #dee2e6;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    color: var(--dark-color);
+}
+
+.form-control::placeholder {
+    color: #6c757d;
+    font-style: italic;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* ===================================
+   4. IMAGE UPLOAD - Tải lên ảnh
+   =================================== */
+.image-upload-area {
+    position: relative;
+    cursor: pointer;
+}
+
+.upload-placeholder {
+    border: 2px dashed var(--primary-color);
+    border-radius: 0.75rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%);
+    transition: all 0.3s ease;
+}
+
+.image-upload-area:hover .upload-placeholder {
+    border-color: #0b5ed7;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
+}
+
+.upload-placeholder i {
+    color: var(--primary-color);
+}
+
+.upload-placeholder p {
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+/* ===================================
+   5. IMAGE GALLERY - Thư viện ảnh
+   =================================== */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.image-item {
+    position: relative;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    aspect-ratio: 1 / 1;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover img {
+    transform: scale(1.1);
+}
+
+.image-remove-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.3s ease;
+}
+
+.image-item:hover .image-remove-btn {
+    opacity: 1;
+}
+
+.image-remove-btn:hover {
+    background: rgba(220, 53, 69, 1);
+}
+
+.image-index {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* ===================================
+   6. FORM NAVIGATION - Điều hướng biểu mẫu
+   =================================== */
+.form-navigation {
+    gap: 1rem;
+}
+
+.btn {
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: #0b5ed7;
+    border-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-success {
+    background: #198754;
+    border-color: #198754;
+}
+
+.btn-success:hover {
+    background: #157347;
+    border-color: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ===================================
+   7. PROGRESS BAR - Thanh tiến độ
+   =================================== */
+.progress {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color) 0%, #0b5ed7 100%);
+    transition: width 0.5s ease;
+}
+
+/* ===================================
+   8. CHECKBOX & AMENITIES - Checkbox và tiện nghi
+   =================================== */
+.form-check {
+    padding-left: 0;
+    margin-bottom: 1rem;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    border: 2px solid #dee2e6;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-label {
+    margin-left: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--dark-color);
+    transition: color 0.3s ease;
+}
+
+.form-check-label:hover {
+    color: var(--primary-color);
+}
+
+/* ===================================
+   9. INVALID FEEDBACK - Phản hồi lỗi
+   =================================== */
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+}
+
+/* ===================================
+   10. SUCCESS ALERT - Thông báo thành công
+   =================================== */
+.alert {
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+    border: none;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border-left: 4px solid #198754;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #842029;
+    border-left: 4px solid #dc3545;
+}
+
+/* ===================================
+   11. LOADING STATE - Trạng thái loading
+   =================================== */
+.btn.is-loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn.is-loading::after {
+    content: '';
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-left: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================
+   12. RESPONSIVE DESIGN - Thiết kế đáp ứng
+   =================================== */
+@media (max-width: 991.98px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-navigation {
+        flex-direction: column-reverse;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-header {
+        padding: 1.5rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .form-step h5 {
+        font-size: 1.1rem;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .upload-placeholder {
+        padding: 2rem 1rem;
+    }
+
+    .upload-placeholder i {
+        font-size: 1.5rem;
+    }
+
+    .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .image-remove-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+
+/* ===================================
+   13. DRAG & DROP - Kéo thả file
+   =================================== */
+.upload-placeholder.drag-over {
+    border-color: #0b5ed7;
+    background: linear-gradient(135deg, rgba(11, 94, 215, 0.15) 0%, rgba(11, 94, 215, 0.1) 100%);
+}
+
+/* ===================================
+   14. FORM ROW SPACING - Khoảng cách hàng
+   =================================== */
+.row {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+}
+
+@media (max-width: 576px) {
+    .row {
+        --bs-gutter-x: 1rem;
+    }
+}

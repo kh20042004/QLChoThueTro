@@ -100,6 +100,31 @@ app.get('/auth/login', (req, res) => {
 app.get('/auth/register', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/auth/register.html'));
 });
+
+// View Routes - Trang hồ sơ cá nhân
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/profile.html'));
+});
+
+// View Routes - Trang đăng tin
+app.get('/property/create', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/property-create.html'));
+});
+
+// View Routes - Trang quản lý bài đăng
+app.get('/my-properties', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/my-properties.html'));
+});
+
+// View Routes - Trang lịch sử nạp tiền
+app.get('/recharge-history', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/recharge-history.html'));
+});
+
+// View Routes - Trang lịch sử giao dịch
+app.get('/transaction-history', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/transaction-history.html'));
+});
  
 // 404 handler - chỉ cho các route HTML, bỏ qua static files
 app.use((req, res, next) => {
