@@ -125,6 +125,36 @@ app.get('/recharge-history', (req, res) => {
 app.get('/transaction-history', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/transaction-history.html'));
 });
+
+// View Routes - Trang thông báo
+app.get('/notifications', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/notifications.html'));
+});
+
+// View Routes - Trang yêu thích
+app.get('/favorites', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/favorites.html'));
+});
+
+// View Routes - Câu hỏi thường gặp
+app.get('/faq', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/faq.html'));
+});
+
+// View Routes - Hướng dẫn
+app.get('/guide', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/guide.html'));
+});
+
+// View Routes - Điều khoản
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/terms.html'));
+});
+
+// View Routes - Bảo mật
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/privacy.html'));
+});
  
 // 404 handler - chỉ cho các route HTML, bỏ qua static files
 app.use((req, res, next) => {

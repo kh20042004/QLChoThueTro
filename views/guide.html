@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hướng Dẫn Sử Dụng - HomeRent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <i class="fas fa-home text-primary fs-3 me-2"></i>
+          <span class="fw-bold text-primary">HomeRent</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Guest navbar -->
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarGuest">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <li class="nav-item ms-lg-3"><a class="btn btn-outline-primary btn-sm" href="/auth/login"><i class="fas fa-sign-in-alt me-1"></i>Đăng nhập</a></li>
+            <li class="nav-item ms-2"><a class="btn btn-primary btn-sm" href="/auth/register"><i class="fas fa-user-plus me-1"></i>Đăng ký</a></li>
+          </ul>
+          <!-- User navbar -->
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarUser" style="display: none;">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <!-- Notifications -->
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                <i class="fas fa-bell text-muted"></i>
+                <span class="badge bg-danger badge-notification">3</span>
+              </button>
+            </li>
+            <!-- Favorites -->
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                <i class="fas fa-heart text-muted"></i>
+                <span class="badge bg-danger badge-notification">2</span>
+              </button>
+            </li>
+            <!-- Post -->
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-danger btn-sm" href="/property/create"><i class="fas fa-plus me-1"></i>Đăng tin</a>
+            </li>
+            <!-- Avatar & dropdown -->
+            <li class="nav-item dropdown ms-lg-3">
+              <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                <span class="text-dark" id="userName">Người dùng</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero-section" style="min-height:auto;">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative">
+      <div class="row align-items-center py-5">
+        <div class="col-lg-8 mx-auto text-center text-white">
+          <h1 class="display-5 fw-bold mb-2">Hướng dẫn sử dụng HomeRent</h1>
+          <p class="lead">Các bước và mẹo để bạn sử dụng hiệu quả</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Breadcrumb -->
+  <div class="bg-light py-3 mb-4">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Hướng dẫn</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="container pb-5">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h4 class="fw-bold mb-3"><i class="fas fa-compass text-primary me-2"></i>Bắt đầu</h4>
+            <ol class="mb-4">
+              <li>Đăng ký tài khoản hoặc đăng nhập để sử dụng đầy đủ tính năng.</li>
+              <li>Tìm phòng theo nhu cầu tại trang “Tìm phòng”.</li>
+              <li>Lưu “Yêu thích” các tin phù hợp để theo dõi.</li>
+              <li>Đăng tin cho thuê tại “Đăng tin” nếu bạn là chủ nhà.</li>
+            </ol>
+
+            <h4 class="fw-bold mb-3"><i class="fas fa-search text-success me-2"></i>Tìm kiếm thông minh</h4>
+            <ul class="mb-4">
+              <li>Sử dụng bộ lọc (Loại hình, Khu vực, Khoảng giá) để thu hẹp kết quả.</li>
+              <li>Nút “Tìm kiếm bằng AI” sẽ hỗ trợ diễn đạt nhu cầu tự nhiên (đang phát triển).</li>
+            </ul>
+
+            <h4 class="fw-bold mb-3"><i class="fas fa-plus-circle text-danger me-2"></i>Đăng tin cho thuê</h4>
+            <p>Điền biểu mẫu theo từng bước, tải hình rõ ràng, mô tả chi tiết, thông tin liên hệ đầy đủ để tăng mức độ tin cậy.</p>
+
+            <h4 class="fw-bold mb-3"><i class="fas fa-user-cog text-info me-2"></i>Quản lý hồ sơ</h4>
+            <p>Cập nhật thông tin, đổi mật khẩu, thiết lập địa chỉ và tùy chọn thông báo trong trang Hồ sơ.</p>
+
+            <hr class="my-4">
+
+            <div class="alert alert-info">
+              <i class="fas fa-lightbulb me-1"></i>
+              Mẹo: Hãy xác thực email/số điện thoại để tăng độ tin cậy cho tài khoản.
+            </div>
+
+            <div class="mt-3">
+              <a href="/faq" class="btn btn-outline-primary btn-sm"><i class="fas fa-question-circle me-1"></i>Xem FAQ</a>
+              <a href="/terms" class="btn btn-outline-secondary btn-sm ms-2"><i class="fas fa-file-contract me-1"></i>Điều khoản</a>
+              <a href="/privacy" class="btn btn-outline-success btn-sm ms-2"><i class="fas fa-user-shield me-1"></i>Bảo mật</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer (nội dung sẽ được nạp từ partial) -->
+  <footer class="footer bg-dark text-white pt-5 pb-3"></footer>
+
+  <!-- Floating -->
+  <button class="btn btn-primary btn-floating" id="chatBtn"><i class="fas fa-comments fa-lg"></i></button>
+  <button class="btn btn-secondary btn-scroll-top" id="scrollTopBtn"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

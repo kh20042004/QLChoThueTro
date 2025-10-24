@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông Báo - HomeRent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <header class="header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <i class="fas fa-home text-primary fs-3 me-2"></i>
+          <span class="fw-bold text-primary">HomeRent</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarGuest">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-outline-primary btn-sm" href="/auth/login"><i class="fas fa-sign-in-alt me-1"></i>Đăng nhập</a>
+            </li>
+            <li class="nav-item ms-2">
+              <a class="btn btn-primary btn-sm" href="/auth/register"><i class="fas fa-user-plus me-1"></i>Đăng ký</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarUser" style="display: none;">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                <i class="fas fa-bell text-muted"></i>
+                <span class="badge bg-danger badge-notification">3</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                <i class="fas fa-heart text-muted"></i>
+                <span class="badge bg-danger badge-notification">2</span>
+              </button>
+            </li>
+            <li class="nav-item dropdown ms-lg-3">
+              <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                <span class="text-dark" id="userName">Người dùng</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <section class="hero-section" style="min-height:auto;">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative">
+      <div class="row align-items-center py-5">
+        <div class="col-lg-8 mx-auto text-center text-white">
+          <h1 class="display-5 fw-bold mb-2">Thông báo của bạn</h1>
+          <p class="lead">Xem tất cả cập nhật mới nhất từ HomeRent</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="bg-light py-3 mb-4">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Thông báo</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+  <main class="container pb-5">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-outline-primary active" id="filterAll">Tất cả</button>
+          <button type="button" class="btn btn-outline-primary" id="filterUnread">Chưa đọc</button>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllRead"><i class="fas fa-check me-1"></i>Đánh dấu đã đọc</button>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush" id="notificationList">
+        <li class="list-group-item d-flex align-items-start gap-3 notification-item unread">
+          <i class="fas fa-check-circle text-success mt-1"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <h6 class="mb-1">Tin của bạn đã được duyệt</h6>
+              <small class="text-muted">2 giờ trước</small>
+            </div>
+            <p class="mb-1 text-muted">Bài đăng "Phòng trọ 30m2 gần BV Chợ Rẫy" đã được phê duyệt và hiển thị.</p>
+            <div><button class="btn btn-link btn-sm p-0 mark-read">Đánh dấu đã đọc</button></div>
+          </div>
+        </li>
+        <li class="list-group-item d-flex align-items-start gap-3 notification-item unread">
+          <i class="fas fa-heart text-danger mt-1"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <h6 class="mb-1">Có 2 người dùng đã yêu thích tin của bạn</h6>
+              <small class="text-muted">Hôm nay</small>
+            </div>
+            <p class="mb-1 text-muted">Tin "Căn hộ mini Q.TB" đang nhận được nhiều quan tâm.</p>
+            <div><button class="btn btn-link btn-sm p-0 mark-read">Đánh dấu đã đọc</button></div>
+          </div>
+        </li>
+        <li class="list-group-item d-flex align-items-start gap-3 notification-item">
+          <i class="fas fa-comment-dots text-primary mt-1"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <h6 class="mb-1">Bạn có tin nhắn mới</h6>
+              <small class="text-muted">Hôm qua</small>
+            </div>
+            <p class="mb-1 text-muted">Khách A: "Phòng còn không ạ? Em muốn xem nhà vào cuối tuần."</p>
+            <div><button class="btn btn-link btn-sm p-0 mark-read">Đánh dấu đã đọc</button></div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer class="footer bg-light pt-5 pb-3" style="border-top: 1px solid #dee2e6;">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-home me-2"></i>HomeRent</h5>
+          <p class="text-muted">
+            Nền tảng cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+          </p>
+          <div class="social-links mt-3 d-flex gap-3">
+            <a href="#" class="text-primary"><i class="fab fa-facebook fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-twitter fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-instagram fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-youtube fa-lg"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4">
+          <h6 class="fw-bold mb-3">Liên Kết</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="/" class="text-decoration-none">Trang chủ</a></li>
+            <li class="mb-2"><a href="/properties" class="text-decoration-none">Tìm phòng</a></li>
+            <li class="mb-2"><a href="/about" class="text-decoration-none">Giới thiệu</a></li>
+            <li class="mb-2"><a href="/contact" class="text-decoration-none">Liên hệ</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-4">
+          <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="/faq" class="text-decoration-none">Câu hỏi thường gặp</a></li>
+            <li class="mb-2"><a href="/guide" class="text-decoration-none">Hướng dẫn</a></li>
+            <li class="mb-2"><a href="/terms" class="text-decoration-none">Điều khoản</a></li>
+            <li class="mb-2"><a href="/privacy" class="text-decoration-none">Bảo mật</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-4">
+          <h6 class="fw-bold mb-3">Liên Hệ</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
+            <li class="mb-2"><i class="fas fa-phone me-2"></i><a href="tel:0123456789" class="text-decoration-none">0123 456 789</a></li>
+            <li class="mb-2"><i class="fas fa-envelope me-2"></i><a href="mailto:info@homerent.vn" class="text-decoration-none">info@homerent.vn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="my-4 bg-secondary">
+
+      <div class="text-center">
+        <p class="mb-1">
+          &copy; 2024 HomeRent. All rights reserved. Developed with <i class="fas fa-heart text-danger"></i> by Your Team
+        </p>
+        <small>Phiên bản 1.0.0</small>
+      </div>
+    </div>
+  </footer>
+  <button class="btn btn-primary btn-floating" id="chatBtn">
+    <i class="fas fa-comments fa-lg"></i>
+  </button>
+  <button class="btn btn-secondary btn-scroll-top" id="scrollTopBtn">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    // Tương tác đơn giản: đánh dấu đã đọc
+    (function(){
+      const list = document.getElementById('notificationList');
+      if (!list) return;
+      list.addEventListener('click', function(e){
+        if (e.target.classList.contains('mark-read')) {
+          const item = e.target.closest('.notification-item');
+          if (item) item.classList.remove('unread');
+        }
+      });
+      document.getElementById('filterUnread').addEventListener('click', function(){
+        this.classList.add('active');
+        document.getElementById('filterAll').classList.remove('active');
+        document.querySelectorAll('.notification-item').forEach(el=>{
+          el.style.display = el.classList.contains('unread') ? '' : 'none';
+        });
+      });
+      document.getElementById('filterAll').addEventListener('click', function(){
+        this.classList.add('active');
+        document.getElementById('filterUnread').classList.remove('active');
+        document.querySelectorAll('.notification-item').forEach(el=> el.style.display = '');
+      });
+      document.getElementById('markAllRead').addEventListener('click', function(){
+        document.querySelectorAll('.notification-item.unread').forEach(el=> el.classList.remove('unread'));
+      });
+    })();
+  </script>
+</body>
+</html>

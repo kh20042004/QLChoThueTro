@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavbarScroll();
     initImagePlaceholders();
     initUserNavbar(); // Khởi tạo navbar người dùng
+    initNotificationAndFavoriteButtons(); // Điều hướng khi click icon chuông/trái tim
+    initFooterPartial(); // Nạp footer dùng partial cho tất cả các trang
     // JS trang Liên hệ đã tách riêng trong /js/contact.js
 });
 
@@ -637,6 +639,87 @@ if ('performance' in window) {
 // CONTACT PAGE logic đã tách sang /js/contact.js
 
 // ===================================
+// 16. NAV ICON SHORTCUTS - Điều hướng icon thông báo và yêu thích
+// ===================================
+function initNotificationAndFavoriteButtons() {
+    const notifBtns = document.querySelectorAll('button.btn-icon-navbar[title="Thông báo"]');
+    const favBtns = document.querySelectorAll('button.btn-icon-navbar[title="Yêu thích"]');
+    
+    notifBtns.forEach(btn => {
+        // Điều hướng đến trang thông báo
+        btn.addEventListener('click', () => { window.location.href = '/notifications'; }, { once: false });
+    });
+    
+    favBtns.forEach(btn => {
+        // Điều hướng đến trang yêu thích
+        btn.addEventListener('click', () => { window.location.href = '/favorites'; }, { once: false });
+    });
+}
+
+// ===================================
 // END OF SCRIPT
 // ===================================
 console.log('✅ All scripts initialized successfully');
+
+// ===================================
+// 17. FOOTER PARTIAL - Nạp nội dung footer cho mọi trang
+// ===================================
+function initFooterPartial() {
+    try {
+        const footerEl = document.querySelector('footer.footer');
+        if (!footerEl) {
+            console.log('⚠️ Không tìm thấy phần tử footer để nạp partial');
+            return;
+        }
+
+        fetch('/views/partials/footer.html', { cache: 'no-cache' })
+            .then(res => {
+                if (!res.ok) throw new Error('Footer partial fetch failed');
+                return res.text();
+            })
+            .then(html => {
+                footerEl.innerHTML = html;
+
+                // Gắn sự kiện Đăng ký nhận bản tin
+                const emailInput = footerEl.querySelector('input[type="email"]');
+                const subscribeBtn = footerEl.querySelector('button[type="button"]');
+                if (subscribeBtn && emailInput) {
+                    subscribeBtn.addEventListener('click', () => {
+                        const email = emailInput.value.trim();
+                        const isValid = window.HomeRent && window.HomeRent.validateEmail
+                            ? window.HomeRent.validateEmail(email)
+                            : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+                        if (!isValid) {
+                            window.HomeRent && window.HomeRent.showToast
+                                ? window.HomeRent.showToast('Email không hợp lệ', 'warning')
+                                : alert('Email không hợp lệ');
+                            return;
+                        }
+
+                        // Hiện tại demo: chỉ hiện thông báo
+                        window.HomeRent && window.HomeRent.showToast
+                            ? window.HomeRent.showToast('Đã đăng ký nhận bản tin!', 'success')
+                            : alert('Đã đăng ký nhận bản tin!');
+
+                        emailInput.value = '';
+                    });
+                }
+
+                // Gắn sự kiện cho liên kết mạng xã hội (demo)
+                footerEl.querySelectorAll('.social-links a').forEach(a => {
+                    a.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.HomeRent && window.HomeRent.showToast
+                            ? window.HomeRent.showToast('Tính năng mạng xã hội sẽ được tích hợp sau', 'info')
+                            : alert('Tính năng mạng xã hội sẽ được tích hợp sau');
+                    });
+                });
+            })
+            .catch(err => {
+                console.error('❌ Không thể nạp footer partial:', err);
+            });
+    } catch (error) {
+        console.error('Footer init error:', error);
+    }
+}

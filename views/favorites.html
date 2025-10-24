@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yêu Thích - HomeRent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <i class="fas fa-home text-primary fs-3 me-2"></i>
+          <span class="fw-bold text-primary">HomeRent</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Guest navbar -->
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarGuest">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-outline-primary btn-sm" href="/auth/login"><i class="fas fa-sign-in-alt me-1"></i>Đăng nhập</a>
+            </li>
+            <li class="nav-item ms-2">
+              <a class="btn btn-primary btn-sm" href="/auth/register"><i class="fas fa-user-plus me-1"></i>Đăng ký</a>
+            </li>
+          </ul>
+          <!-- User navbar -->
+          <ul class="navbar-nav ms-auto align-items-center" id="navbarUser" style="display: none;">
+            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+            <!-- Notifications -->
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                <i class="fas fa-bell text-muted"></i>
+                <span class="badge bg-danger badge-notification">3</span>
+              </button>
+            </li>
+            <!-- Favorites -->
+            <li class="nav-item">
+              <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                <i class="fas fa-heart text-muted"></i>
+                <span class="badge bg-danger badge-notification">2</span>
+              </button>
+            </li>
+            <!-- Post -->
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-danger btn-sm" href="/property/create"><i class="fas fa-plus me-1"></i>Đăng tin</a>
+            </li>
+            <!-- Avatar & dropdown -->
+            <li class="nav-item dropdown ms-lg-3">
+              <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                <span class="text-dark" id="userName">Người dùng</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero-section" style="min-height:auto;">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative">
+      <div class="row align-items-center py-5">
+        <div class="col-lg-8 mx-auto text-center text-white">
+          <h1 class="display-5 fw-bold mb-2">Danh sách yêu thích</h1>
+          <p class="lead">Các phòng/nhà bạn đã lưu lại</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Breadcrumb -->
+  <div class="bg-light py-3 mb-4">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Yêu thích</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="fas fa-heart text-danger me-2"></i>Mục yêu thích của bạn</h4>
+      <button class="btn btn-outline-danger btn-sm" id="clearFavorites"><i class="fas fa-trash me-1"></i>Xóa tất cả</button>
+    </div>
+
+    <div class="row g-4" id="favoritesList">
+      <!-- Item 1 -->
+      <div class="col-lg-4 col-md-6 favorite-item" data-id="1">
+        <div class="card border-0 shadow-sm h-100 hover-lift">
+          <div class="position-relative">
+            <img src="/images/property-2.jpg" class="card-img-top" alt="Căn hộ mini">
+            <span class="badge bg-danger position-absolute top-0 start-0 m-3">Yêu thích</span>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="card-title mb-0">Căn Hộ Mini</h5>
+              <div class="text-end">
+                <div class="text-primary fw-bold fs-6">5.0 triệu</div>
+                <small class="text-muted">/tháng</small>
+              </div>
+            </div>
+            <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1"></i> Quận Tân Bình, TP. HCM</p>
+            <div class="d-flex gap-2">
+              <a href="/properties/2" class="btn btn-sm btn-primary"><i class="fas fa-eye me-1"></i>Xem chi tiết</a>
+              <button class="btn btn-sm btn-outline-danger remove-favorite"><i class="fas fa-times me-1"></i>Xóa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Item 2 -->
+      <div class="col-lg-4 col-md-6 favorite-item" data-id="3">
+        <div class="card border-0 shadow-sm h-100 hover-lift">
+          <div class="position-relative">
+            <img src="/images/property-3.jpg" class="card-img-top" alt="Nhà nguyên căn">
+            <span class="badge bg-danger position-absolute top-0 start-0 m-3">Yêu thích</span>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="card-title mb-0">Nhà Nguyên Căn</h5>
+              <div class="text-end">
+                <div class="text-primary fw-bold fs-6">12 triệu</div>
+                <small class="text-muted">/tháng</small>
+              </div>
+            </div>
+            <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1"></i> TP. Thủ Đức, TP. HCM</p>
+            <div class="d-flex gap-2">
+              <a href="/properties/3" class="btn btn-sm btn-primary"><i class="fas fa-eye me-1"></i>Xem chi tiết</a>
+              <button class="btn btn-sm btn-outline-danger remove-favorite"><i class="fas fa-times me-1"></i>Xóa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Empty state (ẩn mặc định, hiển thị khi không có mục) -->
+      <div class="col-12 d-none" id="favoritesEmpty">
+        <div class="text-center p-5 border rounded-3 bg-light">
+          <i class="fas fa-heart-broken fa-2x text-muted mb-3"></i>
+          <p class="text-muted mb-2">Chưa có mục yêu thích</p>
+          <a href="/properties" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i>Tìm phòng ngay</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer bg-light pt-5 pb-3" style="border-top: 1px solid #dee2e6;">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-home me-2"></i>HomeRent</h5>
+          <p class="text-muted">
+            Nền tảng cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+          </p>
+          <div class="social-links mt-3 d-flex gap-3">
+            <a href="#" class="text-primary"><i class="fab fa-facebook fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-twitter fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-instagram fa-lg"></i></a>
+            <a href="#" class="text-primary"><i class="fab fa-youtube fa-lg"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4">
+          <h6 class="fw-bold mb-3">Liên Kết</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="/" class="text-decoration-none">Trang chủ</a></li>
+            <li class="mb-2"><a href="/properties" class="text-decoration-none">Tìm phòng</a></li>
+            <li class="mb-2"><a href="/about" class="text-decoration-none">Giới thiệu</a></li>
+            <li class="mb-2"><a href="/contact" class="text-decoration-none">Liên hệ</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-4">
+          <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="/faq" class="text-decoration-none">Câu hỏi thường gặp</a></li>
+            <li class="mb-2"><a href="/guide" class="text-decoration-none">Hướng dẫn</a></li>
+            <li class="mb-2"><a href="/terms" class="text-decoration-none">Điều khoản</a></li>
+            <li class="mb-2"><a href="/privacy" class="text-decoration-none">Bảo mật</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-4">
+          <h6 class="fw-bold mb-3">Liên Hệ</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
+            <li class="mb-2"><i class="fas fa-phone me-2"></i><a href="tel:0123456789" class="text-decoration-none">0123 456 789</a></li>
+            <li class="mb-2"><i class="fas fa-envelope me-2"></i><a href="mailto:info@homerent.vn" class="text-decoration-none">info@homerent.vn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="my-4 bg-secondary">
+
+      <div class="text-center">
+        <p class="mb-1">
+          &copy; 2024 HomeRent. All rights reserved. Developed with <i class="fas fa-heart text-danger"></i> by Your Team
+        </p>
+        <small>Phiên bản 1.0.0</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating -->
+  <button class="btn btn-primary btn-floating" id="chatBtn"><i class="fas fa-comments fa-lg"></i></button>
+  <button class="btn btn-secondary btn-scroll-top" id="scrollTopBtn"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    (function(){
+      const listEl = document.getElementById('favoritesList');
+      const emptyEl = document.getElementById('favoritesEmpty');
+      const clearBtn = document.getElementById('clearFavorites');
+
+      function updateEmptyState() {
+        const items = listEl.querySelectorAll('.favorite-item');
+        const visibleItems = Array.from(items).filter(i => i.style.display !== 'none');
+        if (visibleItems.length === 0) {
+          emptyEl.classList.remove('d-none');
+        } else {
+          emptyEl.classList.add('d-none');
+        }
+      }
+
+      // Remove single favorite
+      listEl.addEventListener('click', function(e){
+        const btn = e.target.closest('.remove-favorite');
+        if (!btn) return;
+        const item = btn.closest('.favorite-item');
+        if (item) {
+          item.style.display = 'none';
+          window.HomeRent && window.HomeRent.showToast && window.HomeRent.showToast('Đã xóa khỏi yêu thích', 'warning');
+          updateEmptyState();
+        }
+      });
+
+      // Clear all
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function(){
+          listEl.querySelectorAll('.favorite-item').forEach(i => i.style.display = 'none');
+          window.HomeRent && window.HomeRent.showToast && window.HomeRent.showToast('Đã xóa toàn bộ yêu thích', 'danger');
+          updateEmptyState();
+        });
+      }
+
+      // Init
+      updateEmptyState();
+    })();
+  </script>
+</body>
+</html>
