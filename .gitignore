@@ -27,6 +27,7 @@ Thumbs.db
 .idea/
 *.sublime-project
 *.sublime-workspace
+.history/
 
 # Uploads
 public/uploads/*
