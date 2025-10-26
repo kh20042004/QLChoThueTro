@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Tin Cho Thuê - HomeRent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/property-create.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <i class="fas fa-home text-primary fs-3 me-2"></i>
+                    <span class="fw-bold text-primary">HomeRent</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center" id="navbarUser">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/properties">Tìm phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/contact">Liên hệ</a>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                                <i class="fas fa-bell text-muted"></i>
+                                <span class="badge bg-danger badge-notification">3</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                                <i class="fas fa-heart text-muted"></i>
+                                <span class="badge bg-danger badge-notification">2</span>
+                            </button>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-danger btn-sm" href="/property/create">
+                                <i class="fas fa-plus me-1"></i>Đăng tin
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-lg-3">
+                            <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                                <span class="text-dark" id="userName">Người dùng</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-light py-3 mb-4">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                    <li class="breadcrumb-item active">Đăng tin cho thuê</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container pb-5">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="card property-create-card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Đăng Tin Cho Thuê</h4>
+                        <small>Điền thông tin chi tiết để tin của bạn được nhiều người xem</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="propertyForm" class="needs-validation" novalidate>
+                            <!-- Step 1: Thông tin cơ bản -->
+                            <div class="form-step" id="step1">
+                                <h5 class="mb-4"><i class="fas fa-info-circle me-2 text-primary"></i>Thông Tin Cơ Bản</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="propertyType" class="form-label">Loại hình cho thuê <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="propertyType" name="propertyType" required>
+                                        <option value="">-- Chọn loại hình --</option>
+                                        <option value="phong-tro">Phòng trọ</option>
+                                        <option value="nha-nguyen-can">Nhà nguyên căn</option>
+                                        <option value="can-ho">Căn hộ</option>
+                                        <option value="chung-cu-mini">Chung cư mini</option>
+                                        <option value="homestay">Homestay</option>
+                                    </select>
+                                    <div class="invalid-feedback">Vui lòng chọn loại hình</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Tiêu đề tin <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="title" name="title" placeholder="VD: Phòng trọ 30m2 gần BV Chợ Rẫy" maxlength="100" required>
+                                    <small class="text-muted">Tối đa 100 ký tự</small>
+                                    <div class="invalid-feedback">Vui lòng nhập tiêu đề</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Mô tả chi tiết về phòng/nhà..." required></textarea>
+                                    <small class="text-muted">Mô tả rõ ràng sẽ giúp khách hàng hiểu rõ hơn</small>
+                                    <div class="invalid-feedback">Vui lòng nhập mô tả</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price" class="form-label">Giá cho thuê <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price" name="price" placeholder="0" min="0" required>
+                                            <select class="form-select form-select-sm" id="priceUnit" name="priceUnit" style="max-width: 150px;">
+                                                <option value="vnd-thang">VNĐ/tháng</option>
+                                                <option value="thoa-thuan">Thỏa thuận</option>
+                                                <option value="nhin-thang">Nghìn/tháng</option>
+                                                <option value="trieu-thang">Triệu/tháng</option>
+                                                <option value="trieu-m2-thang">Triệu/m2/tháng</option>
+                                            </select>
+                                        </div>
+                                        <div class="invalid-feedback">Vui lòng nhập giá</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="area" class="form-label">Diện tích (m²) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="area" name="area" placeholder="0" min="0" step="0.1" required>
+                                        <div class="invalid-feedback">Vui lòng nhập diện tích</div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="bedrooms" class="form-label">Số phòng ngủ</label>
+                                        <input type="number" class="form-control" id="bedrooms" name="bedrooms" placeholder="0" min="0">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="bathrooms" class="form-label">Số phòng tắm</label>
+                                        <input type="number" class="form-control" id="bathrooms" name="bathrooms" placeholder="0" min="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Vị trí -->
+                            <div class="form-step d-none" id="step2">
+                                <h5 class="mb-4"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Vị Trí Địa Chỉ</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="street" class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="street" name="street" placeholder="Số nhà, tên đường" required>
+                                    <div class="invalid-feedback">Vui lòng nhập địa chỉ</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="province" class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="province" name="province" required>
+                                            <option value="">-- Chọn tỉnh/thành phố --</option>
+                                            <option value="ho-chi-minh">Thành phố Hồ Chí Minh</option>
+                                            <option value="hanoi">Hà Nội</option>
+                                            <option value="da-nang">Đà Nẵng</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn tỉnh/thành phố</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="district" name="district" required>
+                                            <option value="">-- Chọn quận/huyện --</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn quận/huyện</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="ward" name="ward" required>
+                                            <option value="">-- Chọn phường/xã --</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn phường/xã</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Tiện nghi -->
+                            <div class="form-step d-none" id="step3">
+                                <h5 class="mb-4"><i class="fas fa-th me-2 text-primary"></i>Tiện Nghi</h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="wifi" name="amenities" value="wifi">
+                                            <label class="form-check-label" for="wifi">
+                                                <i class="fas fa-wifi me-2"></i>WiFi
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="ac" name="amenities" value="ac">
+                                            <label class="form-check-label" for="ac">
+                                                <i class="fas fa-snowflake me-2"></i>Điều hòa
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="parking" name="amenities" value="parking">
+                                            <label class="form-check-label" for="parking">
+                                                <i class="fas fa-car me-2"></i>Chỗ đỗ xe
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="kitchen" name="amenities" value="kitchen">
+                                            <label class="form-check-label" for="kitchen">
+                                                <i class="fas fa-utensils me-2"></i>Bếp
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="water" name="amenities" value="water">
+                                            <label class="form-check-label" for="water">
+                                                <i class="fas fa-water me-2"></i>Nước nóng
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="laundry" name="amenities" value="laundry">
+                                            <label class="form-check-label" for="laundry">
+                                                <i class="fas fa-shirt me-2"></i>Máy giặt
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="balcony" name="amenities" value="balcony">
+                                            <label class="form-check-label" for="balcony">
+                                                <i class="fas fa-tree me-2"></i>Ban công
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="security" name="amenities" value="security">
+                                            <label class="form-check-label" for="security">
+                                                <i class="fas fa-shield-alt me-2"></i>An ninh 24/7
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Hình ảnh -->
+                            <div class="form-step d-none" id="step4">
+                                <h5 class="mb-4"><i class="fas fa-images me-2 text-primary"></i>Hình Ảnh</h5>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Tải lên hình ảnh <span class="text-danger">*</span></label>
+                                    <div class="image-upload-area" id="imageUploadArea">
+                                        <input type="file" id="propertyImages" name="propertyImages" class="d-none" multiple accept="image/*" required>
+                                        <div class="upload-placeholder" id="uploadPlaceholder">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                            <p class="mb-1">Kéo thả hình ảnh hoặc <span class="text-primary fw-bold">nhấn để chọn</span></p>
+                                            <small class="text-muted">Tối đa 10 hình, mỗi hình &lt; 5MB</small>
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback" id="imagesError">Vui lòng tải lên ít nhất 1 hình ảnh</div>
+                                </div>
+
+                                <div class="image-gallery mt-4" id="imageGallery"></div>
+                            </div>
+
+                            <!-- Step 5: Liên hệ -->
+                            <div class="form-step d-none" id="step5">
+                                <h5 class="mb-4"><i class="fas fa-phone me-2 text-primary"></i>Thông Tin Liên Hệ</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="contactName" class="form-label">Tên liên hệ <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="contactName" name="contactName" required>
+                                    <div class="invalid-feedback">Vui lòng nhập tên liên hệ</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="contactPhone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" required>
+                                    <div class="invalid-feedback">Vui lòng nhập số điện thoại</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="allowCall" class="form-label">
+                                        <input type="checkbox" id="allowCall" name="allowCall" checked>
+                                        Cho phép gọi điện
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="allowSms" class="form-label">
+                                        <input type="checkbox" id="allowSms" name="allowSms" checked>
+                                        Cho phép gửi SMS
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Navigation Buttons -->
+                            <div class="form-navigation mt-5 d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" id="prevBtn" style="display:none;">
+                                    <i class="fas fa-chevron-left me-1"></i>Quay lại
+                                </button>
+                                <button type="button" class="btn btn-primary" id="nextBtn">
+                                    Tiếp theo <i class="fas fa-chevron-right ms-1"></i>
+                                </button>
+                                <button type="submit" class="btn btn-success" id="submitBtn" style="display:none;">
+                                    <i class="fas fa-check me-1"></i>Đăng tin
+                                </button>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress mt-4">
+                                <div class="progress-bar progress-bar-animated" id="progressBar" role="progressbar" style="width: 20%"></div>
+                            </div>
+                            <small class="text-muted">Bước <span id="currentStep">1</span>/5</small>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer bg-light pt-5 pb-3 mt-5" style="border-top: 1px solid #dee2e6;">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-home me-2"></i>HomeRent</h5>
+                    <p class="text-muted">
+                        Nền tảng cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                    </p>
+                    <div class="social-links mt-3 d-flex gap-3">
+                        <a href="#" class="text-primary"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-youtube fa-lg"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Kết</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="/properties" class="text-decoration-none">Tìm phòng</a></li>
+                        <li class="mb-2"><a href="/about" class="text-decoration-none">Giới thiệu</a></li>
+                        <li class="mb-2"><a href="/contact" class="text-decoration-none">Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/faq" class="text-decoration-none">Câu hỏi thường gặp</a></li>
+                        <li class="mb-2"><a href="/guide" class="text-decoration-none">Hướng dẫn</a></li>
+                        <li class="mb-2"><a href="/terms" class="text-decoration-none">Điều khoản</a></li>
+                        <li class="mb-2"><a href="/privacy" class="text-decoration-none">Bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i><a href="tel:0123456789" class="text-decoration-none">0123 456 789</a></li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i><a href="mailto:info@homerent.vn" class="text-decoration-none">info@homerent.vn</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="my-4 bg-secondary">
+
+            <div class="text-center">
+                <p class="mb-1">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with <i class="fas fa-heart text-danger"></i> by Your Team
+                </p>
+                <small>Phiên bản 1.0.0</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/property-create.js"></script>
+</body>
+</html>

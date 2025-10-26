@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo & Thống kê - Admin Panel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#fafafa]">
+    <!-- Diagonal Grid Background -->
+    <div class="min-h-screen w-full bg-[#fafafa] relative text-gray-900">
+        <!-- Diagonal Grid with Electric Orange/Pink -->
+        <div
+            class="fixed inset-0 z-0 pointer-events-none"
+            style="
+                background-image: 
+                    repeating-linear-gradient(45deg, rgba(255, 0, 100, 0.1) 0, rgba(255, 0, 100, 0.1) 1px, transparent 1px, transparent 20px),
+                    repeating-linear-gradient(-45deg, rgba(255, 0, 100, 0.1) 0, rgba(255, 0, 100, 0.1) 1px, transparent 1px, transparent 20px);
+                background-size: 40px 40px;
+            "
+        ></div>
+
+        <!-- Content -->
+        <div class="relative z-10">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+                <div class="container mx-auto px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <!-- Logo & Title -->
+                        <div class="flex items-center space-x-4">
+                            <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <a href="/admin/dashboard" class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-crown text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <h1 class="text-xl font-bold text-gray-900">Admin Panel</h1>
+                                    <p class="text-xs text-gray-500">Báo cáo & Thống kê</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Right Side -->
+                        <div class="flex items-center space-x-4">
+                            <!-- Export Button -->
+                            <button onclick="exportReport()" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition-all">
+                                <i class="fas fa-download mr-2"></i>Xuất báo cáo
+                            </button>
+
+                            <!-- Notifications -->
+                            <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">5</span>
+                            </button>
+
+                            <!-- User Menu -->
+                            <div class="relative group">
+                                <button class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <img src="https://via.placeholder.com/40/ff0064/ffffff?text=A" alt="Admin" class="w-8 h-8 rounded-full border-2 border-pink-500">
+                                    <span class="hidden md:block text-sm font-medium">Admin</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+
+                                <!-- Dropdown -->
+                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                    <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-user mr-2"></i>Hồ sơ
+                                    </a>
+                                    <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-cog mr-2"></i>Cài đặt
+                                    </a>
+                                    <hr class="my-1">
+                                    <a href="/" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-home mr-2"></i>Về trang chủ
+                                    </a>
+                                    <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-red-50">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex">
+                <!-- Sidebar -->
+                <aside id="sidebar" class="w-64 bg-white/80 backdrop-blur-md border-r border-gray-200 min-h-screen fixed lg:sticky top-16 -left-64 lg:left-0 transition-all duration-300 z-40">
+                    <nav class="p-4 space-y-2">
+                        <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Người dùng</span>
+                        </a>
+                        <a href="/admin/properties" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Bất động sản</span>
+                        </a>
+                        <a href="/admin/bookings" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-calendar-check w-5"></i>
+                            <span>Đặt phòng</span>
+                        </a>
+                        <a href="/admin/reviews" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-star w-5"></i>
+                            <span>Đánh giá</span>
+                        </a>
+                        <a href="/admin/reports" class="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg">
+                            <i class="fas fa-file-alt w-5"></i>
+                            <span class="font-medium">Báo cáo</span>
+                        </a>
+                        <hr class="my-2">
+                        <a href="/admin/settings" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Cài đặt</span>
+                        </a>
+                    </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1 p-6 lg:p-8">
+                    <!-- Page Header -->
+                    <div class="mb-8 animate-fadeIn">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Báo cáo & Thống kê</h2>
+                        <p class="text-gray-600">Phân tích dữ liệu và hiệu suất hệ thống</p>
+                    </div>
+
+                    <!-- Time Range Selector -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 mb-6 animate-fadeIn">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <label class="text-sm font-medium text-gray-700">Thời gian:</label>
+                            <div class="flex gap-2">
+                                <button onclick="setTimeRange('today')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors time-range-btn">Hôm nay</button>
+                                <button onclick="setTimeRange('week')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors time-range-btn">7 ngày</button>
+                                <button onclick="setTimeRange('month')" class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors time-range-btn active">30 ngày</button>
+                                <button onclick="setTimeRange('year')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors time-range-btn">1 năm</button>
+                            </div>
+                            <div class="flex items-center gap-2 ml-auto">
+                                <input type="date" id="fromDate" class="px-3 py-2 border border-gray-300 rounded-lg">
+                                <span>đến</span>
+                                <input type="date" id="toDate" class="px-3 py-2 border border-gray-300 rounded-lg">
+                                <button onclick="applyCustomRange()" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">Áp dụng</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overview Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-dollar-sign text-blue-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-600 text-sm font-medium">+15.3%</span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm mb-1">Doanh thu</h3>
+                            <p class="text-2xl font-bold text-gray-900" id="totalRevenue">0₫</p>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.1s">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-600 text-sm font-medium">+8.2%</span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm mb-1">Đặt phòng</h3>
+                            <p class="text-2xl font-bold text-gray-900" id="totalBookings">0</p>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.2s">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-users text-pink-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-600 text-sm font-medium">+12.5%</span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm mb-1">Người dùng mới</h3>
+                            <p class="text-2xl font-bold text-gray-900" id="newUsers">0</p>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.3s">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-home text-orange-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-600 text-sm font-medium">+6.7%</span>
+                            </div>
+                            <h3 class="text-gray-600 text-sm mb-1">Tin đăng mới</h3>
+                            <p class="text-2xl font-bold text-gray-900" id="newProperties">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 1 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Revenue Chart -->
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.4s">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Doanh thu theo thời gian</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Bookings Chart -->
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.5s">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Đặt phòng theo trạng thái</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="bookingsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 2 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- User Growth Chart -->
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.6s">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Tăng trưởng người dùng</h3>
+                            <canvas id="userGrowthChart" height="300"></canvas>
+                        </div>
+
+                        <!-- Property Types Chart -->
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.7s">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Phân loại bất động sản</h3>
+                            <canvas id="propertyTypesChart" height="300"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Properties Table -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 mb-8 animate-fadeIn" style="animation-delay: 0.8s">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Top 10 bất động sản được đặt nhiều nhất</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tên phòng</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Chủ nhà</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Lượt đặt</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Doanh thu</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Đánh giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topPropertiesTable" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Top Users Table -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.9s">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Top 10 chủ nhà hoạt động tích cực</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tên</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Số tin đăng</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Lượt đặt</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Doanh thu</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Đánh giá TB</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topUsersTable" class="divide-y divide-gray-200">
+                                    <!-- Data will be loaded by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/admin/reports.js"></script>
+</body>
+</html>

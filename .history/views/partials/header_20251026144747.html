@@ -1,0 +1,103 @@
+<!-- Header - Phần đầu trang (Tái sử dụng cho tất cả các trang) -->
+<header class="header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="fas fa-home text-primary fs-3 me-2"></i>
+                <span class="fw-bold text-primary">HomeRent</span>
+            </a>
+            
+            <!-- Nút toggle cho mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Menu điều hướng -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Menu trước khi đăng nhập -->
+                <ul class="navbar-nav ms-auto align-items-center" id="navbarGuest">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/properties">Tìm phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">Giới thiệu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Liên hệ</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-primary btn-sm" href="/auth/login">
+                            <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary btn-sm" href="/auth/register">
+                            <i class="fas fa-user-plus me-1"></i>Đăng ký
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Menu sau khi đăng nhập -->
+                <ul class="navbar-nav ms-auto align-items-center" id="navbarUser" style="display: none;">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/properties">Tìm phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">Giới thiệu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Liên hệ</a>
+                    </li>
+                    
+                    <!-- Thông báo -->
+                    <li class="nav-item">
+                        <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                            <i class="fas fa-bell text-muted"></i>
+                            <span class="badge bg-danger badge-notification">3</span>
+                        </button>
+                    </li>
+
+                    <!-- Yêu thích -->
+                    <li class="nav-item">
+                        <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                            <i class="fas fa-heart text-muted"></i>
+                            <span class="badge bg-danger badge-notification">2</span>
+                        </button>
+                    </li>
+
+                    <!-- Nút Đăng tin -->
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-danger btn-sm" href="/property/create">
+                            <i class="fas fa-plus me-1"></i>Đăng tin
+                        </a>
+                    </li>
+
+                    <!-- Avatar & Dropdown Menu -->
+                    <li class="nav-item dropdown ms-lg-3">
+                        <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                            <span class="text-dark" id="userName">Người dùng</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                            <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                            <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>

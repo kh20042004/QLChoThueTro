@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tin đăng - Admin</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Radial gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #475569 100%);
+            z-index: -1;
+        }
+        
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Page Title -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-tasks mr-3 text-blue-500"></i>
+                    Quản lý tin đăng
+                </h1>
+                <p class="text-gray-600">Duyệt và quản lý các tin đăng cho thuê phòng</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-2 mb-6">
+                <div class="flex gap-2">
+                    <button onclick="switchTab('pending')" id="tab-pending" class="tab-btn flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 bg-blue-500 text-white">
+                        <i class="fas fa-clock mr-2"></i>
+                        Chờ duyệt
+                        <span id="pending-count" class="ml-2 px-2 py-1 bg-white/20 rounded-full text-sm">0</span>
+                    </button>
+                    <button onclick="switchTab('approved')" id="tab-approved" class="tab-btn flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Đã duyệt
+                    </button>
+                    <button onclick="switchTab('rejected')" id="tab-rejected" class="tab-btn flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Đã từ chối
+                    </button>
+                </div>
+            </div>
+
+            <!-- Properties List -->
+            <div id="properties-list" class="space-y-4">
+                <!-- Loading -->
+                <div id="loading" class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p class="text-gray-600">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xem chi tiết -->
+    <div id="detailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+            
+            <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    
+    <script>
+        let currentTab = 'pending';
+        let properties = [];
+
+        // Load header
+        fetch('/partials/header.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('header-placeholder').innerHTML = html;
+                if (typeof initUserNavbar === 'function') {
+                    initUserNavbar();
+                }
+            });
+
+        // Load properties
+        async function loadProperties(status = 'pending') {
+            const loading = document.getElementById('loading');
+            const list = document.getElementById('properties-list');
+            
+            loading.style.display = 'block';
+            
+            try {
+                let url = '/api/properties';
+                if (status === 'pending') {
+                    url = '/api/properties/admin/pending';
+                } else {
+                    url = `/api/properties?approvalStatus=${status}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    properties = data.data || [];
+                    renderProperties(properties);
+                    updatePendingCount();
+                } else {
+                    showError('Không thể tải dữ liệu');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Có lỗi xảy ra');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render properties
+        function renderProperties(props) {
+            const list = document.getElementById('properties-list');
+            const loading = document.getElementById('loading');
+            
+            loading.style.display = 'none';
+            
+            if (props.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-12 bg-white/80 backdrop-blur-sm rounded-xl">
+                        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Không có tin đăng nào</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = props.map(property => {
+                const statusBadge = {
+                    'pending': '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold"><i class="fas fa-clock mr-1"></i>Chờ duyệt</span>',
+                    'approved': '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>Đã duyệt</span>',
+                    'rejected': '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold"><i class="fas fa-times mr-1"></i>Đã từ chối</span>'
+                };
+
+                const image = property.images && property.images.length > 0 ? property.images[0] : '/images/placeholder.jpg';
+                const price = (property.price / 1000000).toFixed(1);
+
+                return `
+                    <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                        <div class="flex gap-4 p-4">
+                            <!-- Image -->
+                            <img src="${image}" alt="${property.title}" class="w-48 h-32 object-cover rounded-lg flex-shrink-0" onerror="this.src='/images/placeholder.jpg'">
+                            
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-lg font-bold text-gray-800 truncate">${property.title}</h3>
+                                    ${statusBadge[property.approvalStatus] || ''}
+                                </div>
+                                
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                                    <span><i class="fas fa-map-marker-alt mr-1"></i>${property.address?.district}, ${property.address?.city}</span>
+                                    <span><i class="fas fa-expand-arrows-alt mr-1"></i>${property.area}m²</span>
+                                    <span><i class="fas fa-bed mr-1"></i>${property.bedrooms} phòng ngủ</span>
+                                    <span class="text-red-500 font-bold"><i class="fas fa-tag mr-1"></i>${price} triệu/tháng</span>
+                                </div>
+
+                                <div class="flex gap-4 text-sm text-gray-500 mb-3">
+                                    <span><i class="fas fa-user mr-1"></i>${property.landlord?.name || 'N/A'}</span>
+                                    <span><i class="fas fa-phone mr-1"></i>${property.landlord?.phone || 'N/A'}</span>
+                                    <span><i class="fas fa-calendar mr-1"></i>${new Date(property.createdAt).toLocaleDateString('vi-VN')}</span>
+                                </div>
+
+                                ${property.rejectionReason ? `
+                                    <div class="bg-red-50 border-l-4 border-red-400 p-3 mb-3">
+                                        <p class="text-sm text-red-700"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Lý do từ chối:</strong> ${property.rejectionReason}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                <!-- Actions -->
+                                <div class="flex gap-2">
+                                    <button onclick="viewDetail('${property._id}')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold">
+                                        <i class="fas fa-eye mr-1"></i>Xem chi tiết
+                                    </button>
+                                    
+                                    ${property.approvalStatus === 'pending' ? `
+                                        <button onclick="approveProperty('${property._id}')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold">
+                                            <i class="fas fa-check mr-1"></i>Duyệt
+                                        </button>
+                                        <button onclick="showRejectModal('${property._id}')" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+                                            <i class="fas fa-times mr-1"></i>Từ chối
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Switch tab
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            activeBtn.classList.add('bg-blue-500', 'text-white');
+            
+            loadProperties(tab);
+        }
+
+        // Update pending count
+        async function updatePendingCount() {
+            try {
+                const response = await fetch('/api/properties/admin/pending', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('pending-count').textContent = data.count || 0;
+                }
+            } catch (error) {
+                console.error('Error updating count:', error);
+            }
+        }
+
+        // Approve property
+        async function approveProperty(id) {
+            if (!confirm('Bạn có chắc muốn duyệt tin đăng này?')) return;
+            
+            try {
+                const response = await fetch(`/api/properties/${id}/approve`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Đã duyệt tin đăng thành công!', 'success');
+                    loadProperties(currentTab);
+                } else {
+                    showAlert(data.error || 'Có lỗi xảy ra', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra', 'danger');
+            }
+        }
+
+        // Show reject modal
+        function showRejectModal(id) {
+            const reason = prompt('Nhập lý do từ chối:');
+            if (!reason) return;
+            
+            rejectProperty(id, reason);
+        }
+
+        // Reject property
+        async function rejectProperty(id, reason) {
+            try {
+                const response = await fetch(`/api/properties/${id}/reject`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Đã từ chối tin đăng', 'success');
+                    loadProperties(currentTab);
+                } else {
+                    showAlert(data.error || 'Có lỗi xảy ra', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra', 'danger');
+            }
+        }
+
+        // View detail
+        function viewDetail(id) {
+            window.open(`/properties/${id}`, '_blank');
+        }
+
+        // Close modal
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('properties-list').innerHTML = `
+                <div class="text-center py-12 bg-white/80 backdrop-blur-sm rounded-xl">
+                    <i class="fas fa-exclamation-circle text-6xl text-red-400 mb-4"></i>
+                    <p class="text-gray-700 text-lg">${message}</p>
+                </div>
+            `;
+        }
+
+        // Initialize
+        loadProperties('pending');
+        
+        // Auto refresh every 30s
+        setInterval(() => {
+            if (currentTab === 'pending') {
+                updatePendingCount();
+            }
+        }, 30000);
+    </script>
+
+    <!-- Chatbot -->
+    <link rel="stylesheet" href="/css/chatbot.css">
+    <script src="/js/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Cho Thuê Nhà/Phòng Trọ - Trang Chủ</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6B7280',
+                        secondary: '#9CA3AF',
+                        accent: '#4B5563',
+                        light: '#F9FAFB',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-gray-800">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2 group">
+                    <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                    <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Trang chủ
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Tìm phòng
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Giới thiệu
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Liên hệ
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                </div>
+                
+                <!-- Auth Buttons (Guest) -->
+                <div class="hidden md:flex items-center space-x-3" id="navbarGuest">
+                    <a href="/auth/login" class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Đăng nhập
+                    </a>
+                    <a href="/auth/register" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <i class="fas fa-user-plus mr-1"></i>Đăng ký
+                    </a>
+                </div>
+                
+                <!-- User Menu (Logged in) -->
+                <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                    </button>
+                    
+                    <!-- Favorites -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">2</span>
+                    </button>
+                    
+                    <!-- Post Property -->
+                    <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <i class="fas fa-plus mr-1"></i>Đăng tin
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                            <span class="text-gray-700" id="userName">Người dùng</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown">
+                            <div class="p-3 border-b border-gray-100">
+                                <p class="text-sm text-gray-500" id="userEmail">user@example.com</p>
+                            </div>
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-500"></i>Hồ sơ cá nhân
+                            </a>
+                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-calendar mr-2 text-gray-500"></i>Đơn đặt phòng
+                            </a>
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-home mr-2 text-gray-500"></i>Nhà/phòng của tôi
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-cog mr-2 text-gray-500"></i>Cài đặt
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="hidden md:hidden mt-4 pb-4 border-t border-gray-100" id="mobileMenu">
+                <div class="flex flex-col space-y-3 mt-4">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 py-2">Trang chủ</a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 py-2">Tìm phòng</a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 py-2">Giới thiệu</a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 py-2">Liên hệ</a>
+                    <a href="/auth/login" class="text-gray-700 hover:text-gray-900 py-2">Đăng nhập</a>
+                    <a href="/auth/register" class="text-gray-700 hover:text-gray-900 py-2">Đăng ký</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-gray-100 via-gray-50 to-white py-20 md:py-32 overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-gray-400 rounded-full filter blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-gray-300 rounded-full filter blur-3xl"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fadeInUp">
+                    Tìm Phòng Trọ Mơ Ước Của Bạn
+                </h1>
+                <p class="text-lg md:text-xl text-gray-600 mb-12 animate-fadeInUp delay-100">
+                    Hệ thống cho thuê nhà/phòng trọ thông minh với AI - Nhanh chóng, tiện lợi, an toàn
+                </p>
+                
+                <!-- Search Box -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 animate-fadeInUp delay-200">
+                    <form id="searchForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="propertyType">
+                                <option value="">Loại hình</option>
+                                <option value="phong-tro">Phòng trọ</option>
+                                <option value="nha-nguyen-can">Nhà nguyên căn</option>
+                                <option value="can-ho">Căn hộ</option>
+                                <option value="chung-cu-mini">Chung cư mini</option>
+                                <option value="homestay">Homestay</option>
+                            </select>
+                            
+                            <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="location">
+                                <option value="">Khu vực</option>
+                                <option value="ha-noi">Hà Nội</option>
+                                <option value="ho-chi-minh">TP. Hồ Chí Minh</option>
+                                <option value="da-nang">Đà Nẵng</option>
+                                <option value="hai-phong">Hải Phòng</option>
+                                <option value="can-tho">Cần Thơ</option>
+                            </select>
+                            
+                            <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="priceRange">
+                                <option value="">Khoảng giá</option>
+                                <option value="0-2">Dưới 2 triệu</option>
+                                <option value="2-4">2-4 triệu</option>
+                                <option value="4-6">4-6 triệu</option>
+                                <option value="6-10">6-10 triệu</option>
+                                <option value="10+">Trên 10 triệu</option>
+                            </select>
+                            
+                            <button type="submit" class="w-full px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                <i class="fas fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="text-gray-600 hover:text-gray-800 transition-colors duration-300" id="aiSearchBtn">
+                                <i class="fas fa-magic mr-2"></i>Tìm kiếm bằng AI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Properties -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-12">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Phòng Nổi Bật</h2>
+                    <p class="text-gray-600">Những phòng được quan tâm nhiều nhất</p>
+                </div>
+                <a href="/properties" class="hidden md:flex items-center text-gray-700 hover:text-gray-900 transition-colors duration-300 group">
+                    Xem tất cả
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="featuredProperties">
+                <!-- Property Card 1 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative">
+                        <img src="/images/property-1.jpg" alt="Phòng trọ cao cấp" class="w-full h-56 object-cover">
+                        <span class="absolute top-3 left-3 px-3 py-1 bg-gray-800 text-white text-xs rounded-full">Nổi bật</span>
+                        <span class="absolute top-3 right-3 px-3 py-1 bg-green-500 text-white text-xs rounded-full">Còn trống</span>
+                    </div>
+                    
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900">Phòng Trọ Cao Cấp Q.1</h3>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-gray-800">3.5 triệu</div>
+                                <div class="text-xs text-gray-500">/tháng</div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt mr-1"></i>Quận 1, TP. Hồ Chí Minh
+                        </p>
+                        
+                        <div class="flex gap-4 mb-3 text-sm text-gray-600">
+                            <span><i class="fas fa-expand-arrows-alt mr-1"></i>25m²</span>
+                            <span><i class="fas fa-bed mr-1"></i>1 phòng ngủ</span>
+                            <span><i class="fas fa-bath mr-1"></i>1 WC</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-wifi mr-1"></i>Wifi</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-snowflake mr-1"></i>Điều hòa</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-bolt mr-1"></i>Nóng lạnh</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="font-semibold text-gray-800">4.8</span>
+                                <span class="text-gray-500">(125)</span>
+                            </div>
+                            <a href="/properties/1" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors duration-300">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Property Card 2 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative">
+                        <img src="/images/property-2.jpg" alt="Căn hộ mini" class="w-full h-56 object-cover">
+                        <span class="absolute top-3 left-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">Giá tốt</span>
+                        <span class="absolute top-3 right-3 px-3 py-1 bg-green-500 text-white text-xs rounded-full">Còn trống</span>
+                    </div>
+                    
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900">Căn Hộ Mini Đầy Đủ</h3>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-gray-800">5.0 triệu</div>
+                                <div class="text-xs text-gray-500">/tháng</div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt mr-1"></i>Quận Tân Bình, TP. HCM
+                        </p>
+                        
+                        <div class="flex gap-4 mb-3 text-sm text-gray-600">
+                            <span><i class="fas fa-expand-arrows-alt mr-1"></i>35m²</span>
+                            <span><i class="fas fa-bed mr-1"></i>1 phòng ngủ</span>
+                            <span><i class="fas fa-bath mr-1"></i>1 WC</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-wifi mr-1"></i>Wifi</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-utensils mr-1"></i>Bếp</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-car mr-1"></i>Xe</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="font-semibold text-gray-800">4.6</span>
+                                <span class="text-gray-500">(89)</span>
+                            </div>
+                            <a href="/properties/2" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors duration-300">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Property Card 3 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative">
+                        <img src="/images/property-3.jpg" alt="Nhà nguyên căn" class="w-full h-56 object-cover">
+                        <span class="absolute top-3 left-3 px-3 py-1 bg-blue-500 text-white text-xs rounded-full">Mới</span>
+                        <span class="absolute top-3 right-3 px-3 py-1 bg-green-500 text-white text-xs rounded-full">Còn trống</span>
+                    </div>
+                    
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900">Nhà Nguyên Căn 2 Tầng</h3>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-gray-800">12 triệu</div>
+                                <div class="text-xs text-gray-500">/tháng</div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt mr-1"></i>Quận Thủ Đức, TP. HCM
+                        </p>
+                        
+                        <div class="flex gap-4 mb-3 text-sm text-gray-600">
+                            <span><i class="fas fa-expand-arrows-alt mr-1"></i>80m²</span>
+                            <span><i class="fas fa-bed mr-1"></i>3 phòng ngủ</span>
+                            <span><i class="fas fa-bath mr-1"></i>2 WC</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-wifi mr-1"></i>Wifi</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-couch mr-1"></i>Nội thất</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"><i class="fas fa-car mr-1"></i>Gara</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="font-semibold text-gray-800">4.9</span>
+                                <span class="text-gray-500">(56)</span>
+                            </div>
+                            <a href="/properties/3" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors duration-300">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="py-16 bg-gray-800 text-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="animate-fadeInUp">
+                    <h3 class="text-4xl font-bold mb-2" data-count="5000">0</h3>
+                    <p class="text-gray-300">Phòng cho thuê</p>
+                </div>
+                <div class="animate-fadeInUp delay-100">
+                    <h3 class="text-4xl font-bold mb-2" data-count="10000">0</h3>
+                    <p class="text-gray-300">Người dùng</p>
+                </div>
+                <div class="animate-fadeInUp delay-200">
+                    <h3 class="text-4xl font-bold mb-2" data-count="8500">0</h3>
+                    <p class="text-gray-300">Giao dịch thành công</p>
+                </div>
+                <div class="animate-fadeInUp delay-300">
+                    <h3 class="text-4xl font-bold mb-2">4.8<span class="text-2xl">/5</span></h3>
+                    <p class="text-gray-300">Đánh giá trung bình</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-3">Tính Năng Nổi Bật</h2>
+                <p class="text-gray-600">Trải nghiệm tìm phòng trọ hiện đại với công nghệ AI</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">AI Thông Minh</h4>
+                    <p class="text-gray-600">Hệ thống AI gợi ý phòng phù hợp với nhu cầu và sở thích của bạn</p>
+                </div>
+                
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">Xác Thực Ảnh</h4>
+                    <p class="text-gray-600">Công nghệ nhận diện hình ảnh đảm bảo ảnh thật, tránh lừa đảo</p>
+                </div>
+                
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">Chatbot 24/7</h4>
+                    <p class="text-gray-600">Trợ lý ảo hỗ trợ tư vấn và giải đáp thắc mắc mọi lúc mọi nơi</p>
+                </div>
+                
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">Đánh Giá Thật</h4>
+                    <p class="text-gray-600">Hệ thống đánh giá từ người thuê thực tế, minh bạch và đáng tin cậy</p>
+                </div>
+                
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">An Toàn</h4>
+                    <p class="text-gray-600">Bảo mật thông tin và giao dịch với công nghệ mã hóa hiện đại</p>
+                </div>
+                
+                <div class="p-6 text-center border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-5xl text-gray-700 mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-900 mb-3">Quản Lý Hiệu Quả</h4>
+                    <p class="text-gray-600">Công cụ quản lý cho chủ nhà: theo dõi, thống kê, báo cáo chi tiết</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-3">Khách Hàng Nói Gì</h2>
+                <p class="text-gray-600">Những phản hồi từ người dùng thực tế</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex mb-3">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        "Tìm được phòng trọ ưng ý chỉ sau 2 ngày. Hệ thống AI gợi ý rất chính xác và phù hợp với nhu cầu của mình. Rất hài lòng!"
+                    </p>
+                    <div class="flex items-center">
+                        <img src="/images/user-1.jpg" alt="User" class="w-12 h-12 rounded-full mr-3">
+                        <div>
+                            <h6 class="font-semibold text-gray-900">Nguyễn Văn A</h6>
+                            <p class="text-sm text-gray-500">Sinh viên, TP. HCM</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex mb-3">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        "Giao diện đẹp, dễ sử dụng. Chatbot hỗ trợ nhiệt tình, giải đáp nhanh chóng. Đăng tin cho thuê cũng rất đơn giản."
+                    </p>
+                    <div class="flex items-center">
+                        <img src="/images/user-2.jpg" alt="User" class="w-12 h-12 rounded-full mr-3">
+                        <div>
+                            <h6 class="font-semibold text-gray-900">Trần Thị B</h6>
+                            <p class="text-sm text-gray-500">Chủ nhà, Hà Nội</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex mb-3">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        "Thông tin minh bạch, ảnh thật. Quy trình thuê phòng nhanh gọn, an toàn. Sẽ giới thiệu cho bạn bè!"
+                    </p>
+                    <div class="flex items-center">
+                        <img src="/images/user-3.jpg" alt="User" class="w-12 h-12 rounded-full mr-3">
+                        <div>
+                            <h6 class="font-semibold text-gray-900">Lê Văn C</h6>
+                            <p class="text-sm text-gray-500">Nhân viên văn phòng, Đà Nẵng</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-gradient-to-r from-gray-700 to-gray-900 text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="mb-6 md:mb-0">
+                    <h2 class="text-3xl font-bold mb-3">Bạn Là Chủ Nhà?</h2>
+                    <p class="text-lg text-gray-200">Đăng tin cho thuê miễn phí, tiếp cận hàng ngàn khách hàng tiềm năng!</p>
+                </div>
+                <a href="/post-property" class="px-8 py-3 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold">
+                    <i class="fas fa-plus-circle mr-2"></i>Đăng Tin Ngay
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 pt-12 pb-6 border-t border-gray-200">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h5 class="font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-home mr-2"></i>HomeRent
+                    </h5>
+                    <p class="text-gray-600 mb-4">
+                        Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                    </p>
+                    <div class="flex space-x-3">
+                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-gray-900 mb-4">Liên Kết</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Trang chủ</a></li>
+                        <li><a href="/properties" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Tìm phòng</a></li>
+                        <li><a href="/views/about.html" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Giới thiệu</a></li>
+                        <li><a href="/views/contact.html" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-gray-900 mb-4">Hỗ Trợ</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/faq" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Câu hỏi thường gặp</a></li>
+                        <li><a href="/terms" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Điều khoản</a></li>
+                        <li><a href="/privacy" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Bảo mật</a></li>
+                        <li><a href="/guide" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">Hướng dẫn</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-gray-900 mb-4">Liên Hệ</h6>
+                    <ul class="space-y-2 text-gray-600">
+                        <li>
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            123 Đường ABC, Quận 1, TP.HCM
+                        </li>
+                        <li>
+                            <i class="fas fa-phone mr-2"></i>
+                            <a href="tel:0123456789" class="hover:text-gray-900 transition-colors duration-300">0123 456 789</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:info@homerent.vn" class="hover:text-gray-900 transition-colors duration-300">info@homerent.vn</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-6 text-center text-gray-600">
+                <p class="mb-1">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with 
+                    <i class="fas fa-heart text-red-500"></i> by Your Team
+                </p>
+                <small>Phiên bản 1.0.0</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-110 opacity-0 invisible">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    
+    <!-- AI Chatbot Widget -->
+    <link rel="stylesheet" href="/css/chatbot.css">
+    <script src="/js/chatbot.js"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Scroll to top button
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollTopBtn.classList.remove('opacity-0', 'invisible');
+                scrollTopBtn.classList.add('opacity-100', 'visible');
+            } else {
+                scrollTopBtn.classList.remove('opacity-100', 'visible');
+                scrollTopBtn.classList.add('opacity-0', 'invisible');
+            }
+        });
+        
+        scrollTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Cá Nhân - HomeRent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <style>
+        /* Radial Gradient Background */
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #475569 100%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <!-- Logo -->
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <i class="fas fa-home text-primary fs-3 me-2"></i>
+                    <span class="fw-bold text-primary">HomeRent</span>
+                </a>
+                
+                <!-- Nút toggle cho mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Menu điều hướng -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <!-- Menu sau khi đăng nhập -->
+                    <ul class="navbar-nav ms-auto align-items-center" id="navbarUser">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/properties">Tìm phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/contact">Liên hệ</a>
+                        </li>
+                        
+                        <!-- Thông báo -->
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
+                                <i class="fas fa-bell text-muted"></i>
+                                <span class="badge bg-danger badge-notification">3</span>
+                            </button>
+                        </li>
+
+                        <!-- Yêu thích -->
+                        <li class="nav-item">
+                            <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
+                                <i class="fas fa-heart text-muted"></i>
+                                <span class="badge bg-danger badge-notification">2</span>
+                            </button>
+                        </li>
+
+                        <!-- Nút Đăng tin -->
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-danger btn-sm" href="/property/create">
+                                <i class="fas fa-plus me-1"></i>Đăng tin
+                            </a>
+                        </li>
+
+                        <!-- Avatar & Dropdown Menu -->
+                        <li class="nav-item dropdown ms-lg-3">
+                            <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
+                                <span class="text-dark" id="userName">Người dùng</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item active" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
+                                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
+                                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-light py-3 mb-4">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                    <li class="breadcrumb-item active">Hồ sơ cá nhân</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container pb-5">
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card profile-card sticky-top" style="top: 80px;">
+                    <div class="card-body text-center">
+                        <!-- Avatar -->
+                        <div class="mb-3 position-relative d-inline-block">
+                            <img id="avatarPreview" src="https://via.placeholder.com/120/0d6efd/ffffff?text=U" 
+                                 alt="Avatar" class="rounded-circle" width="120" height="120">
+                            <label for="avatarInput" class="avatar-upload-label">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="avatarInput" class="d-none" accept="image/*">
+                        </div>
+
+                        <!-- Thông tin cơ bản -->
+                        <h5 class="card-title mb-1" id="profileName">Nguyễn Văn A</h5>
+                        <p class="text-muted small mb-3" id="profileEmail">user@example.com</p>
+
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Xác thực
+                            </span>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-box">
+                                    <h6 class="mb-1">5</h6>
+                                    <small class="text-muted">Tin đăng</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-box">
+                                    <h6 class="mb-1">12</h6>
+                                    <small class="text-muted">Yêu thích</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-box">
+                                    <h6 class="mb-1">4.8</h6>
+                                    <small class="text-muted">Đánh giá</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Menu -->
+                        <div class="list-group list-group-flush mt-4">
+                            <button class="list-group-item list-group-item-action active" data-tab="info">
+                                <i class="fas fa-user me-2 text-primary"></i>Thông tin cơ bản
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-tab="password">
+                                <i class="fas fa-lock me-2"></i>Đổi mật khẩu
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-tab="address">
+                                <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-tab="preferences">
+                                <i class="fas fa-sliders-h me-2"></i>Tùy chọn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Panel -->
+            <div class="col-lg-9">
+                <!-- Thông tin cơ bản -->
+                <div class="tab-content" id="infoTab">
+                    <div class="card">
+                        <div class="card-header bg-white border-bottom">
+                            <h5 class="mb-0"><i class="fas fa-user me-2 text-primary"></i>Thông tin cơ bản</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="infoForm" class="needs-validation" novalidate>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Nguyễn Văn A" required>
+                                        <div class="invalid-feedback">Vui lòng nhập họ tên</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="user@example.com" readonly>
+                                        <small class="text-muted">Email không thể thay đổi</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="0987654321" required>
+                                        <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="dob" class="form-label">Ngày sinh</label>
+                                        <input type="date" class="form-control" id="dob" name="dob">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bio" class="form-label">Giới thiệu về bạn</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Viết vài dòng về bạn..."></textarea>
+                                    <small class="text-muted">Tối đa 500 ký tự</small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="gender" class="form-label">Giới tính</label>
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="">-- Chọn giới tính --</option>
+                                            <option value="male">Nam</option>
+                                            <option value="female">Nữ</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone_verified" class="form-label">Xác thực điện thoại</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="phone_verified" placeholder="Chưa xác thực" disabled>
+                                            <button class="btn btn-outline-primary" type="button" id="verifyPhoneBtn">
+                                                <i class="fas fa-check me-1"></i>Xác thực
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-undo me-2"></i>Hủy
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đổi mật khẩu -->
+                <div class="tab-content d-none" id="passwordTab">
+                    <div class="card">
+                        <div class="card-header bg-white border-bottom">
+                            <h5 class="mb-0"><i class="fas fa-lock me-2 text-danger"></i>Đổi mật khẩu</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="passwordForm" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">Vui lòng nhập mật khẩu hiện tại</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="newPassword" name="newPassword" 
+                                               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$" required>
+                                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
+                                    </small>
+                                    <div class="invalid-feedback">Mật khẩu không đủ mạnh</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">Mật khẩu xác nhận không khớp</div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-undo me-2"></i>Hủy
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Địa chỉ -->
+                <div class="tab-content d-none" id="addressTab">
+                    <div class="card">
+                        <div class="card-header bg-white border-bottom">
+                            <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-success"></i>Địa chỉ</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addressForm" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="street" class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="street" name="street" placeholder="Số nhà, tên đường" required>
+                                    <div class="invalid-feedback">Vui lòng nhập địa chỉ</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="province" class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="province" name="province" required>
+                                            <option value="">-- Chọn tỉnh/thành phố --</option>
+                                            <option value="ho-chi-minh">Thành phố Hồ Chí Minh</option>
+                                            <option value="hanoi">Hà Nội</option>
+                                            <option value="da-nang">Đà Nẵng</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn tỉnh/thành phố</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="district" name="district" required>
+                                            <option value="">-- Chọn quận/huyện --</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn quận/huyện</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="ward" name="ward" required>
+                                            <option value="">-- Chọn phường/xã --</option>
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn phường/xã</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-undo me-2"></i>Hủy
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tùy chọn -->
+                <div class="tab-content d-none" id="preferencesTab">
+                    <div class="card">
+                        <div class="card-header bg-white border-bottom">
+                            <h5 class="mb-0"><i class="fas fa-sliders-h me-2 text-info"></i>Tùy chọn</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="preferencesForm">
+                                <!-- Thông báo -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Cài đặt thông báo</h6>
+                                    
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="notifyEmail" name="notifyEmail" checked>
+                                        <label class="form-check-label" for="notifyEmail">
+                                            Nhận thông báo qua email
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="notifySMS" name="notifySMS" checked>
+                                        <label class="form-check-label" for="notifySMS">
+                                            Nhận thông báo qua SMS
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="notifyPush" name="notifyPush" checked>
+                                        <label class="form-check-label" for="notifyPush">
+                                            Nhận thông báo push
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Quyền riêng tư -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Quyền riêng tư</h6>
+                                    
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" id="privacyPublic" name="privacy" value="public" checked>
+                                        <label class="form-check-label" for="privacyPublic">
+                                            Công khai - Mọi người có thể xem hồ sơ của tôi
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" id="privacyPrivate" name="privacy" value="private">
+                                        <label class="form-check-label" for="privacyPrivate">
+                                            Riêng tư - Chỉ bạn bè có thể xem hồ sơ của tôi
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Các lựa chọn khác -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Các lựa chọn khác</h6>
+                                    
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="twoFactor" name="twoFactor">
+                                        <label class="form-check-label" for="twoFactor">
+                                            Bật xác thực hai bước
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" checked>
+                                        <label class="form-check-label" for="newsletter">
+                                            Đăng ký nhận bản tin hàng tuần
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Lưu tùy chọn
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="card border-danger mt-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Vùng nguy hiểm</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="mb-2">Xóa tài khoản vĩnh viễn</h6>
+                                <p class="text-muted small mb-0">Một khi bạn xóa tài khoản, không có cách nào để khôi phục dữ liệu của bạn.</p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <i class="fas fa-trash me-1"></i>Xóa tài khoản
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Xác nhận xóa tài khoản</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold mb-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>Cảnh báo!
+                    </p>
+                    <p>Bạn có chắc chắn muốn xóa tài khoản không? Hành động này sẽ:</p>
+                    <ul class="text-muted">
+                        <li>Xóa vĩnh viễn tất cả dữ liệu của bạn</li>
+                        <li>Hủy tất cả các tin đăng của bạn</li>
+                        <li>Hủy tất cả các đơn đặt phòng</li>
+                        <li>Không thể khôi phục</li>
+                    </ul>
+                    <p class="mt-3 mb-0">
+                        <input type="text" class="form-control" id="confirmDeleteText" placeholder="Gõ 'XÓA TÀI KHOẢN' để xác nhận">
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                        <i class="fas fa-trash me-1"></i>Xóa vĩnh viễn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer bg-light pt-5 pb-3 mt-5" style="border-top: 1px solid #dee2e6;">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-home me-2"></i>HomeRent</h5>
+                    <p class="text-muted">
+                        Nền tảng cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                    </p>
+                    <div class="social-links mt-3 d-flex gap-3">
+                        <a href="#" class="text-primary"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-primary"><i class="fab fa-youtube fa-lg"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Kết</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="/properties" class="text-decoration-none">Tìm phòng</a></li>
+                        <li class="mb-2"><a href="/about" class="text-decoration-none">Giới thiệu</a></li>
+                        <li class="mb-2"><a href="/contact" class="text-decoration-none">Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/faq" class="text-decoration-none">Câu hỏi thường gặp</a></li>
+                        <li class="mb-2"><a href="/guide" class="text-decoration-none">Hướng dẫn</a></li>
+                        <li class="mb-2"><a href="/terms" class="text-decoration-none">Điều khoản</a></li>
+                        <li class="mb-2"><a href="/privacy" class="text-decoration-none">Bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i><a href="tel:0123456789" class="text-muted text-decoration-none">0123 456 789</a></li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i><a href="mailto:info@homerent.vn" class="text-muted text-decoration-none">info@homerent.vn</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="my-4 bg-secondary">
+
+            <div class="text-center">
+                <p class="mb-1">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with <i class="fas fa-heart text-danger"></i> by Your Team
+                </p>
+                <small>Phiên bản 1.0.0</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/profile.js"></script>
+</body>
+</html>

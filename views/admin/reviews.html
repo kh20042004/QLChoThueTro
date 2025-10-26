@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đánh giá - Admin Panel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#fafafa]">
+    <!-- Diagonal Grid Background -->
+    <div class="min-h-screen w-full bg-[#fafafa] relative text-gray-900">
+        <!-- Diagonal Grid with Electric Orange/Pink -->
+        <div
+            class="fixed inset-0 z-0 pointer-events-none"
+            style="
+                background-image: 
+                    repeating-linear-gradient(45deg, rgba(255, 0, 100, 0.1) 0, rgba(255, 0, 100, 0.1) 1px, transparent 1px, transparent 20px),
+                    repeating-linear-gradient(-45deg, rgba(255, 0, 100, 0.1) 0, rgba(255, 0, 100, 0.1) 1px, transparent 1px, transparent 20px);
+                background-size: 40px 40px;
+            "
+        ></div>
+
+        <!-- Content -->
+        <div class="relative z-10">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+                <div class="container mx-auto px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <!-- Logo & Title -->
+                        <div class="flex items-center space-x-4">
+                            <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <a href="/admin/dashboard" class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-crown text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <h1 class="text-xl font-bold text-gray-900">Admin Panel</h1>
+                                    <p class="text-xs text-gray-500">Quản lý Đánh giá</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Right Side -->
+                        <div class="flex items-center space-x-4">
+                            <!-- Notifications -->
+                            <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">5</span>
+                            </button>
+
+                            <!-- User Menu -->
+                            <div class="relative group">
+                                <button class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <img src="https://via.placeholder.com/40/ff0064/ffffff?text=A" alt="Admin" class="w-8 h-8 rounded-full border-2 border-pink-500">
+                                    <span class="hidden md:block text-sm font-medium">Admin</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+
+                                <!-- Dropdown -->
+                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                    <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-user mr-2"></i>Hồ sơ
+                                    </a>
+                                    <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-cog mr-2"></i>Cài đặt
+                                    </a>
+                                    <hr class="my-1">
+                                    <a href="/" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-home mr-2"></i>Về trang chủ
+                                    </a>
+                                    <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-red-50">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex">
+                <!-- Sidebar -->
+                <aside id="sidebar" class="w-64 bg-white/80 backdrop-blur-md border-r border-gray-200 min-h-screen fixed lg:sticky top-16 -left-64 lg:left-0 transition-all duration-300 z-40">
+                    <nav class="p-4 space-y-2">
+                        <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Người dùng</span>
+                        </a>
+                        <a href="/admin/properties" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Bất động sản</span>
+                        </a>
+                        <a href="/admin/bookings" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-calendar-check w-5"></i>
+                            <span>Đặt phòng</span>
+                        </a>
+                        <a href="/admin/reviews" class="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg">
+                            <i class="fas fa-star w-5"></i>
+                            <span class="font-medium">Đánh giá</span>
+                        </a>
+                        <a href="/admin/reports" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-file-alt w-5"></i>
+                            <span>Báo cáo</span>
+                        </a>
+                        <hr class="my-2">
+                        <a href="/admin/settings" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Cài đặt</span>
+                        </a>
+                    </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1 p-6 lg:p-8">
+                    <!-- Page Header -->
+                    <div class="mb-8 animate-fadeIn">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Quản lý Đánh giá</h2>
+                        <p class="text-gray-600">Kiểm duyệt và quản lý các đánh giá từ người dùng</p>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Tổng đánh giá</p>
+                                    <p class="text-2xl font-bold text-gray-900" id="totalReviews">0</p>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-star text-blue-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.1s">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Chờ duyệt</p>
+                                    <p class="text-2xl font-bold text-yellow-600" id="pendingReviews">0</p>
+                                </div>
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.2s">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Đã duyệt</p>
+                                    <p class="text-2xl font-bold text-green-600" id="approvedReviews">0</p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.3s">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Đã từ chối</p>
+                                    <p class="text-2xl font-bold text-red-600" id="rejectedReviews">0</p>
+                                </div>
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 animate-fadeIn" style="animation-delay: 0.4s">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Đánh giá TB</p>
+                                    <p class="text-2xl font-bold text-pink-600">
+                                        <i class="fas fa-star text-lg"></i>
+                                        <span id="averageRating">0.0</span>
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-pink-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters & Search -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-xl p-6 border border-gray-200 mb-6 animate-fadeIn" style="animation-delay: 0.5s">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Search -->
+                            <div class="md:col-span-2">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="Tìm kiếm theo người đánh giá, phòng..." class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div>
+                                <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="pending">Chờ duyệt</option>
+                                    <option value="approved">Đã duyệt</option>
+                                    <option value="rejected">Đã từ chối</option>
+                                </select>
+                            </div>
+
+                            <!-- Rating Filter -->
+                            <div>
+                                <select id="ratingFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                                    <option value="">Tất cả đánh giá</option>
+                                    <option value="5">5 sao</option>
+                                    <option value="4">4 sao</option>
+                                    <option value="3">3 sao</option>
+                                    <option value="2">2 sao</option>
+                                    <option value="1">1 sao</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reviews Grid -->
+                    <div id="reviewsGrid" class="grid grid-cols-1 gap-6">
+                        <!-- Reviews will be loaded by JavaScript -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="mt-8 flex items-center justify-between">
+                        <p class="text-sm text-gray-600">
+                            Hiển thị <span class="font-medium" id="showingFrom">1</span> đến <span class="font-medium" id="showingTo">10</span> trong tổng số <span class="font-medium" id="totalCount">0</span> đánh giá
+                        </p>
+                        <div class="flex space-x-2" id="pagination">
+                            <!-- Pagination buttons will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div id="reviewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-900">Chi tiết đánh giá</h3>
+                    <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="reviewModalContent" class="p-6">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/admin/reviews.js"></script>
+</body>
+</html>
