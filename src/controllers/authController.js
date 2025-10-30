@@ -466,12 +466,17 @@ exports.googleCallback = async (req, res, next) => {
     // User đã được authenticate bởi Passport
     const user = req.user;
     
+    if (!user) {
+      return res.redirect('/auth/login?error=google_auth_failed');
+    }
+    
     // Tạo token
     const token = user.getSignedJwtToken();
     
     const options = {
       expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
-      httpOnly: true
+      httpOnly: true,
+      sameSite: 'lax'
     };
 
     if (process.env.NODE_ENV === 'production') {
@@ -483,7 +488,8 @@ exports.googleCallback = async (req, res, next) => {
       .cookie('token', token, options)
       .redirect('/');
   } catch (error) {
-    next(error);
+    console.error('Google callback error:', error);
+    res.redirect('/auth/login?error=google_auth_error');
   }
 };
 
@@ -493,8 +499,6 @@ exports.googleCallback = async (req, res, next) => {
  * @access  Public
  */
 exports.googleFailure = (req, res) => {
-  res.status(401).json({
-    success: false,
-    error: 'Đăng nhập Google thất bại'
-  });
+  console.error('Google auth failure:', req.authInfo);
+  res.redirect('/auth/login?error=google_auth_failed');
 };

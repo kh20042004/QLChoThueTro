@@ -81,6 +81,7 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Trang chủ</a>
                     <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Tìm phòng</a>
+                    <a href="/universities" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">🎓 Trường ĐH</a>
                     <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Giới thiệu</a>
                     <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Liên hệ</a>
                 </div>
@@ -597,13 +598,13 @@
                 if (response.ok) {
                     if (isSaved) {
                         btn.classList.remove('favorite-active');
-                        btn.classList.remove('bg-red-600');
-                        btn.classList.add('bg-red-500');
+                        btn.classList.remove('bg-pink-200', 'text-pink-700', 'hover:bg-pink-300');
+                        btn.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
                         btn.innerHTML = '<i class="fas fa-heart mr-2"></i> Lưu tin';
                     } else {
                         btn.classList.add('favorite-active');
-                        btn.classList.remove('bg-red-500');
-                        btn.classList.add('bg-red-600');
+                        btn.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
+                        btn.classList.add('bg-pink-200', 'text-pink-700', 'hover:bg-pink-300');
                         btn.innerHTML = '<i class="fas fa-heart mr-2"></i> Đã lưu';
                     }
                     
@@ -648,8 +649,8 @@
                     
                     if (result.isFavorite) {
                         btn.classList.add('favorite-active');
-                        btn.classList.remove('bg-red-500');
-                        btn.classList.add('bg-red-600');
+                        btn.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
+                        btn.classList.add('bg-pink-200', 'text-pink-700', 'hover:bg-pink-300');
                         btn.innerHTML = '<i class="fas fa-heart mr-2"></i> Đã lưu';
                     }
                 }

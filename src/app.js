@@ -67,6 +67,7 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
+app.use('/api/universities', require('./routes/universityRoutes'));
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {
@@ -161,6 +162,11 @@ app.get('/terms', (req, res) => {
 // View Routes - Bảo mật
 app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/privacy.html'));
+});
+
+// View Routes - Danh sách trường đại học
+app.get('/universities', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/universities.html'));
 });
 
 // ===================================

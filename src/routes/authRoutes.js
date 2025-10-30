@@ -35,7 +35,8 @@ router.post('/login', login);
 router.get(
   '/google',
   passport.authenticate('google', { 
-    scope: ['profile', 'email'] 
+    scope: ['profile', 'email'],
+    session: false
   })
 );
 
@@ -43,7 +44,8 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { 
     failureRedirect: '/api/auth/google/failure',
-    session: false 
+    session: false,
+    failureMessage: true
   }),
   googleCallback
 );

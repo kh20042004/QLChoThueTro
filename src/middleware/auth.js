@@ -86,3 +86,21 @@ exports.verifyEmail = (req, res, next) => {
   }
   next();
 };
+
+/**
+ * Alias cho protect middleware - Xác thực user
+ */
+exports.authenticate = exports.protect;
+
+/**
+ * Middleware phân quyền Admin
+ */
+exports.authorizeAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Bạn không có quyền truy cập tài nguyên này. Chỉ admin mới được phép.'
+    });
+  }
+  next();
+};
