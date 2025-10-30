@@ -66,6 +66,7 @@ app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/favorites', require('./routes/favoriteRoutes'));
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {
@@ -135,6 +136,11 @@ app.get('/notifications', (req, res) => {
 // View Routes - Trang yêu thích
 app.get('/favorites', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/favorites.html'));
+});
+
+// View Routes - Trang đặt phòng của tôi
+app.get('/bookings', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/bookings.html'));
 });
 
 // View Routes - Câu hỏi thường gặp

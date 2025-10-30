@@ -4,330 +4,415 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch Sử Giao Dịch - HomeRent</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/transaction-history.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6B7280',
+                        secondary: '#9CA3AF',
+                        accent: '#4B5563',
+                        light: '#F9FAFB',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50">
     <!-- Header -->
-    <header class="header sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="/">
-                    <i class="fas fa-home text-primary fs-3 me-2"></i>
-                    <span class="fw-bold text-primary">HomeRent</span>
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2 group">
+                    <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                    <span class="text-xl font-bold text-gray-800">HomeRent</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto align-items-center" id="navbarUser">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/properties">Tìm phòng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about">Giới thiệu</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/contact">Liên hệ</a>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
-                                <i class="fas fa-bell text-muted"></i>
-                                <span class="badge bg-danger badge-notification">3</span>
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
-                                <i class="fas fa-heart text-muted"></i>
-                                <span class="badge bg-danger badge-notification">2</span>
-                            </button>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a class="btn btn-danger btn-sm" href="/property/create">
-                                <i class="fas fa-plus me-1"></i>Đăng tin
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Trang chủ
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Tìm phòng
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Giới thiệu
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                        Liên hệ
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                </div>
+                
+                <!-- User Menu (Logged in) -->
+                <div class="hidden md:flex items-center space-x-4" id="navbarUser">
+                    <!-- Notifications -->
+                    <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                    </a>
+                    
+                    <!-- Favorites -->
+                    <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </a>
+                    
+                    <!-- Post Property -->
+                    <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <i class="fas fa-plus mr-1"></i>Đăng tin
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                            <span class="text-gray-700" id="userName">Người dùng</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown">
+                            <div class="p-3 border-b border-gray-100">
+                                <p class="text-sm text-gray-500" id="userEmail">user@example.com</p>
+                            </div>
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-500"></i>Hồ sơ cá nhân
                             </a>
-                        </li>
-                        <li class="nav-item dropdown ms-lg-3">
-                            <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
-                                <span class="text-dark" id="userName">Người dùng</span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
-                                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
-                                <li><a class="dropdown-item" href="/recharge-history"><i class="fas fa-wallet me-2"></i>Lịch sử nạp tiền</a></li>
-                                <li><a class="dropdown-item" href="/transaction-history"><i class="fas fa-exchange-alt me-2"></i>Lịch sử giao dịch</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-home mr-2 text-gray-500"></i>Nhà/phòng của tôi
+                            </a>
+                            <a href="/recharge-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-wallet mr-2 text-gray-500"></i>Lịch sử nạp tiền
+                            </a>
+                            <a href="/transaction-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-exchange-alt mr-2 text-gray-500"></i>Lịch sử giao dịch
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
     <!-- Breadcrumb -->
-    <div class="bg-light py-3 mb-4">
-        <div class="container">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-                    <li class="breadcrumb-item active">Lịch sử giao dịch</li>
-                </ol>
+    <div class="bg-white border-b border-gray-200 py-3 mb-6">
+        <div class="container mx-auto px-4">
+            <nav class="flex items-center gap-2 text-sm">
+                <a href="/" class="text-gray-600 hover:text-blue-600">Trang chủ</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <span class="text-gray-900 font-medium">Lịch sử giao dịch</span>
             </nav>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container pb-5">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Lịch Sử Giao Dịch</h4>
+    <main class="container mx-auto px-4 pb-12">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+                <h2 class="text-xl font-bold text-white"><i class="fas fa-exchange-alt mr-2"></i>Lịch Sử Giao Dịch</h2>
+            </div>
+            <div class="p-6">
+                <!-- Summary Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                        <div class="text-3xl font-bold text-green-600">12</div>
+                        <div class="text-sm text-green-700 font-medium">Giao dịch thành công</div>
                     </div>
-                    <div class="card-body">
-                        <!-- Summary Stats -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-value text-success">12</div>
-                                    <div class="stat-label">Giao dịch thành công</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-value text-warning">2</div>
-                                    <div class="stat-label">Chờ xác nhận</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-value text-danger">1</div>
-                                    <div class="stat-label">Giao dịch thất bại</div>
-                                </div>
+                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border border-yellow-200">
+                        <div class="text-3xl font-bold text-yellow-600">2</div>
+                        <div class="text-sm text-yellow-700 font-medium">Chờ xác nhận</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                        <div class="text-3xl font-bold text-red-600">1</div>
+                        <div class="text-sm text-red-700 font-medium">Giao dịch thất bại</div>
+                    </div>
+                </div>
+
+                <!-- Filter -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" id="typeFilter">
+                        <option value="">Tất cả loại giao dịch</option>
+                        <option value="recharge">Nạp tiền</option>
+                        <option value="post">Đăng tin</option>
+                        <option value="upgrade">Nâng cấp tin</option>
+                        <option value="refund">Hoàn tiền</option>
+                    </select>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="success">Thành công</option>
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="failed">Thất bại</option>
+                    </select>
+                    <input type="date" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" id="dateFilter">
+                    <button class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-150 font-medium">
+                        <i class="fas fa-search mr-1"></i>Tìm kiếm
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200 bg-gray-50">
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">STT</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Loại giao dịch</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Chi tiết</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Số tiền</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Ngày giao dịch</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Trạng thái</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-900">1</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-arrow-down mr-1"></i>Nạp tiền
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">Nạp tiền qua thẻ ngân hàng</td>
+                                <td class="px-4 py-3 font-semibold text-green-600">+500.000 VNĐ</td>
+                                <td class="px-4 py-3 text-gray-600">2025-10-24 14:30</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Thành công</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="#" class="text-blue-600 hover:text-blue-800" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-900">2</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-newspaper mr-1"></i>Đăng tin
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">Đăng tin bài "Phòng trọ 30m2 gần BV"</td>
+                                <td class="px-4 py-3 font-semibold text-red-600">-50.000 VNĐ</td>
+                                <td class="px-4 py-3 text-gray-600">2025-10-23 09:15</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Thành công</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="#" class="text-blue-600 hover:text-blue-800" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-900">3</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-star mr-1"></i>Nâng cấp tin
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">Nâng cấp tin lên "Tin VIP" 7 ngày</td>
+                                <td class="px-4 py-3 font-semibold text-red-600">-100.000 VNĐ</td>
+                                <td class="px-4 py-3 text-gray-600">2025-10-22 16:45</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Thành công</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="#" class="text-blue-600 hover:text-blue-800" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-900">4</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-undo mr-1"></i>Hoàn tiền
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">Hoàn tiền vì hủy bài đăng</td>
+                                <td class="px-4 py-3 font-semibold text-green-600">+25.000 VNĐ</td>
+                                <td class="px-4 py-3 text-gray-600">2025-10-20 11:20</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Thành công</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="#" class="text-blue-600 hover:text-blue-800" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 text-gray-900">5</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-arrow-down mr-1"></i>Nạp tiền
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">Nạp tiền qua ví điện tử</td>
+                                <td class="px-4 py-3 font-semibold text-green-600">+1.000.000 VNĐ</td>
+                                <td class="px-4 py-3 text-gray-600">2025-10-18 10:00</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Chờ xác nhận</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="#" class="text-blue-600 hover:text-blue-800" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-center items-center gap-2 mt-6">
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-150" disabled>Trước</button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">1</button>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-150">2</button>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-150">Sau</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+            <!-- Footer -->
+            <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300">
+                <div class="container mx-auto px-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                        <div>
+                            <h5 class="font-bold text-white mb-4 flex items-center">
+                                <i class="fas fa-home mr-2"></i>HomeRent
+                            </h5>
+                            <p class="text-gray-400 mb-4">
+                                Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                            </p>
+                            <div class="flex space-x-3">
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                                    <i class="fab fa-facebook text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                                    <i class="fab fa-twitter text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                                    <i class="fab fa-instagram text-xl"></i>
+                                </a>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                                    <i class="fab fa-youtube text-xl"></i>
+                                </a>
                             </div>
                         </div>
-
-                        <!-- Filter -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <select class="form-select" id="typeFilter">
-                                    <option value="">Tất cả loại giao dịch</option>
-                                    <option value="recharge">Nạp tiền</option>
-                                    <option value="post">Đăng tin</option>
-                                    <option value="upgrade">Nâng cấp tin</option>
-                                    <option value="refund">Hoàn tiền</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" id="statusFilter">
-                                    <option value="">Tất cả trạng thái</option>
-                                    <option value="success">Thành công</option>
-                                    <option value="pending">Chờ xác nhận</option>
-                                    <option value="failed">Thất bại</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="date" class="form-control" id="dateFilter" placeholder="Chọn ngày">
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-search me-1"></i>Tìm kiếm
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Table -->
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Loại giao dịch</th>
-                                        <th>Chi tiết</th>
-                                        <th>Số tiền</th>
-                                        <th>Ngày giao dịch</th>
-                                        <th>Trạng thái</th>
-                                        <th>Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>
-                                            <span class="badge bg-info"><i class="fas fa-arrow-down me-1"></i>Nạp tiền</span>
-                                        </td>
-                                        <td>Nạp tiền qua thẻ ngân hàng</td>
-                                        <td><strong class="text-success">+500.000 VNĐ</strong></td>
-                                        <td>2025-10-24 14:30</td>
-                                        <td>
-                                            <span class="badge bg-success">Thành công</span>
-                                        </td>
-                                        <td>
-                                            <a href="#" class="text-primary me-2" title="Chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>
-                                            <span class="badge bg-secondary"><i class="fas fa-newspaper me-1"></i>Đăng tin</span>
-                                        </td>
-                                        <td>Đăng tin bài "Phòng trọ 30m2 gần BV"</td>
-                                        <td><strong class="text-danger">-50.000 VNĐ</strong></td>
-                                        <td>2025-10-23 09:15</td>
-                                        <td>
-                                            <span class="badge bg-success">Thành công</span>
-                                        </td>
-                                        <td>
-                                            <a href="#" class="text-primary me-2" title="Chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>
-                                            <span class="badge bg-warning"><i class="fas fa-star me-1"></i>Nâng cấp tin</span>
-                                        </td>
-                                        <td>Nâng cấp tin lên "Tin VIP" 7 ngày</td>
-                                        <td><strong class="text-danger">-100.000 VNĐ</strong></td>
-                                        <td>2025-10-22 16:45</td>
-                                        <td>
-                                            <span class="badge bg-success">Thành công</span>
-                                        </td>
-                                        <td>
-                                            <a href="#" class="text-primary me-2" title="Chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>4</td>
-                                        <td>
-                                            <span class="badge bg-danger"><i class="fas fa-undo me-1"></i>Hoàn tiền</span>
-                                        </td>
-                                        <td>Hoàn tiền vì hủy bài đăng</td>
-                                        <td><strong class="text-success">+25.000 VNĐ</strong></td>
-                                        <td>2025-10-20 11:20</td>
-                                        <td>
-                                            <span class="badge bg-success">Thành công</span>
-                                        </td>
-                                        <td>
-                                            <a href="#" class="text-primary me-2" title="Chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>5</td>
-                                        <td>
-                                            <span class="badge bg-info"><i class="fas fa-arrow-down me-1"></i>Nạp tiền</span>
-                                        </td>
-                                        <td>Nạp tiền qua ví điện tử</td>
-                                        <td><strong class="text-success">+1.000.000 VNĐ</strong></td>
-                                        <td>2025-10-18 10:00</td>
-                                        <td>
-                                            <span class="badge bg-warning">Chờ xác nhận</span>
-                                        </td>
-                                        <td>
-                                            <a href="#" class="text-primary me-2" title="Chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <nav aria-label="Pagination">
-                            <ul class="pagination justify-content-center">
-                                <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">Sau</a></li>
+                        
+                        <div>
+                            <h6 class="font-semibold text-white mb-4">Liên Kết</h6>
+                            <ul class="space-y-2">
+                                <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">Trang chủ</a></li>
+                                <li><a href="/properties" class="text-gray-400 hover:text-white transition-colors duration-300">Tìm phòng</a></li>
+                                <li><a href="/about" class="text-gray-400 hover:text-white transition-colors duration-300">Giới thiệu</a></li>
+                                <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors duration-300">Liên hệ</a></li>
                             </ul>
-                        </nav>
+                        </div>
+                        
+                        <div>
+                            <h6 class="font-semibold text-white mb-4">Hỗ Trợ</h6>
+                            <ul class="space-y-2">
+                                <li><a href="/faq" class="text-gray-400 hover:text-white transition-colors duration-300">Câu hỏi thường gặp</a></li>
+                                <li><a href="/terms" class="text-gray-400 hover:text-white transition-colors duration-300">Điều khoản</a></li>
+                                <li><a href="/privacy" class="text-gray-400 hover:text-white transition-colors duration-300">Bảo mật</a></li>
+                                <li><a href="/guide" class="text-gray-400 hover:text-white transition-colors duration-300">Hướng dẫn</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h6 class="font-semibold text-white mb-4">Liên Hệ</h6>
+                            <ul class="space-y-2 text-gray-400">
+                                <li>
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    123 Đường ABC, Quận 1, TP.HCM
+                                </li>
+                                <li>
+                                    <i class="fas fa-phone mr-2"></i>
+                                    <a href="tel:0123456789" class="hover:text-white transition-colors duration-300">0123 456 789</a>
+                                </li>
+                                <li>
+                                    <i class="fas fa-envelope mr-2"></i>
+                                    <a href="mailto:info@homerent.vn" class="hover:text-white transition-colors duration-300">info@homerent.vn</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 pt-6 text-center text-gray-400">
+                        <p class="mb-1">
+                            &copy; 2024 HomeRent. All rights reserved. Developed with 
+                            <i class="fas fa-heart text-red-500"></i> by Your Team
+                        </p>
+                        <small>Phiên bản 1.0.0</small>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer bg-light pt-5 pb-3 mt-5" style="border-top: 1px solid #dee2e6;">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <h5 class="fw-bold mb-3"><i class="fas fa-home me-2"></i>HomeRent</h5>
-                    <p class="text-muted">
-                        Nền tảng cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
-                    </p>
-                    <div class="social-links mt-3 d-flex gap-3">
-                        <a href="#" class="text-primary"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="#" class="text-primary"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-primary"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="text-primary"><i class="fab fa-youtube fa-lg"></i></a>
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-md-4">
-                    <h6 class="fw-bold mb-3">Liên Kết</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="/" class="text-decoration-none">Trang chủ</a></li>
-                        <li class="mb-2"><a href="/properties" class="text-decoration-none">Tìm phòng</a></li>
-                        <li class="mb-2"><a href="/about" class="text-decoration-none">Giới thiệu</a></li>
-                        <li class="mb-2"><a href="/contact" class="text-decoration-none">Liên hệ</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-2 col-md-4">
-                    <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="/faq" class="text-decoration-none">Câu hỏi thường gặp</a></li>
-                        <li class="mb-2"><a href="/guide" class="text-decoration-none">Hướng dẫn</a></li>
-                        <li class="mb-2"><a href="/terms" class="text-decoration-none">Điều khoản</a></li>
-                        <li class="mb-2"><a href="/privacy" class="text-decoration-none">Bảo mật</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-4 col-md-4">
-                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
-                        <li class="mb-2"><i class="fas fa-phone me-2"></i><a href="tel:0123456789" class="text-decoration-none">0123 456 789</a></li>
-                        <li class="mb-2"><i class="fas fa-envelope me-2"></i><a href="mailto:info@homerent.vn" class="text-decoration-none">info@homerent.vn</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <hr class="my-4 bg-secondary">
-
-            <div class="text-center">
-                <p class="mb-1">
-                    &copy; 2024 HomeRent. All rights reserved. Developed with <i class="fas fa-heart text-danger"></i> by Your Team
-                </p>
-                <small>Phiên bản 1.0.0</small>
-            </div>
-        </div>
-    </footer>
+            </footer>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/transaction-history.js"></script>
+    
+    <!-- Favorites -->
+    <script src="/js/favorites.js"></script>
+    
+    <script>
+        // Dropdown toggle
+        function toggleDropdown(e) {
+            e.preventDefault();
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userDropdown');
+            const btn = e.target.closest('[onclick="toggleDropdown(event)"]');
+            
+            if (!btn && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

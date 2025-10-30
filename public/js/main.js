@@ -941,6 +941,12 @@ function createPropertyCard(property) {
                         <span class="text-gray-500">(${reviewCount})</span>
                     </div>
                     <div class="flex gap-2">
+                        <button onclick="toggleFavorite(event, '${property._id}')" 
+                                class="px-3 py-2 bg-red-100 text-red-600 text-sm rounded-lg hover:bg-red-200 transition-colors duration-300 favorite-btn"
+                                title="Lưu tin"
+                                data-favorite-property="${property._id}">
+                            <i class="far fa-heart"></i>
+                        </button>
                         <button onclick='event.stopPropagation(); event.preventDefault(); showPropertyLocation(${JSON.stringify({
                             id: property._id,
                             lat: property.location?.coordinates?.[1] || 0,

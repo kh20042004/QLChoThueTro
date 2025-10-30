@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Phòng Của Tôi - HomeRent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6B7280',
+                        secondary: '#9CA3AF',
+                        accent: '#4B5563',
+                        light: '#F9FAFB',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        html { scroll-behavior: smooth; }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #FEF3C7;
+            color: #B45309;
+        }
+
+        .status-confirmed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-checked-in {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-checked-out {
+            background-color: #F3E8FF;
+            color: #5B21B6;
+        }
+
+        .status-cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2 group">
+                    <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                    <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Trang chủ</a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Tìm phòng</a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Giới thiệu</a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Liên hệ</a>
+                </div>
+                
+                <!-- Auth Buttons (Guest) -->
+                <div class="hidden md:flex items-center space-x-3" id="navbarGuest">
+                    <a href="/auth/login" class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-300">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Đăng nhập
+                    </a>
+                    <a href="/auth/register" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">
+                        <i class="fas fa-user-plus mr-1"></i>Đăng ký
+                    </a>
+                </div>
+                
+                <!-- User Menu (Logged in) -->
+                <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
+                    <!-- Notifications -->
+                    <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Thông báo">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                    </a>
+                    
+                    <!-- Favorites -->
+                    <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Yêu thích">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </a>
+                    
+                    <!-- Post Property -->
+                    <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300" title="Đăng tin">
+                        <i class="fas fa-plus mr-1"></i>Đăng tin
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                            <span class="text-gray-700" id="userName">Người dùng</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i class="fas fa-user-circle mr-2"></i>Hồ sơ cá nhân
+                            </a>
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i class="fas fa-home mr-2"></i>Tin của tôi
+                            </a>
+                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors font-medium text-blue-600">
+                                <i class="fas fa-calendar mr-2"></i>Đặt phòng của tôi
+                            </a>
+                            <a href="/transaction-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i class="fas fa-history mr-2"></i>Lịch sử giao dịch
+                            </a>
+                            <a href="/recharge-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i class="fas fa-wallet mr-2"></i>Lịch sử nạp tiền
+                            </a>
+                            <hr class="my-2">
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <ol class="flex items-center space-x-2 text-sm text-gray-600">
+                <li><a href="/" class="hover:text-gray-900">Trang chủ</a></li>
+                <li><i class="fas fa-chevron-right text-xs"></i></li>
+                <li class="text-gray-900 font-medium">Đặt phòng của tôi</li>
+            </ol>
+        </nav>
+
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Đặt Phòng Của Tôi</h1>
+            <p class="text-gray-600">Quản lý các lần đặt phòng và theo dõi trạng thái</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                    <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="confirmed">Đã xác nhận</option>
+                        <option value="checked-in">Đã nhận phòng</option>
+                        <option value="checked-out">Đã trả phòng</option>
+                        <option value="cancelled">Đã hủy</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Từ ngày</label>
+                    <input type="date" id="fromDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Đến ngày</label>
+                    <input type="date" id="toDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="filterBookings()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>Lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="flex justify-center items-center py-20">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-600">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden bg-white rounded-lg shadow-sm p-12 text-center">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">Chưa có đặt phòng nào</h3>
+            <p class="text-gray-500 mb-6">Hãy khám phá các phòng tuyệt vời và đặt phòng ngay!</p>
+            <a href="/properties" class="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Tìm phòng
+            </a>
+        </div>
+
+        <!-- Bookings Table -->
+        <div id="bookingsContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Phòng</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ngày nhận/Trả</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Giá tiền</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Trạng thái</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsList" class="divide-y divide-gray-200">
+                            <!-- Bookings will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300 mt-20">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h5 class="font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-home mr-2"></i>HomeRent
+                    </h5>
+                    <p class="text-gray-400 mb-4">
+                        Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI, giúp bạn tìm kiếm và quản lý bất động sản dễ dàng.
+                    </p>
+                    <div class="flex space-x-3">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Kết</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">Trang chủ</a></li>
+                        <li><a href="/properties" class="text-gray-400 hover:text-white transition-colors duration-300">Tìm phòng</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-white transition-colors duration-300">Giới thiệu</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors duration-300">Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Hỗ Trợ</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/faq" class="text-gray-400 hover:text-white transition-colors duration-300">Câu hỏi thường gặp</a></li>
+                        <li><a href="/terms" class="text-gray-400 hover:text-white transition-colors duration-300">Điều khoản</a></li>
+                        <li><a href="/privacy" class="text-gray-400 hover:text-white transition-colors duration-300">Bảo mật</a></li>
+                        <li><a href="/guide" class="text-gray-400 hover:text-white transition-colors duration-300">Hướng dẫn</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Hệ</h6>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            123 Đường ABC, Quận 1, TP.HCM
+                        </li>
+                        <li>
+                            <i class="fas fa-phone mr-2"></i>
+                            <a href="tel:0123456789" class="hover:text-white transition-colors duration-300">0123 456 789</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:info@homerent.vn" class="hover:text-white transition-colors duration-300">info@homerent.vn</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6 text-center text-gray-400">
+                <p class="mb-1">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with 
+                    <i class="fas fa-heart text-red-500"></i> by Your Team
+                </p>
+                <small>Phiên bản 1.0.0</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/favorites.js"></script>
+    
+    <script>
+        // Load bookings
+        async function loadBookings() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    displayBookings(result.data || []);
+                } else {
+                    showError('Không thể tải dữ liệu đặt phòng');
+                }
+            } catch (error) {
+                console.error('Lỗi:', error);
+                showError('Có lỗi xảy ra khi tải dữ liệu');
+            }
+        }
+
+        // Display bookings
+        function displayBookings(bookings) {
+            const loading = document.getElementById('loading');
+            const emptyState = document.getElementById('emptyState');
+            const bookingsContainer = document.getElementById('bookingsContainer');
+            const bookingsList = document.getElementById('bookingsList');
+
+            loading.classList.add('hidden');
+
+            if (bookings.length === 0) {
+                emptyState.classList.remove('hidden');
+                bookingsContainer.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            bookingsContainer.classList.remove('hidden');
+
+            bookingsList.innerHTML = bookings.map(booking => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <img src="${booking.propertyId?.images?.[0] || 'https://via.placeholder.com/60'}" alt="Property" class="w-12 h-12 rounded-lg object-cover">
+                            <div>
+                                <h3 class="font-medium text-gray-900">${booking.propertyId?.title || 'N/A'}</h3>
+                                <p class="text-xs text-gray-500">${booking.propertyId?.address || ''}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                        <div>${formatDate(booking.checkInDate)}</div>
+                        <div class="text-xs text-gray-500">đến</div>
+                        <div>${formatDate(booking.checkOutDate)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-semibold text-gray-900">
+                        ${formatPrice(booking.totalPrice)} VNĐ
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="status-badge status-${booking.status}">
+                            ${getStatusLabel(booking.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <a href="/properties/${booking.propertyId?._id}" class="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                <i class="fas fa-eye mr-1"></i>Xem
+                            </a>
+                            ${booking.status === 'pending' ? `
+                                <button onclick="cancelBooking('${booking._id}')" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
+                                    <i class="fas fa-times mr-1"></i>Hủy
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Format date
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            return new Date(date).toLocaleDateString('vi-VN');
+        }
+
+        // Format price
+        function formatPrice(price) {
+            return price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') || '0';
+        }
+
+        // Get status label
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': 'Chờ xác nhận',
+                'confirmed': 'Đã xác nhận',
+                'checked-in': 'Đã nhận phòng',
+                'checked-out': 'Đã trả phòng',
+                'cancelled': 'Đã hủy'
+            };
+            return labels[status] || status;
+        }
+
+        // Filter bookings
+        function filterBookings() {
+            const status = document.getElementById('statusFilter').value;
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            
+            console.log('Filter:', { status, fromDate, toDate });
+            loadBookings();
+        }
+
+        // Cancel booking
+        async function cancelBooking(bookingId) {
+            if (!confirm('Bạn chắc chắn muốn hủy đặt phòng này?')) return;
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'cancelled' })
+                });
+
+                if (response.ok) {
+                    showSuccess('Đã hủy đặt phòng');
+                    loadBookings();
+                } else {
+                    showError('Không thể hủy đặt phòng');
+                }
+            } catch (error) {
+                console.error('Lỗi:', error);
+                showError('Có lỗi xảy ra');
+            }
+        }
+
+        // Show success notification
+        function showSuccess(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 bg-green-500 text-white animate-slideDown';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Show error notification
+        function showError(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 bg-red-500 text-white animate-slideDown';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Load bookings on page load
+        window.addEventListener('load', loadBookings);
+    </script>
+</body>
+</html>
