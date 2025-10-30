@@ -1,36 +1,57 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <!-- ===================================
+         TRANG HỒ SƠ CÁ NHÂN - QUẢN LÝ THÔNG TIN TÀI KHOẢN
+         Cho phép người dùng xem/chỉnh sửa thông tin cá nhân, mật khẩu, địa chỉ
+         Quản lý avatar, email, số điện thoại, xóa tài khoản
+         =================================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ Sơ Cá Nhân - HomeRent</title>
+    
+    <!-- ===== Thư viện CSS ===== -->
+    <!-- Tailwind CSS - Framework CSS utility-first -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome - Icon library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Font chữ Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS tùy chỉnh chung cho dự án -->
     <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- ===== Cấu hình Tailwind CSS ===== -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    // Bảng màu tùy chỉnh
                     colors: {
-                        primary: '#6B7280',
-                        secondary: '#9CA3AF',
-                        accent: '#4B5563',
-                        light: '#F9FAFB',
-                        dark: '#1F2937'
+                        primary: '#6B7280',    // Xám chính
+                        secondary: '#9CA3AF',  // Xám phụ
+                        accent: '#4B5563',     // Xám đậm
+                        light: '#F9FAFB',      // Xám sáng
+                        dark: '#1F2937'        // Xám đen
                     },
                     fontFamily: {
-                        'sans': ['Inter', 'sans-serif']
+                        'sans': ['Inter', 'sans-serif']  // Font chữ
                     }
                 }
             }
         }
     </script>
+    
+    <!-- ===== Style tùy chỉnh và Animation ===== -->
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif;  /* Font chữ mặc định */
         }
         
+        /* ===== ANIMATION TÙY CHỈNH ===== */
+        /* Animation: Trượt xuống với mờ dần - dùng cho dropdown */
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -42,8 +63,9 @@
             }
         }
         
+        /* Class áp dụng animation slideDown */
         .animate-slideDown {
-            animation: slideDown 0.3s ease-out;
+            animation: slideDown 0.3s ease-out;  /* Thời gian: 300ms */
         }
     </style>
 </head>

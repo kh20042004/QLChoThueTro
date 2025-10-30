@@ -4,170 +4,399 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chính Sách Bảo Mật - HomeRent</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6B7280',
+            secondary: '#9CA3AF',
+            accent: '#4B5563',
+          },
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .animate-slideDown {
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .delay-100 { animation-delay: 100ms; }
+    .delay-200 { animation-delay: 200ms; }
+    .delay-300 { animation-delay: 300ms; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-white">
   <!-- Header -->
-  <header class="header sticky-top">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-          <i class="fas fa-home text-primary fs-3 me-2"></i>
-          <span class="fw-bold text-primary">HomeRent</span>
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <nav class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <a href="/" class="flex items-center space-x-2 group">
+          <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors"></i>
+          <span class="text-xl font-bold text-gray-800">HomeRent</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="/" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
+            Trang chủ
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a href="/properties" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
+            Tìm phòng
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a href="/about" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
+            Giới thiệu
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a href="/contact" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
+            Liên hệ
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a href="/universities" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
+            🎓 Trường ĐH
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+          </a>
+        </div>
+
+        <!-- Right Section -->
+        <div class="hidden md:flex items-center space-x-3" id="navbarGuest">
+          <a href="/auth/login" class="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+          </a>
+          <a href="/auth/register" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">
+            <i class="fas fa-user-plus me-1"></i>Đăng ký
+          </a>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
+          <button class="p-2 text-gray-600 hover:text-gray-900 relative transition-colors" title="Thông báo">
+            <i class="fas fa-bell text-lg"></i>
+            <span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+          </button>
+          <button class="p-2 text-gray-600 hover:text-gray-900 relative transition-colors" title="Yêu thích">
+            <i class="fas fa-heart text-lg"></i>
+            <span id="favoriteBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+          </button>
+          <a href="/property/create" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            <i class="fas fa-plus me-1"></i>Đăng tin
+          </a>
+          <div class="relative group">
+            <button class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full" id="userAvatar">
+              <span class="text-gray-800" id="userName">Người dùng</span>
+              <i class="fas fa-chevron-down text-gray-600"></i>
+            </button>
+            <div class="absolute right-0 mt-0 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+              <div class="px-4 py-3 border-b border-gray-200">
+                <p class="text-sm font-semibold text-gray-800" id="userEmail">user@example.com</p>
+              </div>
+              <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-user me-2"></i>Hồ sơ cá nhân
+              </a>
+              <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-calendar me-2"></i>Đơn đặt phòng
+              </a>
+              <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-home me-2"></i>Nhà/phòng của tôi
+              </a>
+              <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-cog me-2"></i>Cài đặt
+              </a>
+              <div class="border-t border-gray-200 mt-2 pt-2">
+                <a href="/logout" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors" onclick="handleLogout(event)">
+                  <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600 hover:text-gray-900">
+          <i class="fas fa-bars text-xl"></i>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <!-- Guest navbar -->
-          <ul class="navbar-nav ms-auto align-items-center" id="navbarGuest">
-            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/universities">🎓 Trường ĐH</a></li>
-            <li class="nav-item ms-lg-3"><a class="btn btn-outline-primary btn-sm" href="/auth/login"><i class="fas fa-sign-in-alt me-1"></i>Đăng nhập</a></li>
-            <li class="nav-item ms-2"><a class="btn btn-primary btn-sm" href="/auth/register"><i class="fas fa-user-plus me-1"></i>Đăng ký</a></li>
-          </ul>
-          <!-- User navbar -->
-          <ul class="navbar-nav ms-auto align-items-center" id="navbarUser" style="display: none;">
-            <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/properties">Tìm phòng</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about">Giới thiệu</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/universities">🎓 Trường ĐH</a></li>
-            <!-- Notifications -->
-            <li class="nav-item">
-              <button class="nav-link btn-icon-navbar" type="button" title="Thông báo">
-                <i class="fas fa-bell text-muted"></i>
-                <span class="badge bg-danger badge-notification">3</span>
-              </button>
-            </li>
-            <!-- Favorites -->
-            <li class="nav-item">
-              <button class="nav-link btn-icon-navbar" type="button" title="Yêu thích">
-                <i class="fas fa-heart text-muted"></i>
-                <span id="favoriteBadge" class="badge bg-danger badge-notification">0</span>
-              </button>
-            </li>
-            <!-- Post -->
-            <li class="nav-item ms-lg-2">
-              <a class="btn btn-danger btn-sm" href="/property/create"><i class="fas fa-plus me-1"></i>Đăng tin</a>
-            </li>
-            <!-- Avatar & dropdown -->
-            <li class="nav-item dropdown ms-lg-3">
-              <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
-                <span class="text-dark" id="userName">Người dùng</span>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
-                <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
-                <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
-                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-              </ul>
-            </li>
-          </ul>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-3 pb-4">
+        <a href="/" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Trang chủ</a>
+        <a href="/properties" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Tìm phòng</a>
+        <a href="/about" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Giới thiệu</a>
+        <a href="/contact" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Liên hệ</a>
+        <a href="/universities" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">🎓 Trường ĐH</a>
+        <div class="flex gap-2 mt-4">
+          <a href="/auth/login" class="flex-1 px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-center">Đăng nhập</a>
+          <a href="/auth/register" class="flex-1 px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-center">Đăng ký</a>
         </div>
       </div>
     </nav>
   </header>
 
   <!-- Hero -->
-  <section class="hero-section" style="min-height:auto;">
-    <div class="hero-overlay"></div>
-    <div class="container position-relative">
-      <div class="row align-items-center py-5">
-        <div class="col-lg-8 mx-auto text-center text-white">
-          <h1 class="display-5 fw-bold mb-2">Chính sách bảo mật</h1>
-          <p class="lead">Cách chúng tôi thu thập, sử dụng và bảo vệ dữ liệu của bạn</p>
-        </div>
+  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-12">
+    <div class="container mx-auto px-4">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-3">Chính sách bảo mật</h1>
+        <p class="text-lg text-gray-600">Cách chúng tôi thu thập, sử dụng và bảo vệ dữ liệu của bạn</p>
       </div>
     </div>
   </section>
 
   <!-- Breadcrumb -->
-  <div class="bg-light py-3 mb-4">
-    <div class="container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-          <li class="breadcrumb-item active">Bảo mật</li>
-        </ol>
-      </nav>
+  <div class="bg-gray-50 py-3 mb-6">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center space-x-2 text-sm">
+        <a href="/" class="text-gray-600 hover:text-gray-900">Trang chủ</a>
+        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+        <span class="text-gray-900 font-semibold">Bảo mật</span>
+      </div>
     </div>
   </div>
 
   <!-- Main -->
-  <main class="container pb-5">
-    <div class="row">
-      <div class="col-lg-10 mx-auto">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h4 class="fw-bold mb-3"><i class="fas fa-shield-alt text-success me-2"></i>1. Phạm vi</h4>
-            <p class="text-muted">Chính sách này áp dụng cho tất cả dịch vụ, tính năng và nền tảng HomeRent.</p>
+  <main class="container mx-auto px-4 pb-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-8">
+        <!-- Section 1 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-shield-alt text-green-600 me-3"></i>1. Phạm vi
+          </h2>
+          <p class="text-gray-700 leading-relaxed">Chính sách này áp dụng cho tất cả dịch vụ, tính năng và nền tảng HomeRent.</p>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-database text-primary me-2"></i>2. Dữ liệu thu thập</h4>
-            <ul class="text-muted mb-4">
-              <li>Thông tin tài khoản: họ tên, email, số điện thoại, avatar.</li>
-              <li>Hoạt động sử dụng: lịch sử tìm kiếm, yêu thích, tương tác.</li>
-              <li>Dữ liệu kỹ thuật: trình duyệt, IP, cookies, thời gian truy cập.</li>
-            </ul>
+        <!-- Section 2 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-database text-blue-600 me-3"></i>2. Dữ liệu thu thập
+          </h2>
+          <ul class="text-gray-700 space-y-2 ml-6 list-disc">
+            <li>Thông tin tài khoản: họ tên, email, số điện thoại, avatar.</li>
+            <li>Hoạt động sử dụng: lịch sử tìm kiếm, yêu thích, tương tác.</li>
+            <li>Dữ liệu kỹ thuật: trình duyệt, IP, cookies, thời gian truy cập.</li>
+          </ul>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-cogs text-info me-2"></i>3. Mục đích sử dụng</h4>
-            <ul class="text-muted mb-4">
-              <li>Cung cấp và cải thiện dịch vụ.</li>
-              <li>Cá nhân hóa trải nghiệm (gợi ý phòng phù hợp).</li>
-              <li>Đảm bảo an toàn, phòng chống gian lận.</li>
-            </ul>
+        <!-- Section 3 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-cogs text-cyan-600 me-3"></i>3. Mục đích sử dụng
+          </h2>
+          <ul class="text-gray-700 space-y-2 ml-6 list-disc">
+            <li>Cung cấp và cải thiện dịch vụ.</li>
+            <li>Cá nhân hóa trải nghiệm (gợi ý phòng phù hợp).</li>
+            <li>Đảm bảo an toàn, phòng chống gian lận.</li>
+          </ul>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-user-lock text-warning me-2"></i>4. Chia sẻ dữ liệu</h4>
-            <p class="text-muted">Chúng tôi không bán dữ liệu người dùng. Dữ liệu chỉ chia sẻ với đối tác phục vụ vận hành (ví dụ: lưu trữ, phân tích), tuân thủ pháp luật.</p>
+        <!-- Section 4 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-user-lock text-yellow-600 me-3"></i>4. Chia sẻ dữ liệu
+          </h2>
+          <p class="text-gray-700 leading-relaxed">Chúng tôi không bán dữ liệu người dùng. Dữ liệu chỉ chia sẻ với đối tác phục vụ vận hành (ví dụ: lưu trữ, phân tích), tuân thủ pháp luật.</p>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-lock text-secondary me-2"></i>5. Bảo vệ dữ liệu</h4>
-            <p class="text-muted">Áp dụng biện pháp bảo mật phù hợp (mã hóa, kiểm soát truy cập). Người dùng nên sử dụng mật khẩu mạnh và bật xác thực hai bước (nếu có).</p>
+        <!-- Section 5 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-lock text-gray-600 me-3"></i>5. Bảo vệ dữ liệu
+          </h2>
+          <p class="text-gray-700 leading-relaxed">Áp dụng biện pháp bảo mật phù hợp (mã hóa, kiểm soát truy cập). Người dùng nên sử dụng mật khẩu mạnh và bật xác thực hai bước (nếu có).</p>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-trash-alt text-danger me-2"></i>6. Quyền của người dùng</h4>
-            <ul class="text-muted mb-4">
-              <li>Xem, sửa, xóa dữ liệu cá nhân.</li>
-              <li>Yêu cầu ngừng xử lý dữ liệu cho mục đích marketing.</li>
-              <li>Liên hệ để thực thi quyền: <a href="mailto:privacy@homerent.vn">privacy@homerent.vn</a>.</li>
-            </ul>
+        <!-- Section 6 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-trash-alt text-red-600 me-3"></i>6. Quyền của người dùng
+          </h2>
+          <ul class="text-gray-700 space-y-2 ml-6 list-disc">
+            <li>Xem, sửa, xóa dữ liệu cá nhân.</li>
+            <li>Yêu cầu ngừng xử lý dữ liệu cho mục đích marketing.</li>
+            <li>Liên hệ để thực thi quyền: <a href="mailto:privacy@homerent.vn" class="text-blue-600 hover:text-blue-800">privacy@homerent.vn</a>.</li>
+          </ul>
+        </div>
 
-            <h4 class="fw-bold mb-3"><i class="fas fa-sync-alt text-primary me-2"></i>7. Cập nhật chính sách</h4>
-            <p class="text-muted">Chính sách có thể thay đổi. Mọi cập nhật sẽ thông báo rõ ràng trên nền tảng.</p>
+        <!-- Section 7 -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-sync-alt text-blue-600 me-3"></i>7. Cập nhật chính sách
+          </h2>
+          <p class="text-gray-700 leading-relaxed">Chính sách có thể thay đổi. Mọi cập nhật sẽ thông báo rõ ràng trên nền tảng.</p>
+        </div>
 
-            <hr class="my-4">
+        <!-- Divider -->
+        <hr class="my-6 border-gray-200">
 
-            <div class="mt-2">
-              <a href="/terms" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-contract me-1"></i>Điều khoản</a>
-              <a href="/guide" class="btn btn-outline-primary btn-sm ms-2"><i class="fas fa-compass me-1"></i>Hướng dẫn</a>
-              <a href="/faq" class="btn btn-outline-info btn-sm ms-2"><i class="fas fa-question-circle me-1"></i>FAQ</a>
-            </div>
-          </div>
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3">
+          <a href="/terms" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-file-contract me-2"></i>Điều khoản
+          </a>
+          <a href="/guide" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-compass me-2"></i>Hướng dẫn
+          </a>
+          <a href="/faq" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-question-circle me-2"></i>FAQ
+          </a>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Footer (nội dung sẽ được nạp từ partial) -->
-  <footer class="footer bg-dark text-white pt-5 pb-3"></footer>
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <!-- About -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Về HomeRent</h3>
+          <ul class="space-y-2">
+            <li><a href="/about" class="text-gray-400 hover:text-white transition-colors">Giới thiệu</a></li>
+            <li><a href="/blog" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+            <li><a href="/careers" class="text-gray-400 hover:text-white transition-colors">Tuyển dụng</a></li>
+            <li><a href="/press" class="text-gray-400 hover:text-white transition-colors">Báo chí</a></li>
+          </ul>
+        </div>
+        <!-- Products -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Sản phẩm</h3>
+          <ul class="space-y-2">
+            <li><a href="/properties" class="text-gray-400 hover:text-white transition-colors">Tìm phòng</a></li>
+            <li><a href="/for-landlord" class="text-gray-400 hover:text-white transition-colors">Cho chủ nhà</a></li>
+            <li><a href="/universities" class="text-gray-400 hover:text-white transition-colors">Trường Đại học</a></li>
+            <li><a href="/mobile-app" class="text-gray-400 hover:text-white transition-colors">Ứng dụng di động</a></li>
+          </ul>
+        </div>
+        <!-- Support -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Hỗ trợ</h3>
+          <ul class="space-y-2">
+            <li><a href="/help" class="text-gray-400 hover:text-white transition-colors">Trợ giúp</a></li>
+            <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors">Liên hệ</a></li>
+            <li><a href="/faq" class="text-gray-400 hover:text-white transition-colors">Câu hỏi thường gặp</a></li>
+            <li><a href="/guide" class="text-gray-400 hover:text-white transition-colors">Hướng dẫn</a></li>
+          </ul>
+        </div>
+        <!-- Contact -->
+        <div>
+          <h3 class="text-lg font-bold mb-4">Liên hệ</h3>
+          <p class="text-gray-400 text-sm mb-2">Email: <a href="mailto:info@homerent.vn" class="text-white hover:text-gray-300">info@homerent.vn</a></p>
+          <p class="text-gray-400 text-sm mb-4">Điện thoại: <a href="tel:0123456789" class="text-white hover:text-gray-300">0123 456 789</a></p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+      </div>
 
-  <!-- Floating -->
-  <button class="btn btn-primary btn-floating" id="chatBtn"><i class="fas fa-comments fa-lg"></i></button>
-  <button class="btn btn-secondary btn-scroll-top" id="scrollTopBtn"><i class="fas fa-arrow-up"></i></button>
+      <!-- Divider -->
+      <hr class="border-gray-700 my-8">
+
+      <!-- Bottom -->
+      <div class="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+        <div class="mb-4 md:mb-0">
+          <p>&copy; 2024 HomeRent. All rights reserved. Developed with 💖 by Your Team</p>
+          <p class="mt-1">Version 1.0.0</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="/terms" class="hover:text-white transition-colors">Điều khoản</a>
+          <a href="/privacy" class="hover:text-white transition-colors">Bảo mật</a>
+          <a href="/contact" class="hover:text-white transition-colors">Liên hệ</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Buttons -->
+    <button id="chatBtn" class="fixed bottom-8 right-8 bg-gray-800 hover:bg-gray-700 text-white p-4 rounded-full shadow-lg transition-colors z-40">
+      <i class="fas fa-comments text-xl"></i>
+    </button>
+    <button id="scrollTopBtn" class="fixed bottom-24 right-8 bg-gray-800 hover:bg-gray-700 text-white p-4 rounded-full shadow-lg transition-colors opacity-0 invisible z-40" style="visibility: hidden;">
+      <i class="fas fa-arrow-up text-xl"></i>
+    </button>
+  </footer>
 
   <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/favorites.js"></script>
+  <script>
+    // Mobile menu toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('hidden');
+    });
+
+    // Scroll to top button
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        scrollTopBtn.style.opacity = '1';
+        scrollTopBtn.style.visibility = 'visible';
+      } else {
+        scrollTopBtn.style.opacity = '0';
+        scrollTopBtn.style.visibility = 'hidden';
+      }
+    });
+
+    scrollTopBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  </script>
 </body>
 </html>
