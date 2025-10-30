@@ -1,809 +1,1042 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Danh sách Trường Đại học - Hệ thống Cho Thuê Phòng</title>
-  <link rel="stylesheet" href="/css/main.css">
-  <style>
-    .universities-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 60px 20px;
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .universities-header h1 {
-      font-size: 2.5em;
-      margin: 0;
-      margin-bottom: 10px;
-    }
-
-    .universities-header p {
-      font-size: 1.1em;
-      margin: 0;
-      opacity: 0.95;
-    }
-
-    .universities-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    .filters-section {
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .filters-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .filter-group label {
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #333;
-    }
-
-    .filter-group input,
-    .filter-group select {
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 1em;
-      transition: border-color 0.3s;
-    }
-
-    .filter-group input:focus,
-    .filter-group select:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .filter-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-search,
-    .btn-reset {
-      flex: 1;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .btn-search {
-      background: #667eea;
-      color: white;
-    }
-
-    .btn-search:hover {
-      background: #5568d3;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-reset {
-      background: #f0f0f0;
-      color: #333;
-    }
-
-    .btn-reset:hover {
-      background: #e0e0e0;
-    }
-
-    .universities-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 25px;
-      margin-bottom: 40px;
-    }
-
-    .university-card {
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-
-    .university-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .university-card-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-bottom: 4px solid #ffb86c;
-    }
-
-    .university-card-header h3 {
-      margin: 0;
-      font-size: 1.3em;
-      margin-bottom: 5px;
-    }
-
-    .university-shortname {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.2);
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.85em;
-      font-weight: 600;
-    }
-
-    .university-card-body {
-      padding: 20px;
-    }
-
-    .university-info {
-      margin-bottom: 15px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-    }
-
-    .university-info-icon {
-      color: #667eea;
-      font-size: 1.2em;
-      margin-top: 2px;
-      min-width: 25px;
-    }
-
-    .university-info-content {
-      flex: 1;
-    }
-
-    .university-info-label {
-      font-weight: 600;
-      color: #666;
-      font-size: 0.85em;
-    }
-
-    .university-info-value {
-      color: #333;
-      margin-top: 3px;
-    }
-
-    .university-specialties {
-      margin-bottom: 15px;
-    }
-
-    .specialties-label {
-      font-weight: 600;
-      color: #666;
-      font-size: 0.85em;
-      margin-bottom: 8px;
-    }
-
-    .specialties-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .specialty-tag {
-      background: #f0f0f0;
-      color: #667eea;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.85em;
-      font-weight: 500;
-    }
-
-    .university-card-footer {
-      padding: 15px 20px;
-      border-top: 1px solid #f0f0f0;
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-view,
-    .btn-find-room {
-      flex: 1;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.9em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .btn-view {
-      background: #f0f0f0;
-      color: #333;
-    }
-
-    .btn-view:hover {
-      background: #e0e0e0;
-    }
-
-    .btn-find-room {
-      background: #667eea;
-      color: white;
-    }
-
-    .btn-find-room:hover {
-      background: #5568d3;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #667eea;
-      font-size: 1.1em;
-    }
-
-    .no-results {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
-    }
-
-    .no-results-icon {
-      font-size: 3em;
-      margin-bottom: 20px;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 40px;
-      flex-wrap: wrap;
-    }
-
-    .pagination button {
-      padding: 10px 15px;
-      border: 2px solid #e0e0e0;
-      background: white;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-weight: 600;
-    }
-
-    .pagination button:hover,
-    .pagination button.active {
-      background: #667eea;
-      color: white;
-      border-color: #667eea;
-    }
-
-    .pagination button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 5% auto;
-      padding: 30px;
-      border: none;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: color 0.3s;
-    }
-
-    .close:hover,
-    .close:focus {
-      color: #000;
-    }
-
-    .modal-header {
-      border-bottom: 2px solid #f0f0f0;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      color: #333;
-    }
-
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin: 20px 0;
-    }
-
-    .stat {
-      background: #f5f5f5;
-      padding: 15px;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    .stat-label {
-      font-size: 0.85em;
-      color: #999;
-      margin-bottom: 5px;
-    }
-
-    .stat-value {
-      font-size: 1.5em;
-      font-weight: 700;
-      color: #667eea;
-    }
-
-    @media (max-width: 768px) {
-      .universities-header h1 {
-        font-size: 1.8em;
-      }
-
-      .filters-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .universities-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .filter-buttons {
-        flex-direction: column;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Trường Đại Học - HomeRent</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6B7280',
+                        secondary: '#9CA3AF',
+                        accent: '#4B5563',
+                        light: '#F9FAFB',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+        
+        /* Line clamp for description */
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
+<body class="font-sans text-gray-800">
+    <!-- Radial Gradient Background -->
+    <div class="fixed inset-0 w-full h-full z-0" style="background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #1d2125 100%);"></div>
+    
+    <!-- Content Wrapper -->
+    <div class="relative z-10">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+            <nav class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <a href="/" class="flex items-center space-x-2 group">
+                        <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                        <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                    </a>
+                    
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Trang chủ
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Tìm phòng
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/universities" class="text-gray-900 font-semibold transition-colors duration-300 relative group">
+                            🎓 Trường ĐH
+                            <span class="absolute bottom-0 left-0 w-full h-0.5 bg-gray-800"></span>
+                        </a>
+                        <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Giới thiệu
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Liên hệ
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                    </div>
+                    
+                    <!-- Auth Buttons -->
+                    <div class="hidden md:flex items-center space-x-3" id="navbarGuest">
+                        <a href="/auth/login" class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fas fa-sign-in-alt mr-1"></i>Đăng nhập
+                        </a>
+                        <a href="/auth/register" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">
+                            <i class="fas fa-user-plus mr-1"></i>Đăng ký
+                        </a>
+                    </div>
+                    
+                    <!-- User Menu (Logged in) -->
+                    <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
+                        <!-- Notifications -->
+                        <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Thông báo">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                        </a>
+                        
+                        <!-- Favorites -->
+                        <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Yêu thích">
+                            <i class="fas fa-heart text-xl"></i>
+                            <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                        </a>
+                        
+                        <!-- Post Property -->
+                        <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md" title="Đăng tin">
+                            <i class="fas fa-plus mr-1"></i>Đăng tin
+                        </a>
+                        
+                        <!-- User Dropdown -->
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2">
+                                <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                                <span class="text-gray-700" id="userName">Người dùng</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                                <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-user-circle mr-2"></i>Hồ sơ cá nhân
+                                </a>
+                                <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-home mr-2"></i>Tin của tôi
+                                </a>
+                                <a href="/transaction-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-history mr-2"></i>Lịch sử giao dịch
+                                </a>
+                                <a href="/recharge-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-wallet mr-2"></i>Lịch sử nạp tiền
+                                </a>
+                                <hr class="my-2">
+                                <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu -->
+                <div class="hidden md:hidden mt-4 pb-4 border-t border-gray-100" id="mobileMenu">
+                    <div class="flex flex-col space-y-3 mt-4">
+                        <a href="/" class="text-gray-700 hover:text-gray-900 py-2">Trang chủ</a>
+                        <a href="/properties" class="text-gray-700 hover:text-gray-900 py-2">Tìm phòng</a>
+                        <a href="/universities" class="text-gray-900 font-semibold py-2">🎓 Trường ĐH</a>
+                        <a href="/about" class="text-gray-700 hover:text-gray-900 py-2">Giới thiệu</a>
+                        <a href="/contact" class="text-gray-700 hover:text-gray-900 py-2">Liên hệ</a>
+                        
+                        <!-- Mobile Auth -->
+                        <div id="mobileAuthGuest" class="border-t border-gray-200 pt-3 mt-3 space-y-2">
+                            <a href="/auth/login" class="block px-4 py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-sign-in-alt mr-1"></i>Đăng nhập
+                            </a>
+                            <a href="/auth/register" class="block px-4 py-2 bg-gray-800 text-white rounded-lg text-center">
+                                <i class="fas fa-user-plus mr-1"></i>Đăng ký
+                            </a>
+                        </div>
+                        
+                        <!-- Mobile User Menu -->
+                        <div id="mobileAuthUser" style="display: none;" class="border-t border-gray-200 pt-3 mt-3 space-y-2">
+                            <a href="/notifications" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-bell mr-2"></i>Thông báo
+                            </a>
+                            <a href="/favorites" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-heart mr-2"></i>Yêu thích
+                            </a>
+                            <a href="/property/create" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-plus mr-2"></i>Đăng tin
+                            </a>
+                            <a href="/profile" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-user-circle mr-2"></i>Hồ sơ cá nhân
+                            </a>
+                            <a href="/my-properties" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-home mr-2"></i>Tin của tôi
+                            </a>
+                            <a href="/transaction-history" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-history mr-2"></i>Lịch sử giao dịch
+                            </a>
+                            <a href="/recharge-history" class="flex items-center py-2 text-gray-700 hover:text-gray-900">
+                                <i class="fas fa-wallet mr-2"></i>Lịch sử nạp tiền
+                            </a>
+                            <a href="/logout" onclick="handleLogout(event)" class="flex items-center py-2 text-red-600 hover:text-red-700">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
 
-<body>
-  <!-- Header -->
-  <div id="header-placeholder"></div>
+        <!-- Hero Section -->
+        <section class="py-16 bg-gradient-to-br from-gray-600 to-gray-800 text-white">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fadeInUp">🎓 Trường Đại Học TP.HCM</h1>
+                <p class="text-lg text-gray-300 animate-fadeInUp delay-100">Tìm kiếm trường đại học và phòng trọ gần trường bạn mong muốn</p>
+            </div>
+        </section>
 
-  <!-- Universities Section -->
-  <div class="universities-header">
-    <h1>🎓 Trường Đại Học TP.HCM</h1>
-    <p>Tìm kiếm trường đại học và phòng trọ gần trường bạn mong muốn</p>
-  </div>
+        <!-- Breadcrumb -->
+        <div class="bg-gray-100 py-3 border-b border-gray-200">
+            <div class="container mx-auto px-4">
+                <nav class="flex items-center gap-2 text-sm text-gray-600">
+                    <a href="/" class="hover:text-gray-900">Trang chủ</a>
+                    <span>/</span>
+                    <span class="text-gray-900 font-semibold">Trường Đại Học</span>
+                </nav>
+            </div>
+        </div>
 
-  <div class="universities-container">
-    <!-- Filters Section -->
-    <div class="filters-section">
-      <h2>🔍 Tìm kiếm</h2>
-      <div class="filters-grid">
-        <div class="filter-group">
-          <label for="searchInput">Tên trường hoặc ngành học</label>
-          <input type="text" id="searchInput" placeholder="Nhập tên trường...">
-        </div>
-        <div class="filter-group">
-          <label for="districtFilter">Quận</label>
-          <select id="districtFilter">
-            <option value="">-- Tất cả quận --</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="specialtyFilter">Ngành học</label>
-          <select id="specialtyFilter">
-            <option value="">-- Tất cả ngành --</option>
-          </select>
-        </div>
-      </div>
-      <div class="filter-buttons">
-        <button class="btn-search" onclick="searchUniversities()">🔍 Tìm kiếm</button>
-        <button class="btn-reset" onclick="resetFilters()">↺ Đặt lại</button>
-      </div>
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-12">
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8 animate-fadeInUp">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fas fa-filter text-gray-600"></i>
+                    Tìm Kiếm & Lọc
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Search Input with Autocomplete -->
+                    <div class="relative">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tên trường hoặc ngành học</label>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Nhập tên trường..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-800 transition"
+                            autocomplete="off"
+                        >
+                        <!-- Autocomplete Dropdown -->
+                        <div 
+                            id="autocompleteDropdown" 
+                            class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                        ></div>
+                    </div>
+                    
+                    <!-- District Filter -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Quận</label>
+                        <select 
+                            id="districtFilter"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-800 transition"
+                        >
+                            <option value="">-- Tất cả quận --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Specialty Filter -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Ngành học</label>
+                        <select 
+                            id="specialtyFilter"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-800 transition"
+                        >
+                            <option value="">-- Tất cả ngành --</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button 
+                        onclick="searchUniversities()"
+                        class="flex-1 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition font-semibold"
+                    >
+                        <i class="fas fa-search mr-2"></i>Tìm Kiếm
+                    </button>
+                    <button 
+                        onclick="resetFilters()"
+                        class="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-semibold"
+                    >
+                        <i class="fas fa-redo mr-2"></i>Đặt Lại
+                    </button>
+                </div>
+            </div>
+
+            <!-- Universities Grid -->
+            <div id="universitiesGrid" class="space-y-6 mb-12">
+                <div class="text-center py-12">
+                    <div class="text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+                        <p class="text-lg">Đang tải dữ liệu...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination Info & Buttons -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-12">
+                <div id="paginationInfo" class="text-gray-600 text-sm"></div>
+                <div id="paginationContainer" class="flex justify-center gap-2 flex-wrap"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <!-- Brand -->
+                    <div>
+                        <h3 class="text-white font-bold text-lg mb-4">HomeRent</h3>
+                        <p class="text-sm text-gray-400">Nền tảng cho thuê nhà/phòng trọ hàng đầu tại TP.HCM</p>
+                    </div>
+                    
+                    <!-- Links -->
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">Liên Kết</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="/" class="text-gray-400 hover:text-white transition">Trang chủ</a></li>
+                            <li><a href="/properties" class="text-gray-400 hover:text-white transition">Tìm phòng</a></li>
+                            <li><a href="/about" class="text-gray-400 hover:text-white transition">Giới thiệu</a></li>
+                            <li><a href="/contact" class="text-gray-400 hover:text-white transition">Liên hệ</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Support -->
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">Hỗ Trợ</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="/faq" class="text-gray-400 hover:text-white transition">Câu hỏi thường gặp</a></li>
+                            <li><a href="/guide" class="text-gray-400 hover:text-white transition">Hướng dẫn</a></li>
+                            <li><a href="/terms" class="text-gray-400 hover:text-white transition">Điều khoản</a></li>
+                            <li><a href="/privacy" class="text-gray-400 hover:text-white transition">Bảo mật</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Social -->
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">Theo Dõi</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-instagram text-xl"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-youtube text-xl"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
+                    <p>&copy; 2024 HomeRent. Tất cả quyền được bảo lưu.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <!-- Universities Grid -->
-    <div id="universitiesGrid" class="universities-grid">
-      <div class="loading">⏳ Đang tải dữ liệu...</div>
+    <!-- Modal Detail -->
+    <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div id="modalContent"></div>
+        </div>
     </div>
 
-    <!-- Pagination -->
-    <div id="paginationContainer" class="pagination"></div>
-  </div>
+    <!-- Scripts -->
+    <script>
+        const ITEMS_PER_PAGE = 12;
+        let currentPage = 1;
+        let allUniversities = [];
+        let filteredUniversities = [];
 
-  <!-- University Detail Modal -->
-  <div id="detailModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <div id="modalBody"></div>
-    </div>
-  </div>
+        // Check if user is logged in
+        function checkUserStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('navbarGuest').style.display = 'none';
+                document.getElementById('navbarUser').style.display = 'flex';
+                document.getElementById('mobileAuthGuest').style.display = 'none';
+                document.getElementById('mobileAuthUser').style.display = 'block';
+                
+                // Load user info
+                fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        document.getElementById('userName').textContent = data.data.name;
+                        if (data.data.avatar) {
+                            document.getElementById('userAvatar').src = data.data.avatar;
+                        }
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+                
+                // Load favorites count
+                loadFavoritesCount();
+            }
+        }
 
-  <!-- Footer -->
-  <div id="footer-placeholder"></div>
+        // Load favorites count
+        function loadFavoritesCount() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-  <script>
-    const ITEMS_PER_PAGE = 12;
-    let currentPage = 1;
-    let allUniversities = [];
-    let filteredUniversities = [];
+            fetch('/api/favorites', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const count = Array.isArray(data.data) ? data.data.length : (data.data.length || 0);
+                    document.getElementById('favoriteBadge').textContent = count;
+                }
+            })
+            .catch(err => console.error('Error loading favorites:', err));
+        }
 
-    // Load header and footer
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        // Load header
-        const headerRes = await fetch('/views/partials/header.html');
-        const headerHTML = await headerRes.text();
-        document.getElementById('header-placeholder').innerHTML = headerHTML;
+        // Handle logout
+        function handleLogout(e) {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
 
-        // Load footer
-        const footerRes = await fetch('/views/partials/footer.html');
-        const footerHTML = await footerRes.text();
-        document.getElementById('footer-placeholder').innerHTML = footerHTML;
-
-        // Load universities
-        await loadUniversities();
-        await loadDistricts();
-        await loadSpecialties();
-      } catch (error) {
-        console.error('Lỗi khi tải dữ liệu:', error);
-      }
-    });
-
-    // Load all universities
-    async function loadUniversities() {
-      try {
-        const response = await fetch('/api/universities?limit=1000');
-        const data = await response.json();
-        allUniversities = data.data;
-        filteredUniversities = allUniversities;
-        displayUniversities();
-        updatePagination();
-      } catch (error) {
-        console.error('Lỗi khi tải trường đại học:', error);
-        document.getElementById('universitiesGrid').innerHTML =
-          '<div class="no-results">❌ Có lỗi khi tải dữ liệu. Vui lòng thử lại.</div>';
-      }
-    }
-
-    // Load districts for filter
-    async function loadDistricts() {
-      try {
-        const response = await fetch('/api/universities/districts/list');
-        const data = await response.json();
-        const select = document.getElementById('districtFilter');
-        data.data.forEach(district => {
-          const option = document.createElement('option');
-          option.value = district;
-          option.textContent = district;
-          select.appendChild(option);
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
         });
-      } catch (error) {
-        console.error('Lỗi khi tải quận:', error);
-      }
-    }
 
-    // Load specialties for filter
-    async function loadSpecialties() {
-      try {
-        const response = await fetch('/api/universities/specialties/list');
-        const data = await response.json();
-        const select = document.getElementById('specialtyFilter');
-        data.data.forEach(specialty => {
-          const option = document.createElement('option');
-          option.value = specialty;
-          option.textContent = specialty;
-          select.appendChild(option);
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkUserStatus();
+            await loadUniversities();
+            await loadDistricts();
+            await loadSpecialties();
         });
-      } catch (error) {
-        console.error('Lỗi khi tải ngành học:', error);
-      }
-    }
 
-    // Search universities
-    function searchUniversities() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const district = document.getElementById('districtFilter').value;
-      const specialty = document.getElementById('specialtyFilter').value;
-
-      filteredUniversities = allUniversities.filter(uni => {
-        const matchSearch = !search ||
-          uni.name.toLowerCase().includes(search) ||
-          uni.description.toLowerCase().includes(search) ||
-          uni.specialties.some(s => s.toLowerCase().includes(search));
-
-        const matchDistrict = !district || uni.district === district;
-
-        const matchSpecialty = !specialty || uni.specialties.includes(specialty);
-
-        return matchSearch && matchDistrict && matchSpecialty;
-      });
-
-      currentPage = 1;
-      displayUniversities();
-      updatePagination();
-    }
-
-    // Reset filters
-    function resetFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('districtFilter').value = '';
-      document.getElementById('specialtyFilter').value = '';
-      filteredUniversities = allUniversities;
-      currentPage = 1;
-      displayUniversities();
-      updatePagination();
-    }
-
-    // Display universities
-    function displayUniversities() {
-      const grid = document.getElementById('universitiesGrid');
-
-      if (filteredUniversities.length === 0) {
-        grid.innerHTML = '<div class="no-results" style="grid-column: 1/-1;"><div class="no-results-icon">📭</div><h3>Không tìm thấy trường nào</h3><p>Vui lòng thay đổi bộ lọc tìm kiếm</p></div>';
-        return;
-      }
-
-      const start = (currentPage - 1) * ITEMS_PER_PAGE;
-      const end = start + ITEMS_PER_PAGE;
-      const paginated = filteredUniversities.slice(start, end);
-
-      grid.innerHTML = paginated.map(uni => `
-        <div class="university-card">
-          <div class="university-card-header">
-            <h3>${uni.name}</h3>
-            <span class="university-shortname">${uni.shortName}</span>
-          </div>
-          <div class="university-card-body">
-            <div class="university-info">
-              <span class="university-info-icon">📍</span>
-              <div class="university-info-content">
-                <div class="university-info-label">Địa chỉ</div>
-                <div class="university-info-value">${uni.address}</div>
-              </div>
-            </div>
-            <div class="university-info">
-              <span class="university-info-icon">📞</span>
-              <div class="university-info-content">
-                <div class="university-info-label">Điện thoại</div>
-                <div class="university-info-value"><a href="tel:${uni.phone}" style="color: #667eea; text-decoration: none;">${uni.phone}</a></div>
-              </div>
-            </div>
-            ${uni.email ? `
-            <div class="university-info">
-              <span class="university-info-icon">✉️</span>
-              <div class="university-info-content">
-                <div class="university-info-label">Email</div>
-                <div class="university-info-value"><a href="mailto:${uni.email}" style="color: #667eea; text-decoration: none;">${uni.email}</a></div>
-              </div>
-            </div>
-            ` : ''}
-            ${uni.specialties && uni.specialties.length > 0 ? `
-            <div class="university-specialties">
-              <div class="specialties-label">🎯 Ngành học</div>
-              <div class="specialties-list">
-                ${uni.specialties.slice(0, 3).map(spec => `<span class="specialty-tag">${spec}</span>`).join('')}
-                ${uni.specialties.length > 3 ? `<span class="specialty-tag">+${uni.specialties.length - 3}</span>` : ''}
-              </div>
-            </div>
-            ` : ''}
-          </div>
-          <div class="university-card-footer">
-            <button class="btn-view" onclick="showDetail('${uni._id}')">📋 Chi tiết</button>
-            <button class="btn-find-room" onclick="findNearbyRooms('${uni._id}')">🏠 Tìm phòng</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Show university detail
-    async function showDetail(universityId) {
-      try {
-        const response = await fetch(`/api/universities/${universityId}`);
-        const data = await response.json();
-        const uni = data.data;
-
-        const modal = document.getElementById('detailModal');
-        const modalBody = document.getElementById('modalBody');
-
-        let statsHtml = '';
-        if (uni.foundedYear || uni.studentCount || uni.facultyCount) {
-          statsHtml = `
-            <div class="stats-row">
-              ${uni.foundedYear ? `<div class="stat"><div class="stat-label">Năm thành lập</div><div class="stat-value">${uni.foundedYear}</div></div>` : ''}
-              ${uni.studentCount ? `<div class="stat"><div class="stat-label">Số sinh viên</div><div class="stat-value">${uni.studentCount.toLocaleString()}</div></div>` : ''}
-              ${uni.facultyCount ? `<div class="stat"><div class="stat-label">Số khoa</div><div class="stat-value">${uni.facultyCount}</div></div>` : ''}
-            </div>
-          `;
+        // Load all universities
+        async function loadUniversities() {
+            try {
+                const response = await fetch('/api/universities?limit=1000');
+                const data = await response.json();
+                allUniversities = data.data;
+                filteredUniversities = allUniversities;
+                displayUniversities();
+                updatePagination();
+                setupAutocomplete();
+            } catch (error) {
+                console.error('Lỗi:', error);
+                document.getElementById('universitiesGrid').innerHTML = 
+                    '<div class="col-span-full text-center py-12 text-red-500"><i class="fas fa-exclamation-circle text-3xl mb-4"></i><p>Có lỗi khi tải dữ liệu</p></div>';
+            }
         }
 
-        modalBody.innerHTML = `
-          <div class="modal-header">
-            <h2>${uni.name}</h2>
-            <span class="university-shortname">${uni.shortName}</span>
-          </div>
-          
-          ${uni.description ? `<p style="color: #666; font-size: 1em; line-height: 1.6;">${uni.description}</p>` : ''}
+        // Setup autocomplete
+        function setupAutocomplete() {
+            const searchInput = document.getElementById('searchInput');
+            const autocompleteDropdown = document.getElementById('autocompleteDropdown');
 
-          ${statsHtml}
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
 
-          <div class="university-info" style="margin-bottom: 15px;">
-            <span class="university-info-icon">📍</span>
-            <div class="university-info-content">
-              <div class="university-info-label">Địa chỉ</div>
-              <div class="university-info-value">${uni.address}, ${uni.district}</div>
-            </div>
-          </div>
+                if (query.length === 0) {
+                    autocompleteDropdown.classList.add('hidden');
+                    return;
+                }
 
-          <div class="university-info" style="margin-bottom: 15px;">
-            <span class="university-info-icon">📞</span>
-            <div class="university-info-content">
-              <div class="university-info-label">Điện thoại</div>
-              <div class="university-info-value"><a href="tel:${uni.phone}" style="color: #667eea; text-decoration: none;">${uni.phone}</a></div>
-            </div>
-          </div>
+                // Collect all suggestions (university names and specialties)
+                const suggestions = new Set();
+                
+                allUniversities.forEach(uni => {
+                    if (uni.name.toLowerCase().includes(query)) {
+                        suggestions.add(uni.name);
+                    }
+                    uni.specialties.forEach(specialty => {
+                        if (specialty.toLowerCase().includes(query)) {
+                            suggestions.add(specialty);
+                        }
+                    });
+                });
 
-          ${uni.email ? `
-          <div class="university-info" style="margin-bottom: 15px;">
-            <span class="university-info-icon">✉️</span>
-            <div class="university-info-content">
-              <div class="university-info-label">Email</div>
-              <div class="university-info-value"><a href="mailto:${uni.email}" style="color: #667eea; text-decoration: none;">${uni.email}</a></div>
-            </div>
-          </div>
-          ` : ''}
+                if (suggestions.size === 0) {
+                    autocompleteDropdown.classList.add('hidden');
+                    return;
+                }
 
-          ${uni.website ? `
-          <div class="university-info" style="margin-bottom: 15px;">
-            <span class="university-info-icon">🌐</span>
-            <div class="university-info-content">
-              <div class="university-info-label">Website</div>
-              <div class="university-info-value"><a href="${uni.website}" target="_blank" style="color: #667eea; text-decoration: none;">${uni.website}</a></div>
-            </div>
-          </div>
-          ` : ''}
+                // Display suggestions
+                const suggestionsArray = Array.from(suggestions).sort().slice(0, 8);
+                autocompleteDropdown.innerHTML = suggestionsArray.map(suggestion => `
+                    <div class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0 transition"
+                         onclick="selectSuggestion('${suggestion}')">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-search text-gray-400 text-sm"></i>
+                            <span class="text-gray-700">${suggestion}</span>
+                        </div>
+                    </div>
+                `).join('');
 
-          ${uni.specialties && uni.specialties.length > 0 ? `
-          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-            <div class="specialties-label">🎯 Các ngành học</div>
-            <div class="specialties-list" style="margin-top: 10px;">
-              ${uni.specialties.map(spec => `<span class="specialty-tag">${spec}</span>`).join('')}
-            </div>
-          </div>
-          ` : ''}
+                autocompleteDropdown.classList.remove('hidden');
+            });
 
-          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-            <button class="btn-find-room" onclick="findNearbyRooms('${uni._id}'); closeModal();" style="width: 100%; padding: 15px; font-size: 1em;">🏠 Tìm phòng trọ gần trường</button>
-          </div>
-        `;
-
-        modal.style.display = 'block';
-      } catch (error) {
-        console.error('Lỗi khi tải chi tiết:', error);
-        alert('Không thể tải thông tin chi tiết');
-      }
-    }
-
-    // Find nearby rooms
-    function findNearbyRooms(universityId) {
-      // Lưu ID trường vào sessionStorage để trang properties dùng
-      sessionStorage.setItem('nearUniversityId', universityId);
-      window.location.href = '/properties?university=' + universityId;
-    }
-
-    // Close modal
-    function closeModal() {
-      document.getElementById('detailModal').style.display = 'none';
-    }
-
-    // Update pagination
-    function updatePagination() {
-      const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
-      const paginationContainer = document.getElementById('paginationContainer');
-
-      if (totalPages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-      }
-
-      let paginationHTML = '';
-
-      // Previous button
-      paginationHTML += `
-        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-          ← Trước
-        </button>
-      `;
-
-      // Page numbers
-      const maxPagesToShow = 5;
-      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-      let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-      if (endPage - startPage < maxPagesToShow - 1) {
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-      }
-
-      if (startPage > 1) {
-        paginationHTML += `<button onclick="goToPage(1)">1</button>`;
-        if (startPage > 2) {
-          paginationHTML += `<button disabled>...</button>`;
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('#searchInput') && !event.target.closest('#autocompleteDropdown')) {
+                    autocompleteDropdown.classList.add('hidden');
+                }
+            });
         }
-      }
 
-      for (let i = startPage; i <= endPage; i++) {
-        paginationHTML += `
-          <button onclick="goToPage(${i})" ${i === currentPage ? 'class="active"' : ''}>
-            ${i}
-          </button>
-        `;
-      }
-
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          paginationHTML += `<button disabled>...</button>`;
+        // Select suggestion
+        function selectSuggestion(suggestion) {
+            document.getElementById('searchInput').value = suggestion;
+            document.getElementById('autocompleteDropdown').classList.add('hidden');
+            searchUniversities();
         }
-        paginationHTML += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
-      }
 
-      // Next button
-      paginationHTML += `
-        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-          Tiếp →
-        </button>
-      `;
+        // Load districts
+        async function loadDistricts() {
+            try {
+                const response = await fetch('/api/universities/districts/list');
+                const data = await response.json();
+                const select = document.getElementById('districtFilter');
+                data.data.forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Lỗi khi tải quận:', error);
+            }
+        }
 
-      paginationContainer.innerHTML = paginationHTML;
-    }
+        // Load specialties
+        async function loadSpecialties() {
+            try {
+                const response = await fetch('/api/universities/specialties/list');
+                const data = await response.json();
+                const select = document.getElementById('specialtyFilter');
+                data.data.forEach(specialty => {
+                    const option = document.createElement('option');
+                    option.value = specialty;
+                    option.textContent = specialty;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Lỗi khi tải ngành:', error);
+            }
+        }
 
-    // Go to page
-    function goToPage(page) {
-      const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
-      if (page >= 1 && page <= totalPages) {
-        currentPage = page;
-        displayUniversities();
-        updatePagination();
-        window.scrollTo(0, 0);
-      }
-    }
+        // Search universities
+        function searchUniversities() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const district = document.getElementById('districtFilter').value;
+            const specialty = document.getElementById('specialtyFilter').value;
 
-    // Close modal when clicking outside
-    window.onclick = function (event) {
-      const modal = document.getElementById('detailModal');
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
-    }
-  </script>
+            filteredUniversities = allUniversities.filter(uni => {
+                const matchSearch = !search ||
+                    uni.name.toLowerCase().includes(search) ||
+                    uni.description.toLowerCase().includes(search) ||
+                    uni.specialties.some(s => s.toLowerCase().includes(search));
+
+                const matchDistrict = !district || uni.district === district;
+                const matchSpecialty = !specialty || uni.specialties.includes(specialty);
+
+                return matchSearch && matchDistrict && matchSpecialty;
+            });
+
+            currentPage = 1;
+            displayUniversities();
+            updatePagination();
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('districtFilter').value = '';
+            document.getElementById('specialtyFilter').value = '';
+            filteredUniversities = allUniversities;
+            currentPage = 1;
+            displayUniversities();
+            updatePagination();
+        }
+
+        // Display universities
+        function displayUniversities() {
+            const grid = document.getElementById('universitiesGrid');
+
+            if (filteredUniversities.length === 0) {
+                grid.innerHTML = '<div class="text-center py-12"><div class="text-gray-500"><i class="fas fa-inbox text-4xl mb-4"></i><p class="text-lg font-semibold">Không tìm thấy trường nào</p><p class="text-sm">Vui lòng thay đổi bộ lọc tìm kiếm</p></div></div>';
+                return;
+            }
+
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const paginated = filteredUniversities.slice(start, end);
+
+            grid.innerHTML = paginated.map(uni => `
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden animate-fadeIn">
+                    <div class="p-6">
+                        <!-- Header with Ranking -->
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gray-800 text-white rounded-lg flex items-center justify-center font-bold text-lg">
+                                    #${uni.ranking || '?'}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-bold text-xl text-gray-900 mb-2">${uni.name}</h3>
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    <span class="inline-block ${uni.type === 'Công lập' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs px-3 py-1 rounded-full font-semibold">${uni.type}</span>
+                                    <span class="inline-block bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">${uni.shortName}</span>
+                                    <span class="inline-block bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full"><i class="fas fa-map-marker-alt mr-1"></i>${uni.district}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-4">${uni.description || 'Chưa có mô tả'}</p>
+                        
+                        <!-- Info -->
+                        <div class="space-y-2 mb-4 text-sm">
+                            <p class="text-gray-600 flex items-start gap-2">
+                                <i class="fas fa-map-marker-alt text-gray-800 mt-1"></i>
+                                <span>${uni.address}</span>
+                            </p>
+                            <p class="text-gray-600 flex items-center gap-2">
+                                <i class="fas fa-phone text-gray-800"></i>
+                                <a href="tel:${uni.phone}" class="text-gray-800 hover:underline">${uni.phone}</a>
+                            </p>
+                        </div>
+                        
+                        <!-- Specialties -->
+                        ${uni.specialties && uni.specialties.length > 0 ? `
+                        <div class="mb-4">
+                            <p class="text-xs font-semibold text-gray-700 mb-2">🎯 Ngành học nổi bật:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${uni.specialties.slice(0, 4).map(spec => `
+                                    <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">${spec}</span>
+                                `).join('')}
+                                ${uni.specialties.length > 4 ? `<span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">+${uni.specialties.length - 4} ngành</span>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="bg-gray-50 px-6 py-4 flex gap-2 border-t border-gray-200">
+                        <button 
+                            onclick="showDetail('${uni._id}')"
+                            class="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-sm font-semibold"
+                        >
+                            <i class="fas fa-info-circle mr-1"></i>Chi tiết
+                        </button>
+                        <button 
+                            onclick="findNearbyRooms('${uni._id}')"
+                            class="flex-1 px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-semibold"
+                        >
+                            <i class="fas fa-home mr-1"></i>Tìm phòng
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update pagination info
+            updatePaginationInfo();
+        }
+
+        // Update pagination info
+        function updatePaginationInfo() {
+            const info = document.getElementById('paginationInfo');
+            const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+            const end = Math.min(currentPage * ITEMS_PER_PAGE, filteredUniversities.length);
+            info.textContent = `Hiển thị ${start}-${end} trong tổng số ${filteredUniversities.length} trường`;
+        }
+
+        // Show detail
+        async function showDetail(universityId) {
+            try {
+                const response = await fetch(`/api/universities/${universityId}`);
+                const data = await response.json();
+                const uni = data.data;
+
+                const modalContent = document.getElementById('modalContent');
+                
+                let statsHtml = '';
+                if (uni.foundedYear || uni.studentCount || uni.facultyCount) {
+                    statsHtml = `
+                        <div class="grid grid-cols-3 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                            ${uni.foundedYear ? `<div class="text-center"><p class="text-gray-500 text-sm">Năm thành lập</p><p class="text-xl font-bold text-gray-800">${uni.foundedYear}</p></div>` : ''}
+                            ${uni.studentCount ? `<div class="text-center"><p class="text-gray-500 text-sm">Sinh viên</p><p class="text-xl font-bold text-gray-800">${uni.studentCount.toLocaleString()}</p></div>` : ''}
+                            ${uni.facultyCount ? `<div class="text-center"><p class="text-gray-500 text-sm">Số khoa</p><p class="text-xl font-bold text-gray-800">${uni.facultyCount}</p></div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Programs section
+                let programsHtml = '';
+                if (uni.programs && uni.programs.length > 0) {
+                    programsHtml = `
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-graduation-cap text-gray-600"></i>
+                                Chương trình đào tạo & Học phí 2025
+                            </h3>
+                            <div class="space-y-4">
+                                ${uni.programs.map(prog => `
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <h4 class="font-semibold text-gray-900 mb-2">${prog.name}</h4>
+                                        <p class="text-sm text-blue-800 font-semibold mb-2">💰 ${prog.tuition}</p>
+                                        ${prog.description ? `<p class="text-xs text-gray-600 mb-2 italic">${prog.description}</p>` : ''}
+                                        <div class="mt-2">
+                                            <p class="text-xs font-semibold text-gray-700 mb-1">Các ngành:</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                ${prog.majors.slice(0, 5).map(major => `
+                                                    <span class="text-xs bg-white text-gray-700 px-2 py-1 rounded">${major}</span>
+                                                `).join('')}
+                                                ${prog.majors.length > 5 ? `<span class="text-xs bg-white text-gray-700 px-2 py-1 rounded">+${prog.majors.length - 5} ngành</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Admission Scores section
+                let scoresHtml = '';
+                if (uni.admissionScores && uni.admissionScores.length > 0) {
+                    scoresHtml = `
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-chart-line text-gray-600"></i>
+                                Điểm chuẩn năm ${uni.admissionScores[0].year}
+                            </h3>
+                            <div class="max-h-64 overflow-y-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-100 sticky top-0">
+                                        <tr>
+                                            <th class="text-left p-2 font-semibold text-gray-700">Ngành</th>
+                                            <th class="text-right p-2 font-semibold text-gray-700">Điểm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${uni.admissionScores.map((score, idx) => `
+                                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                                                <td class="p-2 text-gray-800">${score.major}</td>
+                                                <td class="p-2 text-right font-semibold text-blue-600">${score.score}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 italic">* Điểm chuẩn đã bao gồm điểm ưu tiên (nếu có)</p>
+                        </div>
+                    `;
+                }
+
+                // Admission Info section
+                let admissionHtml = '';
+                if (uni.admissionInfo && uni.admissionInfo.methods) {
+                    admissionHtml = `
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-file-alt text-gray-600"></i>
+                                Thông tin tuyển sinh 2025
+                            </h3>
+                            ${uni.admissionInfo.description ? `<p class="text-sm text-gray-600 mb-3">${uni.admissionInfo.description}</p>` : ''}
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800 mb-2">📋 Phương thức xét tuyển:</p>
+                                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                                        ${uni.admissionInfo.methods.map(method => `<li>${method}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                
+                                ${uni.admissionInfo.examSubjects && uni.admissionInfo.examSubjects.length > 0 ? `
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800 mb-2">📝 Tổ hợp môn xét tuyển:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${uni.admissionInfo.examSubjects.slice(0, 6).map(subject => `
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">${subject}</span>
+                                        `).join('')}
+                                        ${uni.admissionInfo.examSubjects.length > 6 ? `<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">+${uni.admissionInfo.examSubjects.length - 6} tổ hợp</span>` : ''}
+                                    </div>
+                                </div>
+                                ` : ''}
+                                
+                                ${uni.admissionInfo.priority ? `
+                                <div class="bg-yellow-50 p-3 rounded">
+                                    <p class="text-sm"><span class="font-semibold text-gray-800">⭐ Thứ tự ưu tiên:</span> <span class="text-gray-700">${uni.admissionInfo.priority}</span></p>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Changes 2025 section
+                let changesHtml = '';
+                if (uni.changes2025) {
+                    changesHtml = `
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                Thay đổi năm 2025
+                            </h3>
+                            <p class="text-sm text-gray-700 leading-relaxed">${uni.changes2025}</p>
+                        </div>
+                    `;
+                }
+
+                modalContent.innerHTML = `
+                    <div class="p-6 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-1">${uni.name}</h2>
+                                <div class="flex gap-2">
+                                    <span class="inline-block ${uni.type === 'Công lập' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs px-3 py-1 rounded-full font-semibold">${uni.type}</span>
+                                    <span class="inline-block bg-gray-200 text-gray-800 text-xs px-3 py-1 rounded-full font-semibold">${uni.shortName}</span>
+                                    ${uni.ranking ? `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full font-semibold">#${uni.ranking}</span>` : ''}
+                                </div>
+                            </div>
+                            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        ${uni.description ? `<p class="text-gray-600 mb-4 text-sm leading-relaxed">${uni.description}</p>` : ''}
+                        
+                        ${statsHtml}
+                        
+                        <div class="space-y-3 mt-6">
+                            <div class="flex gap-3">
+                                <i class="fas fa-map-marker-alt text-gray-800 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-gray-600">Địa chỉ</p>
+                                    <p class="font-semibold text-gray-900">${uni.address}, ${uni.district}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <i class="fas fa-phone text-gray-800 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-gray-600">Điện thoại</p>
+                                    <a href="tel:${uni.phone}" class="font-semibold text-gray-900 hover:text-gray-700">${uni.phone}</a>
+                                </div>
+                            </div>
+                            
+                            ${uni.email ? `
+                            <div class="flex gap-3">
+                                <i class="fas fa-envelope text-gray-800 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-gray-600">Email</p>
+                                    <a href="mailto:${uni.email}" class="font-semibold text-gray-900 hover:text-gray-700">${uni.email}</a>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${uni.website ? `
+                            <div class="flex gap-3">
+                                <i class="fas fa-globe text-gray-800 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-gray-600">Website</p>
+                                    <a href="${uni.website}" target="_blank" class="font-semibold text-blue-600 hover:text-blue-700">${uni.website}</a>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${uni.specialties && uni.specialties.length > 0 ? `
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <p class="font-semibold text-gray-900 mb-3">🎯 Ngành Học Nổi Bật</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${uni.specialties.map(spec => `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm">${spec}</span>`).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${programsHtml}
+                        ${scoresHtml}
+                        ${admissionHtml}
+                        ${changesHtml}
+                        
+                        <div class="mt-6 pt-6 border-t border-gray-200 flex gap-3">
+                            <button 
+                                onclick="closeModal()"
+                                class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition font-semibold"
+                            >
+                                Đóng
+                            </button>
+                            <button 
+                                onclick="findNearbyRooms('${uni._id}'); closeModal();"
+                                class="flex-1 px-4 py-3 bg-gray-800 text-white rounded hover:bg-gray-700 transition font-semibold"
+                            >
+                                <i class="fas fa-home mr-1"></i>Tìm Phòng Gần Trường
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('detailModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Lỗi:', error);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Find nearby rooms
+        function findNearbyRooms(universityId) {
+            sessionStorage.setItem('nearUniversityId', universityId);
+            window.location.href = '/properties?university=' + universityId;
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
+            const container = document.getElementById('paginationContainer');
+
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous
+            html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">← Trước</button>`;
+
+            // Numbers
+            const maxPages = 5;
+            let start = Math.max(1, currentPage - Math.floor(maxPages / 2));
+            let end = Math.min(totalPages, start + maxPages - 1);
+            if (end - start < maxPages - 1) start = Math.max(1, end - maxPages + 1);
+
+            if (start > 1) {
+                html += `<button onclick="goToPage(1)" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition">1</button>`;
+                if (start > 2) html += `<span class="px-3 py-2">...</span>`;
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `<button onclick="goToPage(${i})" class="px-4 py-2 border ${i === currentPage ? 'bg-gray-800 text-white border-gray-800' : 'border-gray-300 hover:bg-gray-100'} rounded transition">${i}</button>`;
+            }
+
+            if (end < totalPages) {
+                if (end < totalPages - 1) html += `<span class="px-3 py-2">...</span>`;
+                html += `<button onclick="goToPage(${totalPages})" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition">${totalPages}</button>`;
+            }
+
+            // Next
+            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Tiếp →</button>`;
+
+            container.innerHTML = html;
+        }
+
+        // Go to page
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                displayUniversities();
+                updatePagination();
+                window.scrollTo(0, 300);
+            }
+        }
+
+        // Close modal on background click
+        document.getElementById('detailModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
 </body>
-
 </html>

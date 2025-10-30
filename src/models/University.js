@@ -21,6 +21,11 @@ const universitySchema = new mongoose.Schema(
       unique: true,
       uppercase: true
     },
+    type: {
+      type: String,
+      enum: ['Công lập', 'Tư thục', 'Dân lập'],
+      default: 'Công lập'
+    },
     description: {
       type: String,
       default: ''
@@ -100,6 +105,38 @@ const universitySchema = new mongoose.Schema(
       default: []
     },
     imageUrl: {
+      type: String,
+      default: ''
+    },
+    programs: {
+      type: [
+        {
+          name: String,
+          tuition: String,
+          majors: [String],
+          description: String
+        }
+      ],
+      default: []
+    },
+    admissionInfo: {
+      methods: [String],
+      requirements: [String],
+      examSubjects: [String],
+      priority: String,
+      description: String
+    },
+    admissionScores: {
+      type: [
+        {
+          major: String,
+          score: String,
+          year: Number
+        }
+      ],
+      default: []
+    },
+    changes2025: {
       type: String,
       default: ''
     },
