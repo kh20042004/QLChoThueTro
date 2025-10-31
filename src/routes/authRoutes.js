@@ -22,7 +22,9 @@ const {
   uploadAvatar,
   deleteAccount,
   googleCallback,
-  googleFailure
+  googleFailure,
+  sendPhoneOTP,
+  verifyPhoneOTP
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -36,6 +38,7 @@ router.get(
   '/google',
   passport.authenticate('google', { 
     scope: ['profile', 'email'],
+    prompt: 'select_account', // Luôn hiện giao diện chọn tài khoản Gmail
     session: false
   })
 );
@@ -65,5 +68,9 @@ router.post('/change-password', protect, changePassword);
 router.put('/preferences', protect, updatePreferences);
 router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.delete('/delete-account', protect, deleteAccount);
+
+// Phone verification routes
+router.post('/phone/send-otp', protect, sendPhoneOTP);
+router.post('/phone/verify-otp', protect, verifyPhoneOTP);
 
 module.exports = router;

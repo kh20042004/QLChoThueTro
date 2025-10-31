@@ -37,6 +37,17 @@ const UserSchema = new mongoose.Schema({
     type: String,
     match: [/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ']
   },
+  dob: {
+    type: Date
+  },
+  bio: {
+    type: String,
+    maxlength: [500, 'Giới thiệu không được quá 500 ký tự']
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other']
+  },
   avatar: {
     type: String,
     default: '/images/default-avatar.png'
@@ -59,6 +70,12 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  phoneVerificationCode: String,
+  phoneVerificationExpires: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   favorites: [{

@@ -68,6 +68,28 @@ class FavoritesPageLoader {
         : '/images/property-default.jpg';
 
       const price = new Intl.NumberFormat('vi-VN').format(property.price);
+      
+      // Xử lý địa chỉ - kiểm tra xem là string hay object
+      let addressText = '';
+      if (typeof property.address === 'string') {
+        addressText = property.address;
+      } else if (property.address && typeof property.address === 'object') {
+        // Nếu có full address thì dùng
+        if (property.address.full) {
+          addressText = property.address.full;
+        } else {
+          // Ghép từ các phần
+          const parts = [
+            property.address.street,
+            property.address.ward,
+            property.address.district,
+            property.address.city
+          ].filter(part => part); // Lọc bỏ các phần undefined/null
+          addressText = parts.join(', ');
+        }
+      } else {
+        addressText = 'Chưa có địa chỉ';
+      }
 
       item.innerHTML = `
         <div class="relative overflow-hidden bg-gray-200 h-48">
@@ -85,7 +107,7 @@ class FavoritesPageLoader {
             </div>
           </div>
           <p class="text-sm text-gray-600 mb-4">
-            <i class="fas fa-map-marker-alt mr-1 text-red-500"></i>${property.address}
+            <i class="fas fa-map-marker-alt mr-1 text-red-500"></i>${addressText}
           </p>
           <div class="flex gap-2">
             <a href="/properties/${property._id}" class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors duration-200 text-center">

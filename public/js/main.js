@@ -11,6 +11,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🏠 HomeRent System Loaded');
     
+    // Xử lý Google OAuth callback
+    handleGoogleAuthCallback();
+    
     // Gọi các hàm khởi tạo
     initScrollToTop();
     initCounterAnimation();
@@ -26,6 +29,43 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFeaturedProperties(); // Load dữ liệu phòng nổi bật
     // JS trang Liên hệ đã tách riêng trong /js/contact.js
 });
+
+// ===================================
+// 1.5. XỬ LÝ GOOGLE OAUTH CALLBACK
+// ===================================
+function handleGoogleAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authStatus = urlParams.get('auth');
+    const token = urlParams.get('token');
+    const userEncoded = urlParams.get('user');
+    
+    if (authStatus === 'success' && token && userEncoded) {
+        try {
+            // Decode user data từ base64 với UTF-8 encoding
+            const userDataJson = decodeURIComponent(escape(atob(userEncoded)));
+            const userData = JSON.parse(userDataJson);
+            
+            // Lưu token và user data vào localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            console.log('✅ Google login successful:', userData);
+            
+            // Xóa URL params và reload để cập nhật navbar
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Cập nhật navbar ngay lập tức
+            if (window.HomeRent && window.HomeRent.updateNavbarAfterLogin) {
+                window.HomeRent.updateNavbarAfterLogin(userData);
+            } else {
+                // Reload trang để cập nhật navbar
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('❌ Error processing Google auth callback:', error);
+        }
+    }
+}
 
 // ===================================
 // 2. SCROLL TO TOP - Nút cuộn lên đầu

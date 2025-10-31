@@ -221,7 +221,7 @@ exports.logout = async (req, res, next) => {
  */
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, dob, bio, gender } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -234,6 +234,9 @@ exports.updateProfile = async (req, res, next) => {
     // Cập nhật các trường
     if (name) user.name = name;
     if (phone) user.phone = phone;
+    if (dob !== undefined) user.dob = dob;
+    if (bio !== undefined) user.bio = bio;
+    if (gender !== undefined) user.gender = gender;
 
     await user.save();
 
@@ -244,7 +247,10 @@ exports.updateProfile = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        dob: user.dob,
+        bio: user.bio,
+        gender: user.gender
       }
     });
   } catch (error) {
@@ -483,10 +489,22 @@ exports.googleCallback = async (req, res, next) => {
       options.secure = true;
     }
 
-    // Set cookie và chuyển hướng về trang chủ
+    // Tạo URL với token và user data để client-side có thể lưu vào localStorage
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
+    };
+
+    // Encode user data to base64 với UTF-8 encoding
+    const userDataEncoded = Buffer.from(JSON.stringify(userData), 'utf-8').toString('base64');
+
+    // Set cookie và chuyển hướng về trang chủ với token và user data
     res
       .cookie('token', token, options)
-      .redirect('/');
+      .redirect(`/?auth=success&token=${token}&user=${encodeURIComponent(userDataEncoded)}`);
   } catch (error) {
     console.error('Google callback error:', error);
     res.redirect('/auth/login?error=google_auth_error');
@@ -501,4 +519,149 @@ exports.googleCallback = async (req, res, next) => {
 exports.googleFailure = (req, res) => {
   console.error('Google auth failure:', req.authInfo);
   res.redirect('/auth/login?error=google_auth_failed');
+};
+
+/**
+ * @desc    Gửi OTP xác thực số điện thoại
+ * @route   POST /api/auth/phone/send-otp
+ * @access  Private
+ */
+exports.sendPhoneOTP = async (req, res, next) => {
+  try {
+    const { phone } = req.body;
+    const otpService = require('../services/otpService');
+
+    // Validate phone number
+    if (!phone || !/^[0-9]{10,11}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Số điện thoại không hợp lệ'
+      });
+    }
+
+    // Lấy user hiện tại
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Người dùng không tồn tại'
+      });
+    }
+
+    // Kiểm tra số điện thoại có khớp với số trong profile không
+    if (user.phone !== phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Số điện thoại không khớp với tài khoản của bạn'
+      });
+    }
+
+    // Nếu đã xác thực rồi
+    if (user.phoneVerified) {
+      return res.status(400).json({
+        success: false,
+        error: 'Số điện thoại đã được xác thực'
+      });
+    }
+
+    // Tạo OTP mới
+    const otp = otpService.generateOTP();
+    const hashedOTP = otpService.hashOTP(otp);
+    const expiryTime = otpService.getOTPExpiry();
+
+    // Lưu OTP vào database
+    user.phoneVerificationCode = hashedOTP;
+    user.phoneVerificationExpires = expiryTime;
+    await user.save();
+
+    // Gửi OTP (mô phỏng - log ra console)
+    const result = await otpService.sendOTP(phone, otp);
+
+    res.status(200).json({
+      success: true,
+      message: 'Mã OTP đã được gửi đến số điện thoại của bạn',
+      // Chỉ trả về OTP trong development mode để test
+      ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    next(error);
+  }
+};
+
+/**
+ * @desc    Xác thực OTP số điện thoại
+ * @route   POST /api/auth/phone/verify-otp
+ * @access  Private
+ */
+exports.verifyPhoneOTP = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    const otpService = require('../services/otpService');
+
+    // Validate OTP
+    if (!otp || !/^[0-9]{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Mã OTP không hợp lệ'
+      });
+    }
+
+    // Lấy user hiện tại
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Người dùng không tồn tại'
+      });
+    }
+
+    // Kiểm tra có OTP trong hệ thống không
+    if (!user.phoneVerificationCode || !user.phoneVerificationExpires) {
+      return res.status(400).json({
+        success: false,
+        error: 'Không tìm thấy mã OTP. Vui lòng yêu cầu gửi lại OTP'
+      });
+    }
+
+    // Kiểm tra OTP có hết hạn không
+    if (!otpService.isOTPValid(user.phoneVerificationExpires)) {
+      // Xóa OTP đã hết hạn
+      user.phoneVerificationCode = undefined;
+      user.phoneVerificationExpires = undefined;
+      await user.save();
+
+      return res.status(400).json({
+        success: false,
+        error: 'Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại OTP'
+      });
+    }
+
+    // Xác thực OTP
+    const isValid = otpService.verifyOTP(otp, user.phoneVerificationCode);
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Mã OTP không đúng'
+      });
+    }
+
+    // OTP đúng - cập nhật trạng thái xác thực
+    user.phoneVerified = true;
+    user.phoneVerificationCode = undefined;
+    user.phoneVerificationExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Xác thực số điện thoại thành công',
+      data: {
+        phoneVerified: true,
+        phone: user.phone
+      }
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    next(error);
+  }
 };

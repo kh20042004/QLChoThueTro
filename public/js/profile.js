@@ -21,17 +21,43 @@ document.addEventListener('DOMContentLoaded', function() {
 /**
  * Khởi tạo trang hồ sơ
  */
-function initProfilePage() {
+async function initProfilePage() {
     // Kiểm tra đăng nhập
+    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('userData');
-    if (!userData) {
+    
+    if (!token || !userData) {
         window.location.href = '/auth/login';
         return;
     }
 
     try {
-        const user = JSON.parse(userData);
-        loadUserData(user);
+        // Load dữ liệu từ localStorage trước (để hiển thị nhanh)
+        const localUser = JSON.parse(userData);
+        loadUserData(localUser);
+        
+        // Sau đó fetch dữ liệu mới nhất từ server
+        const response = await fetch('/api/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const serverUser = result.data;
+            
+            // Cập nhật localStorage với dữ liệu mới từ server
+            const updatedUserData = {
+                ...localUser,
+                ...serverUser,
+                id: serverUser._id || localUser.id
+            };
+            localStorage.setItem('userData', JSON.stringify(updatedUserData));
+            
+            // Load lại dữ liệu mới
+            loadUserData(updatedUserData);
+        }
     } catch (error) {
         console.error('Error loading user data:', error);
     }
@@ -52,7 +78,7 @@ function loadUserData(user) {
         const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
         const colors = ['0d6efd', '6f42c1', 'dc3545', 'fd7e14', '198754'];
         const bgColor = colors[Math.floor(Math.random() * colors.length)];
-        document.getElementById('avatarPreview').src = `https://ui-avatars.com/api/?name=${initials}&background=${bgColor}&color=fff`;
+        document.getElementById('avatarPreview').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff`;
     }
 
     // Điền vào form thông tin cơ bản
@@ -60,6 +86,32 @@ function loadUserData(user) {
         document.getElementById('fullName').value = user.name || '';
         document.getElementById('email').value = user.email || '';
         document.getElementById('phone').value = user.phone || '';
+        
+        // Thêm các trường khác nếu có
+        if (document.getElementById('dob') && user.dob) {
+            // Chuyển đổi ISO date sang YYYY-MM-DD format cho input[type="date"]
+            const date = new Date(user.dob);
+            const formattedDate = date.toISOString().split('T')[0];
+            document.getElementById('dob').value = formattedDate;
+        }
+        if (document.getElementById('bio') && user.bio) {
+            document.getElementById('bio').value = user.bio;
+        }
+        if (document.getElementById('gender') && user.gender) {
+            document.getElementById('gender').value = user.gender;
+        }
+    }
+    
+    // Cập nhật trạng thái xác thực điện thoại
+    if (typeof updatePhoneVerificationStatus === 'function') {
+        updatePhoneVerificationStatus(user.phoneVerified || false);
+    }
+    
+    // Điền vào form địa chỉ nếu có
+    if (user.address) {
+        if (document.getElementById('street') && user.address.street) {
+            document.getElementById('street').value = user.address.street;
+        }
     }
 
     // Cập nhật navbar
@@ -364,10 +416,23 @@ async function handleInfoFormSubmit(e) {
         if (response.ok) {
             const result = await response.json();
             
-            // Cập nhật localStorage
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            Object.assign(userData, data);
+            // Cập nhật localStorage với dữ liệu mới
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            userData.name = data.name;
+            userData.phone = data.phone;
+            userData.dob = data.dob;
+            userData.bio = data.bio;
+            userData.gender = data.gender;
             localStorage.setItem('userData', JSON.stringify(userData));
+            
+            // Cập nhật hiển thị trên trang
+            document.getElementById('profileName').textContent = data.name || 'Người dùng';
+            
+            // Cập nhật navbar nếu có
+            const navUserName = document.getElementById('userName');
+            if (navUserName) {
+                navUserName.textContent = data.name || 'Người dùng';
+            }
 
             showSuccessAlert('Thông tin cá nhân đã được cập nhật!', e.target);
         } else {
@@ -707,18 +772,27 @@ function showSuccessAlert(message, form) {
     removeExistingAlert(form);
     
     const alert = document.createElement('div');
-    alert.className = 'alert alert-success alert-dismissible fade show';
-    alert.role = 'alert';
+    alert.className = 'bg-green-50 border-l-4 border-green-500 text-green-900 p-4 rounded-lg mb-4 flex items-start animate-slideDown';
+    alert.setAttribute('role', 'alert');
     alert.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="fas fa-check-circle text-green-500 text-xl mr-3 mt-0.5"></i>
+        <div class="flex-1">
+            <p class="font-medium">${message}</p>
+        </div>
+        <button type="button" class="text-green-700 hover:text-green-900 ml-3" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
     `;
 
     form.insertBefore(alert, form.firstChild);
+    
+    // Scroll to alert
+    alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     setTimeout(() => {
-        alert.remove();
+        alert.style.transition = 'opacity 0.5s ease-out';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 500);
     }, 5000);
 }
 
@@ -729,18 +803,27 @@ function showErrorAlert(message, form) {
     removeExistingAlert(form);
     
     const alert = document.createElement('div');
-    alert.className = 'alert alert-danger alert-dismissible fade show';
-    alert.role = 'alert';
+    alert.className = 'bg-red-50 border-l-4 border-red-500 text-red-900 p-4 rounded-lg mb-4 flex items-start animate-slideDown';
+    alert.setAttribute('role', 'alert');
     alert.innerHTML = `
-        <i class="fas fa-exclamation-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3 mt-0.5"></i>
+        <div class="flex-1">
+            <p class="font-medium">${message}</p>
+        </div>
+        <button type="button" class="text-red-700 hover:text-red-900 ml-3" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
     `;
 
     form.insertBefore(alert, form.firstChild);
+    
+    // Scroll to alert
+    alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     setTimeout(() => {
-        alert.remove();
+        alert.style.transition = 'opacity 0.5s ease-out';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 500);
     }, 5000);
 }
 
@@ -748,10 +831,9 @@ function showErrorAlert(message, form) {
  * Xóa alert hiện tại
  */
 function removeExistingAlert(form) {
-    const existingAlert = form.querySelector('.alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
+    // Tìm alert hiện tại (cả Bootstrap và Tailwind)
+    const existingAlerts = form.querySelectorAll('.alert, [role="alert"]');
+    existingAlerts.forEach(alert => alert.remove());
 }
 
 /**
@@ -779,4 +861,439 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('button[type="submit"]').forEach(btn => {
         btn.setAttribute('data-original-text', btn.innerHTML);
     });
+});
+
+// ===================================
+// PHONE VERIFICATION STATUS UI
+// ===================================
+
+/**
+ * Cập nhật trạng thái hiển thị xác thực điện thoại
+ */
+function updatePhoneVerificationStatus(isVerified) {
+    const statusElement = document.getElementById('phoneVerificationStatus');
+    const verifyBtn = document.getElementById('verifyPhoneBtn');
+    
+    if (!statusElement || !verifyBtn) return;
+    
+    if (isVerified) {
+        // Đã xác thực - Hiển thị badge xanh
+        statusElement.innerHTML = `
+            <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                <i class="fas fa-check-circle mr-1"></i>Đã xác thực
+            </span>
+        `;
+        
+        // Disable nút xác thực
+        verifyBtn.disabled = true;
+        verifyBtn.classList.remove('border-blue-600', 'text-blue-600', 'hover:bg-blue-50');
+        verifyBtn.classList.add('border-gray-300', 'text-gray-400', 'cursor-not-allowed');
+        verifyBtn.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Đã xác thực';
+    } else {
+        // Chưa xác thực - Hiển thị badge xám
+        statusElement.innerHTML = `
+            <span class="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                <i class="fas fa-times-circle mr-1"></i>Chưa xác thực
+            </span>
+        `;
+        
+        // Enable nút xác thực
+        verifyBtn.disabled = false;
+        verifyBtn.classList.remove('border-gray-300', 'text-gray-400', 'cursor-not-allowed');
+        verifyBtn.classList.add('border-blue-600', 'text-blue-600', 'hover:bg-blue-50');
+        verifyBtn.innerHTML = '<i class="fas fa-shield-alt mr-1"></i>Xác thực ngay';
+    }
+}
+
+// ===================================
+// PHONE VERIFICATION - OTP
+// ===================================
+
+let otpTimerInterval = null;
+let resendTimerInterval = null;
+
+// Hiển thị OTP modal
+function showOTPModal(phone) {
+    const modal = document.getElementById('otpModal');
+    const phoneDisplay = document.getElementById('otpPhoneDisplay');
+    
+    if (!modal || !phoneDisplay) return;
+    
+    // Hiển thị số điện thoại
+    phoneDisplay.textContent = phone;
+    
+    // Reset OTP inputs
+    const otpInputs = document.querySelectorAll('.otp-input');
+    otpInputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('border-red-500');
+    });
+    
+    // Focus vào input đầu tiên
+    if (otpInputs[0]) {
+        setTimeout(() => otpInputs[0].focus(), 100);
+    }
+    
+    // Ẩn error
+    hideOTPError();
+    
+    // Reset và start timers
+    startOTPTimer();
+    startResendTimer();
+    
+    // Hiển thị modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+// Ẩn OTP modal
+function hideOTPModal() {
+    const modal = document.getElementById('otpModal');
+    if (!modal) return;
+    
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    
+    // Clear timers
+    if (otpTimerInterval) clearInterval(otpTimerInterval);
+    if (resendTimerInterval) clearInterval(resendTimerInterval);
+}
+
+// Hiển thị lỗi OTP
+function showOTPError(message) {
+    const errorDiv = document.getElementById('otpError');
+    const errorMessage = document.getElementById('otpErrorMessage');
+    
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.classList.remove('hidden');
+        
+        // Highlight các input
+        document.querySelectorAll('.otp-input').forEach(input => {
+            input.classList.add('border-red-500');
+        });
+    }
+}
+
+// Ẩn lỗi OTP
+function hideOTPError() {
+    const errorDiv = document.getElementById('otpError');
+    if (errorDiv) {
+        errorDiv.classList.add('hidden');
+    }
+    
+    // Remove highlight
+    document.querySelectorAll('.otp-input').forEach(input => {
+        input.classList.remove('border-red-500');
+    });
+}
+
+// Timer cho OTP (10 phút)
+function startOTPTimer() {
+    let timeLeft = 600; // 10 phút = 600 giây
+    const timerElement = document.getElementById('otpTimer');
+    
+    if (!timerElement) return;
+    
+    // Clear timer cũ nếu có
+    if (otpTimerInterval) clearInterval(otpTimerInterval);
+    
+    otpTimerInterval = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(otpTimerInterval);
+            timerElement.textContent = 'Hết hạn';
+            timerElement.classList.add('text-red-600');
+            showOTPError('Mã OTP đã hết hạn. Vui lòng gửi lại OTP');
+        } else if (timeLeft <= 60) {
+            timerElement.classList.add('text-red-600');
+        }
+        
+        timeLeft--;
+    }, 1000);
+}
+
+// Timer cho nút gửi lại OTP (60 giây)
+function startResendTimer() {
+    let timeLeft = 60;
+    const resendBtn = document.getElementById('resendOtpBtn');
+    const countdownSpan = document.getElementById('resendCountdown');
+    
+    if (!resendBtn || !countdownSpan) return;
+    
+    resendBtn.disabled = true;
+    
+    // Clear timer cũ nếu có
+    if (resendTimerInterval) clearInterval(resendTimerInterval);
+    
+    resendTimerInterval = setInterval(() => {
+        countdownSpan.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(resendTimerInterval);
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = 'Gửi lại OTP';
+        }
+        
+        timeLeft--;
+    }, 1000);
+}
+
+// Xử lý input OTP tự động chuyển ô
+document.addEventListener('DOMContentLoaded', function() {
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+    
+    otpInputs.forEach((input, index) => {
+        // Chỉ cho nhập số
+        input.addEventListener('input', function(e) {
+            const value = e.target.value;
+            
+            // Chỉ giữ lại số
+            e.target.value = value.replace(/[^0-9]/g, '');
+            
+            // Xóa error khi user bắt đầu nhập
+            hideOTPError();
+            
+            // Tự động chuyển sang ô tiếp theo
+            if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+            
+            // Enable/disable nút verify
+            checkOTPComplete();
+        });
+        
+        // Xử lý phím Backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+        
+        // Xử lý paste
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+            
+            // Điền vào các ô
+            for (let i = 0; i < pastedData.length && index + i < otpInputs.length; i++) {
+                otpInputs[index + i].value = pastedData[i];
+            }
+            
+            // Focus vào ô cuối cùng được điền
+            const lastFilledIndex = Math.min(index + pastedData.length - 1, otpInputs.length - 1);
+            otpInputs[lastFilledIndex].focus();
+            
+            checkOTPComplete();
+        });
+    });
+    
+    // Kiểm tra OTP đã nhập đủ chưa
+    function checkOTPComplete() {
+        const allFilled = Array.from(otpInputs).every(input => input.value.length === 1);
+        if (verifyBtn) {
+            verifyBtn.disabled = !allFilled;
+        }
+    }
+});
+
+// Xử lý click nút "Xác thực" trên profile
+document.addEventListener('DOMContentLoaded', function() {
+    const verifyPhoneBtn = document.getElementById('verifyPhoneBtn');
+    
+    if (verifyPhoneBtn) {
+        verifyPhoneBtn.addEventListener('click', async function() {
+            const phoneInput = document.getElementById('phone');
+            
+            if (!phoneInput || !phoneInput.value) {
+                alert('Vui lòng nhập số điện thoại');
+                return;
+            }
+            
+            const phone = phoneInput.value.trim();
+            
+            // Validate phone
+            if (!/^[0-9]{10,11}$/.test(phone)) {
+                alert('Số điện thoại không hợp lệ');
+                return;
+            }
+            
+            try {
+                // Disable button
+                verifyPhoneBtn.disabled = true;
+                verifyPhoneBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Đang gửi...';
+                
+                // Gọi API gửi OTP
+                const response = await fetch('/api/auth/phone/send-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Hiển thị modal OTP
+                    showOTPModal(phone);
+                    
+                    // Nếu là development mode, log OTP
+                    if (result.otp) {
+                        console.log('%c🔐 MÃ OTP: ' + result.otp, 'background: #4CAF50; color: white; font-size: 20px; padding: 10px; border-radius: 5px;');
+                    }
+                } else {
+                    alert(result.error || 'Không thể gửi OTP');
+                }
+            } catch (error) {
+                console.error('Send OTP error:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            } finally {
+                // Enable button
+                verifyPhoneBtn.disabled = false;
+                verifyPhoneBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Xác thực';
+            }
+        });
+    }
+});
+
+// Xử lý nút "Hủy" trong modal
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelBtn = document.getElementById('cancelOtpBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            hideOTPModal();
+        });
+    }
+});
+
+// Xử lý nút "Xác thực OTP"
+document.addEventListener('DOMContentLoaded', function() {
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+    
+    if (verifyBtn) {
+        verifyBtn.addEventListener('click', async function() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            
+            if (otp.length !== 6) {
+                showOTPError('Vui lòng nhập đủ 6 chữ số');
+                return;
+            }
+            
+            try {
+                // Show loading
+                verifyBtn.disabled = true;
+                verifyBtn.querySelector('.verify-btn-text').classList.add('hidden');
+                verifyBtn.querySelector('.verify-btn-loading').classList.remove('hidden');
+                
+                // Gọi API verify OTP
+                const response = await fetch('/api/auth/phone/verify-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ otp })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Thành công!
+                    hideOTPModal();
+                    
+                    // Cập nhật trạng thái hiển thị
+                    updatePhoneVerificationStatus(true);
+                    
+                    // Cập nhật localStorage
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    userData.phoneVerified = true;
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    // Hiển thị thông báo thành công
+                    const formContainer = document.querySelector('.max-w-2xl');
+                    showSuccessAlert('🎉 Xác thực số điện thoại thành công!', formContainer);
+                } else {
+                    // Hiển thị lỗi
+                    showOTPError(result.error || 'Mã OTP không đúng');
+                }
+            } catch (error) {
+                console.error('Verify OTP error:', error);
+                showOTPError('Có lỗi xảy ra. Vui lòng thử lại.');
+            } finally {
+                // Hide loading
+                verifyBtn.disabled = false;
+                verifyBtn.querySelector('.verify-btn-text').classList.remove('hidden');
+                verifyBtn.querySelector('.verify-btn-loading').classList.add('hidden');
+            }
+        });
+    }
+});
+
+// Xử lý nút "Gửi lại OTP"
+document.addEventListener('DOMContentLoaded', function() {
+    const resendBtn = document.getElementById('resendOtpBtn');
+    
+    if (resendBtn) {
+        resendBtn.addEventListener('click', async function() {
+            const phoneDisplay = document.getElementById('otpPhoneDisplay');
+            
+            if (!phoneDisplay) return;
+            
+            const phone = phoneDisplay.textContent;
+            
+            try {
+                resendBtn.disabled = true;
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+                
+                // Gọi API gửi OTP
+                const response = await fetch('/api/auth/phone/send-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Reset inputs
+                    document.querySelectorAll('.otp-input').forEach(input => {
+                        input.value = '';
+                    });
+                    document.querySelector('.otp-input').focus();
+                    
+                    // Reset timers
+                    startOTPTimer();
+                    startResendTimer();
+                    
+                    hideOTPError();
+                    
+                    // Log OTP trong development
+                    if (result.otp) {
+                        console.log('%c🔐 MÃ OTP MỚI: ' + result.otp, 'background: #4CAF50; color: white; font-size: 20px; padding: 10px; border-radius: 5px;');
+                    }
+                } else {
+                    alert(result.error || 'Không thể gửi OTP');
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = 'Gửi lại OTP';
+                }
+            } catch (error) {
+                console.error('Resend OTP error:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = 'Gửi lại OTP';
+            }
+        });
+    }
 });
