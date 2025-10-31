@@ -443,292 +443,146 @@ function removeImage(index) {
 // ===================================
 // 7. XỬ LÝ DỮ LIỆU ĐỊA ĐIỂM
 // ===================================
-function loadLocationData() {
-    // Giải pháp tạm thời: load dữ liệu tỉnh/thành phố từ API hoặc hardcode
-    // Có thể mở rộng thành API call nếu cần
+async function loadLocationData() {
+    console.log('🌍 Loading location data from API...');
     
     const provinceSelect = document.getElementById('province');
-    if (provinceSelect) {
-        // Dữ liệu các tỉnh/thành phố (tạm thời)
-        const provinces = [
-            'Hà Nội',
-            'TP. Hồ Chí Minh',
-            'Đà Nẵng',
-            'Hải Phòng',
-            'Cần Thơ',
-            'An Giang',
-            'Bạc Liêu',
-            'Bà Rịa - Vũng Tàu',
-            'Bắc Giang',
-            'Bắc Kạn',
-            'Bắc Ninh',
-            'Bến Tre',
-            'Bình Dương',
-            'Bình Phước',
-            'Bình Thuận'
-        ];
+    if (!provinceSelect) {
+        console.warn('Province select not found');
+        return;
+    }
 
-        provinces.forEach(province => {
-            const option = document.createElement('option');
-            option.value = province;
-            option.textContent = province;
-            provinceSelect.appendChild(option);
-        });
+    try {
+        // Gọi API lấy danh sách tỉnh/thành phố
+        const response = await fetch('/api/locations/provinces');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+            // Clear existing options
+            provinceSelect.innerHTML = '<option value="">-- Chọn tỉnh/thành phố --</option>';
+            
+            // Thêm các tỉnh/thành phố từ API
+            result.data.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province.code;
+                option.textContent = province.name;
+                option.dataset.name = province.name; // Lưu tên để dùng sau
+                provinceSelect.appendChild(option);
+            });
+            
+            console.log(`✅ Loaded ${result.data.length} provinces`);
+        }
 
         // Sự kiện thay đổi tỉnh
         provinceSelect.addEventListener('change', function() {
             clearFieldError('province');
-            loadDistricts(this.value);
+            const provinceCode = this.value;
+            if (provinceCode) {
+                loadDistricts(provinceCode);
+            } else {
+                // Reset district và ward
+                const districtSelect = document.getElementById('district');
+                const wardSelect = document.getElementById('ward');
+                if (districtSelect) districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
+                if (wardSelect) wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+            }
         });
+
+    } catch (error) {
+        console.error('❌ Error loading provinces:', error);
+        showAlert('Không thể tải dữ liệu tỉnh/thành phố', 'danger');
     }
 }
 
-function loadDistricts(province) {
-    // Dữ liệu quận/huyện theo tỉnh/thành phố
+async function loadDistricts(provinceCode) {
+    console.log('🏘️ Loading districts for province:', provinceCode);
+    
     const districtSelect = document.getElementById('district');
     const wardSelect = document.getElementById('ward');
 
     if (!districtSelect) return;
 
-    districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
-    wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+    try {
+        // Reset select boxes
+        districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+        wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
 
-    // Dữ liệu đầy đủ các tỉnh/thành phố lớn
-    const districtsByProvince = {
-        'ho-chi-minh': [
-            'Quận 1', 'Quận 2', 'Quận 3', 'Quận 4', 'Quận 5', 'Quận 6', 'Quận 7', 'Quận 8', 
-            'Quận 9', 'Quận 10', 'Quận 11', 'Quận 12', 'Quận Bình Tân', 'Quận Bình Thạnh',
-            'Quận Gò Vấp', 'Quận Phú Nhuận', 'Quận Tân Bình', 'Quận Tân Phú', 'Quận Thủ Đức',
-            'Huyện Bình Chánh', 'Huyện Cần Giờ', 'Huyện Củ Chi', 'Huyện Hóc Môn', 'Huyện Nhà Bè'
-        ],
-        'hanoi': [
-            'Quận Ba Đình', 'Quận Hoàn Kiếm', 'Quận Tây Hồ', 'Quận Long Biên', 'Quận Cầu Giấy',
-            'Quận Đống Đa', 'Quận Hai Bà Trưng', 'Quận Hoàng Mai', 'Quận Thanh Xuân', 'Quận Bắc Từ Liêm',
-            'Quận Nam Từ Liêm', 'Quận Hà Đông', 'Huyện Ba Vì', 'Huyện Chương Mỹ', 'Huyện Đan Phượng',
-            'Huyện Đông Anh', 'Huyện Gia Lâm', 'Huyện Hoài Đức', 'Huyện Mê Linh', 'Huyện Mỹ Đức',
-            'Huyện Phú Xuyên', 'Huyện Phúc Thọ', 'Huyện Quốc Oai', 'Huyện Sóc Sơn', 'Huyện Thạch Thất',
-            'Huyện Thanh Oai', 'Huyện Thanh Trì', 'Huyện Thường Tín', 'Huyện Ứng Hòa', 'Thị xã Sơn Tây'
-        ],
-        'da-nang': [
-            'Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà', 'Quận Ngũ Hành Sơn', 
-            'Quận Liên Chiểu', 'Quận Cẩm Lệ', 'Huyện Hòa Vang', 'Huyện Hoàng Sa'
-        ],
-        'can-tho': [
-            'Quận Ninh Kiều', 'Quận Bình Thủy', 'Quận Cái Răng', 'Quận Ô Môn', 'Quận Thốt Nốt',
-            'Huyện Phong Điền', 'Huyện Cờ Đỏ', 'Huyện Vĩnh Thạnh', 'Huyện Thới Lai'
-        ],
-        'hai-phong': [
-            'Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân', 'Quận Hải An', 'Quận Kiến An',
-            'Quận Đồ Sơn', 'Quận Dương Kinh', 'Huyện Thuỷ Nguyên', 'Huyện An Dương', 'Huyện An Lão',
-            'Huyện Kiến Thuỵ', 'Huyện Tiên Lãng', 'Huyện Vĩnh Bảo', 'Huyện Cát Hải', 'Huyện Bạch Long Vĩ'
-        ],
-        'bien-hoa': [
-            'Quận Long Biên', 'Quận Biên Hòa', 'Quận Tân Phú', 'Quận Thống Nhất',
-            'Huyện Trảng Bom', 'Huyện Thống Nhất', 'Huyện Cẩm Mỹ', 'Huyện Long Thành',
-            'Huyện Xuân Lộc', 'Huyện Nhơn Trạch', 'Huyện Định Quán', 'Huyện Vĩnh Cửu'
-        ],
-        'vung-tau': [
-            'Thành phố Vũng Tàu', 'Thành phố Bà Rịa', 'Huyện Châu Đức', 'Huyện Xuyên Mộc',
-            'Huyện Long Điền', 'Huyện Đất Đỏ', 'Huyện Tân Thành', 'Huyện Côn Đảo'
-        ],
-        'nha-trang': [
-            'Thành phố Nha Trang', 'Thành phố Cam Ranh', 'Thị xã Ninh Hòa', 'Huyện Khánh Vĩnh',
-            'Huyện Diên Khánh', 'Huyện Khánh Sơn', 'Huyện Trường Sa', 'Huyện Cam Lâm', 'Huyện Vạn Ninh'
-        ],
-        'da-lat': [
-            'Thành phố Đà Lạt', 'Thành phố Bảo Lộc', 'Huyện Đam Rông', 'Huyện Lạc Dương',
-            'Huyện Lâm Hà', 'Huyện Đơn Dương', 'Huyện Đức Trọng', 'Huyện Di Linh',
-            'Huyện Bảo Lâm', 'Huyện Đạ Huoai', 'Huyện Đạ Tẻh', 'Huyện Cát Tiên'
-        ],
-        'hue': [
-            'Thành phố Huế', 'Thị xã Hương Thủy', 'Thị xã Hương Trà', 'Huyện Phong Điền',
-            'Huyện Quảng Điền', 'Huyện Phú Vang', 'Huyện Phú Lộc', 'Huyện A Lưới', 'Huyện Nam Đông'
-        ],
-        'quy-nhon': [
-            'Thành phố Quy Nhơn', 'Thị xã An Nhơn', 'Thị xã Hoài Nhơn', 'Huyện Hoài Ân',
-            'Huyện Phù Mỹ', 'Huyện Vĩnh Thạnh', 'Huyện Tây Sơn', 'Huyện Phù Cát',
-            'Huyện An Lão', 'Huyện Tuy Phước', 'Huyện Vân Canh'
-        ]
-    };
+        // Gọi API lấy danh sách quận/huyện
+        const response = await fetch(`/api/locations/provinces/${provinceCode}/districts`);
+        const result = await response.json();
 
-    const districts = districtsByProvince[province] || [];
-    districts.forEach(district => {
-        const option = document.createElement('option');
-        option.value = district;
-        option.textContent = district;
-        districtSelect.appendChild(option);
-    });
+        if (result.success && result.data) {
+            districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
+            
+            result.data.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.code;
+                option.textContent = district.name;
+                option.dataset.name = district.name; // Lưu tên để dùng sau
+                districtSelect.appendChild(option);
+            });
+            
+            console.log(`✅ Loaded ${result.data.length} districts`);
+        } else {
+            districtSelect.innerHTML = '<option value="">Không có dữ liệu</option>';
+        }
 
-    districtSelect.addEventListener('change', function() {
-        clearFieldError('district');
-        loadWards(this.value);
-    });
+        // Event listener cho district
+        districtSelect.addEventListener('change', function() {
+            clearFieldError('district');
+            const districtCode = this.value;
+            if (districtCode) {
+                loadWards(districtCode);
+            } else {
+                wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error loading districts:', error);
+        districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+    }
 }
 
-function loadWards(district) {
+async function loadWards(districtCode) {
+    console.log('🏘️ Loading wards for district:', districtCode);
+    
     const wardSelect = document.getElementById('ward');
     if (!wardSelect) return;
 
-    wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+    try {
+        // Reset select box
+        wardSelect.innerHTML = '<option value="">Đang tải...</option>';
 
-    // Dữ liệu phường/xã theo quận/huyện (các quận/huyện phổ biến)
-    const wardsByDistrict = {
-        // TP. Hồ Chí Minh
-        'Quận 1': [
-            'Phường Bến Nghé', 'Phường Bến Thành', 'Phường Cầu Kho', 'Phường Cầu Ông Lãnh',
-            'Phường Cô Giang', 'Phường Đa Kao', 'Phường Nguyễn Cư Trinh', 'Phường Nguyễn Thái Bình',
-            'Phường Phạm Ngũ Lão', 'Phường Tân Định'
-        ],
-        'Quận 2': [
-            'Phường An Khánh', 'Phường An Lợi Đông', 'Phường An Phú', 'Phường Bình An',
-            'Phường Bình Khanh', 'Phường Bình Trưng Đông', 'Phường Bình Trưng Tây', 'Phường Cát Lái',
-            'Phường Thạnh Mỹ Lợi', 'Phường Thảo Điền', 'Phường Thủ Thiêm'
-        ],
-        'Quận 3': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14'
-        ],
-        'Quận 4': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 08', 'Phường 09', 'Phường 10', 'Phường 13', 'Phường 14', 'Phường 15',
-            'Phường 16', 'Phường 18'
-        ],
-        'Quận 5': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14', 'Phường 15'
-        ],
-        'Quận 6': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14'
-        ],
-        'Quận 7': [
-            'Phường Bình Thuận', 'Phường Phú Mỹ', 'Phường Phú Thuận', 'Phường Tân Hưng',
-            'Phường Tân Kiểng', 'Phường Tân Phong', 'Phường Tân Phú', 'Phường Tân Quy',
-            'Phường Tân Thuận Đông', 'Phường Tân Thuận Tây'
-        ],
-        'Quận 8': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14', 'Phường 15', 'Phường 16'
-        ],
-        'Quận 10': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14', 'Phường 15'
-        ],
-        'Quận Bình Thạnh': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 05', 'Phường 06', 'Phường 07',
-            'Phường 11', 'Phường 12', 'Phường 13', 'Phường 14', 'Phường 15', 'Phường 17',
-            'Phường 19', 'Phường 21', 'Phường 22', 'Phường 24', 'Phường 25', 'Phường 26',
-            'Phường 27', 'Phường 28'
-        ],
-        'Quận Tân Bình': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06',
-            'Phường 07', 'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12',
-            'Phường 13', 'Phường 14', 'Phường 15'
-        ],
-        'Quận Phú Nhuận': [
-            'Phường 01', 'Phường 02', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 07',
-            'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13',
-            'Phường 15', 'Phường 17'
-        ],
-        'Quận Gò Vấp': [
-            'Phường 01', 'Phường 03', 'Phường 04', 'Phường 05', 'Phường 06', 'Phường 07',
-            'Phường 08', 'Phường 09', 'Phường 10', 'Phường 11', 'Phường 12', 'Phường 13',
-            'Phường 14', 'Phường 15', 'Phường 16', 'Phường 17'
-        ],
+        // Gọi API lấy danh sách phường/xã
+        const response = await fetch(`/api/locations/districts/${districtCode}/wards`);
+        const result = await response.json();
 
-        // Hà Nội
-        'Quận Ba Đình': [
-            'Phường Phúc Xá', 'Phường Trúc Bạch', 'Phường Vĩnh Phúc', 'Phường Cống Vị',
-            'Phường Liễu Giai', 'Phường Nguyễn Trung Trực', 'Phường Quán Thánh', 'Phường Ngọc Hà',
-            'Phường Điện Biên', 'Phường Đội Cấn', 'Phường Ngọc Khánh', 'Phường Kim Mã',
-            'Phường Giảng Võ', 'Phường Thành Công'
-        ],
-        'Quận Hoàn Kiếm': [
-            'Phường Phúc Tân', 'Phường Đồng Xuân', 'Phường Hàng Mã', 'Phường Hàng Buồm',
-            'Phường Hàng Đào', 'Phường Hàng Bồ', 'Phường Cửa Đông', 'Phường Lý Thái Tổ',
-            'Phường Hàng Bạc', 'Phường Hàng Gai', 'Phường Chương Dương', 'Phường Cửa Nam',
-            'Phường Hàng Trống', 'Phường Phan Chu Trinh', 'Phường Tràng Tiền', 'Phường Trần Hưng Đạo',
-            'Phường Hàng Bài', 'Phường Hàng Bông'
-        ],
-        'Quận Tây Hồ': [
-            'Phường Phú Thượng', 'Phường Nhật Tân', 'Phường Tứ Liên', 'Phường Quảng An',
-            'Phường Xuân La', 'Phường Yên Phụ', 'Phường Bưởi', 'Phường Thụy Khuê'
-        ],
-        'Quận Long Biên': [
-            'Phường Thượng Thanh', 'Phường Ngọc Thụy', 'Phường Giang Biên', 'Phường Đức Giang',
-            'Phường Việt Hưng', 'Phường Gia Thụy', 'Phường Ngọc Lâm', 'Phường Phúc Lợi',
-            'Phường Bồ Đề', 'Phường Sài Đồng', 'Phường Long Biên', 'Phường Thạch Bàn',
-            'Phường Phúc Đồng', 'Phường Cự Khối'
-        ],
-        'Quận Cầu Giấy': [
-            'Phường Nghĩa Đô', 'Phường Nghĩa Tân', 'Phường Mai Dịch', 'Phường Dịch Vọng',
-            'Phường Dịch Vọng Hậu', 'Phường Quan Hoa', 'Phường Yên Hòa', 'Phường Trung Hòa'
-        ],
-        'Quận Đống Đa': [
-            'Phường Cát Linh', 'Phường Văn Miếu', 'Phường Quốc Tử Giám', 'Phường Láng Thượng',
-            'Phường Ô Chợ Dừa', 'Phường Văn Chương', 'Phường Hàng Bột', 'Phường Láng Hạ',
-            'Phường Khâm Thiên', 'Phường Thổ Quan', 'Phường Nam Đồng', 'Phường Trung Phụng',
-            'Phường Quang Trung', 'Phường Trung Liệt', 'Phường Phương Liên', 'Phường Thịnh Quang',
-            'Phường Trung Tự', 'Phường Kim Liên', 'Phường Phương Mai', 'Phường Ngã Tư Sở', 'Phường Khương Thượng'
-        ],
-        'Quận Hai Bà Trưng': [
-            'Phường Nguyễn Du', 'Phường Bạch Đằng', 'Phường Phạm Đình Hổ', 'Phường Lê Đại Hành',
-            'Phường Đồng Nhân', 'Phường Phố Huế', 'Phường Đống Mác', 'Phường Thanh Lương',
-            'Phường Thanh Nhàn', 'Phường Cầu Dền', 'Phường Bách Khoa', 'Phường Đồng Tâm',
-            'Phường Vĩnh Tuy', 'Phường Bạch Mai', 'Phường Quỳnh Mai', 'Phường Quỳnh Lôi',
-            'Phường Minh Khai', 'Phường Trương Định'
-        ],
-        'Quận Thanh Xuân': [
-            'Phường Nhân Chính', 'Phường Thượng Đình', 'Phường Khương Trung', 'Phường Khương Mai',
-            'Phường Thanh Xuân Trung', 'Phường Phương Liệt', 'Phường Hạ Đình', 'Phường Khương Đình',
-            'Phường Thanh Xuân Bắc', 'Phường Thanh Xuân Nam', 'Phường Kim Giang'
-        ],
+        if (result.success && result.data) {
+            wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+            
+            result.data.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward.code;
+                option.textContent = ward.name;
+                option.dataset.name = ward.name; // Lưu tên để dùng sau
+                wardSelect.appendChild(option);
+            });
+            
+            console.log(`✅ Loaded ${result.data.length} wards`);
+        } else {
+            wardSelect.innerHTML = '<option value="">Không có dữ liệu</option>';
+        }
 
-        // Đà Nẵng
-        'Quận Hải Châu': [
-            'Phường Thanh Bình', 'Phường Thuận Phước', 'Phường Thạch Thang', 'Phường Hải Châu 1',
-            'Phường Hải Châu 2', 'Phường Phước Ninh', 'Phường Hòa Thuận Tây', 'Phường Hòa Thuận Đông',
-            'Phường Nam Dương', 'Phường Bình Hiên', 'Phường Bình Thuận', 'Phường Hòa Cường Bắc',
-            'Phường Hòa Cường Nam'
-        ],
-        'Quận Thanh Khê': [
-            'Phường Tam Thuận', 'Phường Thanh Khê Tây', 'Phường Thanh Khê Đông', 'Phường Xuân Hà',
-            'Phường Tân Chính', 'Phường Chính Gián', 'Phường Vĩnh Trung', 'Phường Thạc Gián',
-            'Phường An Khê', 'Phường Hòa Khê'
-        ],
-        'Quận Sơn Trà': [
-            'Phường Thọ Quang', 'Phường Nại Hiên Đông', 'Phường Mân Thái', 'Phường An Hải Bắc',
-            'Phường Phước Mỹ', 'Phường An Hải Tây', 'Phường An Hải Đông'
-        ],
-        'Quận Ngũ Hành Sơn': [
-            'Phường Mỹ An', 'Phường Khuê Mỹ', 'Phường Hòa Quý', 'Phường Hòa Hải'
-        ],
-        'Quận Liên Chiểu': [
-            'Phường Hòa Hiệp Bắc', 'Phường Hòa Hiệp Nam', 'Phường Hòa Khánh Bắc', 'Phường Hòa Khánh Nam',
-            'Phường Hòa Minh'
-        ],
-        'Quận Cẩm Lệ': [
-            'Phường Khuê Trung', 'Phường Hòa Phát', 'Phường Hòa An', 'Phường Hòa Thọ Tây',
-            'Phường Hòa Thọ Đông', 'Phường Hòa Xuân'
-        ]
-    };
+        // Event listener cho ward
+        wardSelect.addEventListener('change', function() {
+            clearFieldError('ward');
+        });
 
-    const wards = wardsByDistrict[district] || [];
-    wards.forEach(ward => {
-        const option = document.createElement('option');
-        option.value = ward;
-        option.textContent = ward;
-        wardSelect.appendChild(option);
-    });
-
-    wardSelect.addEventListener('change', function() {
-        clearFieldError('ward');
-    });
+    } catch (error) {
+        console.error('❌ Error loading wards:', error);
+        wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+    }
 }
 
 // ===================================

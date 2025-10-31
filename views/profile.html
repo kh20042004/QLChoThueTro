@@ -369,25 +369,37 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label for="province" class="block text-sm font-medium text-gray-900 mb-1">Tỉnh/Thành phố <span class="text-red-500">*</span></label>
+                                        <label for="province" class="block text-sm font-medium text-gray-900 mb-1">
+                                            Tỉnh/Thành phố <span class="text-red-500">*</span>
+                                        </label>
                                         <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" id="province" name="province" required>
                                             <option value="">-- Chọn tỉnh/thành phố --</option>
-                                            <option value="ho-chi-minh">Thành phố Hồ Chí Minh</option>
-                                            <option value="hanoi">Hà Nội</option>
-                                            <option value="da-nang">Đà Nẵng</option>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>Chọn tỉnh/thành phố
+                                        </p>
                                     </div>
                                     <div>
-                                        <label for="district" class="block text-sm font-medium text-gray-900 mb-1">Quận/Huyện <span class="text-red-500">*</span></label>
+                                        <label for="district" class="block text-sm font-medium text-gray-900 mb-1">
+                                            Quận/Huyện <span class="text-red-500">*</span>
+                                        </label>
                                         <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" id="district" name="district" required>
                                             <option value="">-- Chọn quận/huyện --</option>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>Chọn tỉnh trước
+                                        </p>
                                     </div>
                                     <div>
-                                        <label for="ward" class="block text-sm font-medium text-gray-900 mb-1">Phường/Xã <span class="text-red-500">*</span></label>
+                                        <label for="ward" class="block text-sm font-medium text-gray-900 mb-1">
+                                            Phường/Xã <span class="text-red-500">*</span>
+                                        </label>
                                         <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" id="ward" name="ward" required>
                                             <option value="">-- Chọn phường/xã --</option>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>Chọn quận trước
+                                        </p>
                                     </div>
                                 </div>
 
@@ -685,13 +697,13 @@
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('userDropdown');
-            const btn = e.target.closest('[onclick="toggleDropdown(event)"]');
-            
-            if (!btn && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
+    const dropdown = document.getElementById('userDropdown');
+    const btn = e.target.closest('[onclick="toggleDropdown(event)"]');
+
+    if (dropdown && !btn && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
     </script>
     
     <!-- Favorites -->

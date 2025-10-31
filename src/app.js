@@ -68,6 +68,7 @@ app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/universities', require('./routes/universityRoutes'));
+app.use('/api/locations', require('./routes/locationRoutes'));
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {

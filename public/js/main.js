@@ -664,9 +664,9 @@ console.log('✅ All scripts initialized successfully');
 // ===================================
 function initFooterPartial() {
     try {
-        const footerEl = document.querySelector('footer.footer');
+        const footerEl = document.querySelector('footer');
         if (!footerEl) {
-            console.log('⚠️ Không tìm thấy phần tử footer để nạp partial');
+            // Không log warning vì một số trang có thể không có footer
             return;
         }
 
