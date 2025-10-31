@@ -27,7 +27,32 @@ const errorHandler = (err, req, res, next) => {
 
   // Nếu là lỗi Mongoose validation
   if (err.name === 'ValidationError') {
-    message = Object.values(err.errors).map(val => val.message).join(', ');
+    const errors = Object.values(err.errors).map(val => {
+      // Dịch một số message phổ biến sang tiếng Việt
+      let msg = val.message;
+      
+      // Xử lý enum error
+      if (val.kind === 'enum') {
+        msg = val.message; // Sử dụng custom message đã định nghĩa trong model
+      }
+      
+      // Xử lý required error
+      if (val.kind === 'required') {
+        const fieldName = val.path;
+        const fieldNameVi = {
+          'name': 'Tên',
+          'email': 'Email',
+          'password': 'Mật khẩu',
+          'phone': 'Số điện thoại',
+          'gender': 'Giới tính',
+          'address': 'Địa chỉ'
+        };
+        msg = `${fieldNameVi[fieldName] || fieldName} không được để trống`;
+      }
+      
+      return msg;
+    });
+    message = errors.join(', ');
   }
 
   // Nếu là lỗi Mongoose CastError (ID không hợp lệ)

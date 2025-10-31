@@ -77,9 +77,40 @@ const PropertySchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  amenities: [{
-    type: String
-  }],
+  amenities: {
+    wifi: {
+      type: Boolean,
+      default: false
+    },
+    ac: {
+      type: Boolean,
+      default: false
+    },
+    parking: {
+      type: Boolean,
+      default: false
+    },
+    kitchen: {
+      type: Boolean,
+      default: false
+    },
+    water: {
+      type: Boolean,
+      default: false
+    },
+    laundry: {
+      type: Boolean,
+      default: false
+    },
+    balcony: {
+      type: Boolean,
+      default: false
+    },
+    security: {
+      type: Boolean,
+      default: false
+    }
+  },
   utilities: {
     electric: {
       type: String,

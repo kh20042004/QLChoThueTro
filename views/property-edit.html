@@ -254,10 +254,13 @@
                 <nav class="flex text-gray-600 text-sm">
                     <a href="/" class="hover:text-gray-900 transition-colors">Trang chủ</a>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-900 font-semibold">Đăng tin cho thuê</span>
+                    <span class="text-gray-900 font-semibold">Chỉnh sửa bài đăng</span>
                 </nav>
             </div>
         </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer" class="fixed top-20 right-6 z-50 space-y-4 max-w-md"></div>
 
         <!-- Main Content -->
         <div class="container mx-auto px-4 pb-12">
@@ -479,10 +482,10 @@
                                     <input type="file" id="propertyImages" class="hidden" multiple accept="image/*">
                                     <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 mb-4"></i>
                                     <p class="text-gray-700 mb-2">Kéo thả hình ảnh hoặc <span class="text-gray-800 font-semibold">nhấn để chọn</span></p>
-                                    <p class="text-sm text-gray-500">Tối đa 10 hình, mỗi hình < 5MB</p>
+                                    <p class="text-sm text-gray-500">Tối đa 10 hình, mỗi hình < 5MB. Đã có <span id="imageCount">0</span> ảnh.</p>
                                 </div>
 
-                                <div class="mt-6 grid grid-cols-3 gap-4" id="imageGallery"></div>
+                                <div class="mt-6 grid grid-cols-3 gap-4" id="imagePreview"></div>
                             </div>
 
                             <!-- Step 5: Liên hệ -->
@@ -555,7 +558,7 @@
                                 <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                                     <div class="h-full bg-gray-800 transition-all duration-300" id="progressBar" style="width: 20%"></div>
                                 </div>
-                                <p class="text-sm text-gray-600 mt-2">Bước <span id="currentStep">1</span>/5</p>
+                                <p class="text-sm text-gray-600 mt-2" id="progressText">Bước 1/5</p>
                             </div>
                         </form>
                     </div>
@@ -648,8 +651,7 @@
     <!-- Scripts -->
     <script src="/js/main.js"></script>
     <script src="/js/auth.js"></script>
-    <script src="/js/property-create.js"></script>
-    <script src="/js/price-prediction.js"></script>
+    <script src="/js/property-edit.js"></script>
     
     <!-- Favorites -->
     <script src="/js/favorites.js"></script>
@@ -675,10 +677,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
-        // Image upload area click - XÓA ĐOẠN NÀY VÌ ĐÃ CÓ TRONG property-create.js
-        // document.getElementById('imageUploadArea').addEventListener('click', function() {
-        //     document.getElementById('propertyImages').click();
-        // });
+       
     </script>
 </body>
 </html>

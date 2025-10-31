@@ -187,9 +187,14 @@ exports.createProperty = async (req, res, next) => {
     // Handle amenities
     if (req.body.amenities) {
       try {
-        propertyData.amenities = JSON.parse(req.body.amenities);
+        const amenitiesData = JSON.parse(req.body.amenities);
+        // Nếu là object, assign trực tiếp
+        if (typeof amenitiesData === 'object' && !Array.isArray(amenitiesData)) {
+          propertyData.amenities = amenitiesData;
+        }
       } catch (e) {
-        propertyData.amenities = [];
+        // Nếu parse fail, bỏ qua
+        console.warn('Lỗi parse amenities:', e.message);
       }
     }
 
@@ -256,16 +261,117 @@ exports.updateProperty = async (req, res, next) => {
       });
     }
 
-    property = await Property.findByIdAndUpdate(req.params.id, req.body, {
+    // Prepare update data
+    const updateData = {
+      title: req.body.title,
+      description: req.body.description,
+      propertyType: req.body.propertyType,
+      price: parseFloat(req.body.price),
+      area: parseFloat(req.body.area),
+      bedrooms: parseInt(req.body.bedrooms),
+      bathrooms: parseInt(req.body.bathrooms),
+    };
+
+    // Handle address
+    if (req.body.address) {
+      try {
+        const addressData = typeof req.body.address === 'string' 
+          ? JSON.parse(req.body.address) 
+          : req.body.address;
+        
+        const fullAddress = `${addressData.street}, ${addressData.ward}, ${addressData.district}, ${addressData.province}`;
+        
+        updateData.address = {
+          street: addressData.street,
+          city: addressData.province,
+          district: addressData.district,
+          ward: addressData.ward,
+          full: fullAddress
+        };
+
+        // Cập nhật tọa độ nếu địa chỉ thay đổi
+        try {
+          const geoData = await geocodingService.getCoordinatesFromAddress(
+            addressData.street,
+            addressData.ward,
+            addressData.district,
+            addressData.province
+          );
+          updateData.location = {
+            type: 'Point',
+            coordinates: [geoData.lng, geoData.lat],
+            address: addressData.street,
+            ward: addressData.ward,
+            district: addressData.district,
+            province: addressData.province
+          };
+        } catch (err) {
+          console.warn('Không lấy được tọa độ mới, giữ tọa độ cũ');
+        }
+      } catch (e) {
+        console.warn('Lỗi parse address:', e.message);
+      }
+    }
+
+    // Handle amenities
+    if (req.body.amenities) {
+      try {
+        const amenitiesData = typeof req.body.amenities === 'string'
+          ? JSON.parse(req.body.amenities)
+          : req.body.amenities;
+        
+        if (typeof amenitiesData === 'object' && !Array.isArray(amenitiesData)) {
+          updateData.amenities = amenitiesData;
+        }
+      } catch (e) {
+        console.warn('Lỗi parse amenities:', e.message);
+      }
+    }
+
+    // Handle images
+    let finalImages = [];
+    
+    // Giữ lại ảnh cũ nếu có
+    if (req.body.existingImages) {
+      try {
+        const existingImages = typeof req.body.existingImages === 'string'
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
+        
+        if (Array.isArray(existingImages)) {
+          finalImages = [...existingImages];
+        }
+      } catch (e) {
+        console.warn('Lỗi parse existingImages:', e.message);
+      }
+    }
+    
+    // Thêm ảnh mới
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(file => `/uploads/${file.filename}`);
+      finalImages = [...finalImages, ...newImages];
+    }
+    
+    // Cập nhật images nếu có thay đổi
+    if (finalImages.length > 0) {
+      updateData.images = finalImages;
+    }
+
+    // Update property
+    property = await Property.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     });
 
+    console.log(`Người dùng ${req.user.id} vừa cập nhật tin đăng ${property._id}`);
+
     res.status(200).json({
       success: true,
+      message: 'Cập nhật bài đăng thành công!',
       data: property
     });
   } catch (error) {
+    console.error('Lỗi cập nhật property:', error);
     next(error);
   }
 };

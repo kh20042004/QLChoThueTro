@@ -5,6 +5,11 @@
  * ===================================
  */
 
+// Choices.js instances
+let provinceChoice = null;
+let districtChoice = null;
+let wardChoice = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📋 Profile Page Loaded');
     
@@ -16,6 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initPasswordToggle();
     initDeleteAccountModal();
     initLocationSelects(); // Thêm khởi tạo location
+    
+    // Khởi tạo searchable selects sau khi DOM sẵn sàng
+    setTimeout(() => {
+        initSearchableLocationSelects();
+    }, 500);
 });
 
 /**
@@ -250,6 +260,65 @@ function initLocationSelects() {
 }
 
 /**
+ * Khởi tạo Searchable Select với Choices.js
+ */
+function initSearchableLocationSelects() {
+    console.log('🔍 Initializing searchable select boxes for profile...');
+    
+    // Đợi một chút để đảm bảo DOM đã sẵn sàng
+    setTimeout(() => {
+        const provinceSelect = document.getElementById('province');
+        const districtSelect = document.getElementById('district');
+        const wardSelect = document.getElementById('ward');
+        
+        if (provinceSelect && typeof Choices !== 'undefined') {
+            provinceChoice = new Choices(provinceSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Tìm kiếm tỉnh/thành phố...',
+                noResultsText: 'Không tìm thấy kết quả',
+                itemSelectText: 'Nhấn để chọn',
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: '-- Chọn tỉnh/thành phố --',
+                searchResultLimit: 100,
+                removeItemButton: false
+            });
+            console.log('✅ Province searchable select initialized');
+        }
+        
+        if (districtSelect && typeof Choices !== 'undefined') {
+            districtChoice = new Choices(districtSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Tìm kiếm quận/huyện...',
+                noResultsText: 'Không tìm thấy kết quả',
+                itemSelectText: 'Nhấn để chọn',
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: '-- Chọn quận/huyện --',
+                searchResultLimit: 100,
+                removeItemButton: false
+            });
+            console.log('✅ District searchable select initialized');
+        }
+        
+        if (wardSelect && typeof Choices !== 'undefined') {
+            wardChoice = new Choices(wardSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Tìm kiếm phường/xã...',
+                noResultsText: 'Không tìm thấy kết quả',
+                itemSelectText: 'Nhấn để chọn',
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: '-- Chọn phường/xã --',
+                searchResultLimit: 100,
+                removeItemButton: false
+            });
+            console.log('✅ Ward searchable select initialized');
+        }
+    }, 500); // Đợi 500ms để Choices.js load xong
+}
+
+/**
  * Load danh sách tỉnh/thành phố
  */
 async function loadProvinces() {
@@ -262,21 +331,38 @@ async function loadProvinces() {
         const result = await response.json();
         
         if (result.success && result.data) {
-            provinceSelect.innerHTML = '<option value="">-- Chọn tỉnh/thành phố --</option>';
-            
-            result.data.forEach(province => {
-                const option = document.createElement('option');
-                option.value = province.code;
-                option.textContent = province.name;
-                option.dataset.name = province.name; // Lưu tên để dùng sau
-                provinceSelect.appendChild(option);
-            });
+            // Nếu dùng Choices.js
+            if (provinceChoice) {
+                const choices = result.data.map(province => ({
+                    value: province.code,
+                    label: province.name,
+                    customProperties: { name: province.name }
+                }));
+                provinceChoice.clearStore();
+                provinceChoice.setChoices(choices, 'value', 'label', true);
+            } else {
+                // Fallback nếu không có Choices.js
+                provinceSelect.innerHTML = '<option value="">-- Chọn tỉnh/thành phố --</option>';
+                
+                result.data.forEach(province => {
+                    const option = document.createElement('option');
+                    option.value = province.code;
+                    option.textContent = province.name;
+                    option.dataset.name = province.name;
+                    provinceSelect.appendChild(option);
+                });
+            }
             
             console.log(`✅ Loaded ${result.data.length} provinces`);
         }
     } catch (error) {
         console.error('❌ Error loading provinces:', error);
-        provinceSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        if (provinceChoice) {
+            provinceChoice.clearStore();
+            provinceChoice.setChoices([{ value: '', label: 'Lỗi tải dữ liệu' }], 'value', 'label', true);
+        } else {
+            provinceSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        }
     } finally {
         hideLoading(provinceSelect);
     }
@@ -291,27 +377,51 @@ async function loadDistricts(provinceCode) {
     
     try {
         showLoading(districtSelect);
-        resetSelect(wardSelect, '-- Chọn phường/xã --');
+        
+        // Reset ward select
+        if (wardChoice) {
+            wardChoice.clearStore();
+            wardChoice.setChoices([{ value: '', label: '-- Chọn phường/xã --' }], 'value', 'label', true);
+        } else {
+            resetSelect(wardSelect, '-- Chọn phường/xã --');
+        }
         
         const response = await fetch(`/api/locations/provinces/${provinceCode}/districts`);
         const result = await response.json();
         
         if (result.success && result.data) {
-            districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
-            
-            result.data.forEach(district => {
-                const option = document.createElement('option');
-                option.value = district.code;
-                option.textContent = district.name;
-                option.dataset.name = district.name; // Lưu tên để dùng sau
-                districtSelect.appendChild(option);
-            });
+            // Nếu dùng Choices.js
+            if (districtChoice) {
+                const choices = result.data.map(district => ({
+                    value: district.code,
+                    label: district.name,
+                    customProperties: { name: district.name }
+                }));
+                districtChoice.clearStore();
+                districtChoice.setChoices(choices, 'value', 'label', true);
+            } else {
+                // Fallback
+                districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
+                
+                result.data.forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district.code;
+                    option.textContent = district.name;
+                    option.dataset.name = district.name;
+                    districtSelect.appendChild(option);
+                });
+            }
             
             console.log(`✅ Loaded ${result.data.length} districts for province ${provinceCode}`);
         }
     } catch (error) {
         console.error('❌ Error loading districts:', error);
-        districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        if (districtChoice) {
+            districtChoice.clearStore();
+            districtChoice.setChoices([{ value: '', label: 'Lỗi tải dữ liệu' }], 'value', 'label', true);
+        } else {
+            districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        }
     } finally {
         hideLoading(districtSelect);
     }
@@ -330,21 +440,38 @@ async function loadWards(districtCode) {
         const result = await response.json();
         
         if (result.success && result.data) {
-            wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
-            
-            result.data.forEach(ward => {
-                const option = document.createElement('option');
-                option.value = ward.code;
-                option.textContent = ward.name;
-                option.dataset.name = ward.name; // Lưu tên để dùng sau
-                wardSelect.appendChild(option);
-            });
+            // Nếu dùng Choices.js
+            if (wardChoice) {
+                const choices = result.data.map(ward => ({
+                    value: ward.code,
+                    label: ward.name,
+                    customProperties: { name: ward.name }
+                }));
+                wardChoice.clearStore();
+                wardChoice.setChoices(choices, 'value', 'label', true);
+            } else {
+                // Fallback
+                wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+                
+                result.data.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.code;
+                    option.textContent = ward.name;
+                    option.dataset.name = ward.name;
+                    wardSelect.appendChild(option);
+                });
+            }
             
             console.log(`✅ Loaded ${result.data.length} wards for district ${districtCode}`);
         }
     } catch (error) {
         console.error('❌ Error loading wards:', error);
-        wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        if (wardChoice) {
+            wardChoice.clearStore();
+            wardChoice.setChoices([{ value: '', label: 'Lỗi tải dữ liệu' }], 'value', 'label', true);
+        } else {
+            wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+        }
     } finally {
         hideLoading(wardSelect);
     }
@@ -354,7 +481,20 @@ async function loadWards(districtCode) {
  * Reset select box
  */
 function resetSelect(selectElement, defaultText) {
-    selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+    const selectId = selectElement.id;
+    let choiceInstance = null;
+    
+    // Xác định Choices instance tương ứng
+    if (selectId === 'province') choiceInstance = provinceChoice;
+    else if (selectId === 'district') choiceInstance = districtChoice;
+    else if (selectId === 'ward') choiceInstance = wardChoice;
+    
+    if (choiceInstance) {
+        choiceInstance.clearStore();
+        choiceInstance.setChoices([{ value: '', label: defaultText }], 'value', 'label', true);
+    } else {
+        selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+    }
     selectElement.disabled = false;
 }
 
@@ -362,8 +502,20 @@ function resetSelect(selectElement, defaultText) {
  * Hiển thị trạng thái loading cho select
  */
 function showLoading(selectElement) {
-    selectElement.disabled = true;
-    selectElement.innerHTML = '<option value="">Đang tải...</option>';
+    const selectId = selectElement.id;
+    let choiceInstance = null;
+    
+    if (selectId === 'province') choiceInstance = provinceChoice;
+    else if (selectId === 'district') choiceInstance = districtChoice;
+    else if (selectId === 'ward') choiceInstance = wardChoice;
+    
+    if (choiceInstance) {
+        choiceInstance.clearStore();
+        choiceInstance.setChoices([{ value: '', label: 'Đang tải...', disabled: true }], 'value', 'label', true);
+    } else {
+        selectElement.disabled = true;
+        selectElement.innerHTML = '<option value="">Đang tải...</option>';
+    }
 }
 
 /**
@@ -371,6 +523,7 @@ function showLoading(selectElement) {
  */
 function hideLoading(selectElement) {
     selectElement.disabled = false;
+    // Choices.js sẽ tự động enable lại khi setChoices
 }
 
 /**
@@ -395,9 +548,14 @@ async function handleInfoFormSubmit(e) {
         name: formData.get('fullName'),
         phone: formData.get('phone'),
         dob: formData.get('dob'),
-        bio: formData.get('bio'),
-        gender: formData.get('gender')
+        bio: formData.get('bio')
     };
+    
+    // Chỉ thêm gender nếu có giá trị hợp lệ
+    const gender = formData.get('gender');
+    if (gender && gender !== '') {
+        data.gender = gender;
+    }
 
     try {
         showLoadingButton(e.target.querySelector('button[type="submit"]'));
@@ -513,14 +671,48 @@ async function handleAddressFormSubmit(e) {
 
     const formData = new FormData(e.target);
     
-    // Lấy text name từ selected option
+    // Lấy text name từ Choices.js instances hoặc từ selected option
     const provinceSelect = document.getElementById('province');
     const districtSelect = document.getElementById('district');
     const wardSelect = document.getElementById('ward');
     
-    const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-    const districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
-    const wardName = wardSelect.options[wardSelect.selectedIndex]?.text || '';
+    let provinceName = '';
+    let districtName = '';
+    let wardName = '';
+    
+    // Nếu dùng Choices.js, lấy từ instance
+    if (provinceChoice) {
+        const selected = provinceChoice.getValue();
+        provinceSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === selected.value) {
+                provinceName = opt.text;
+            }
+        });
+    } else {
+        provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+    }
+    
+    if (districtChoice) {
+        const selected = districtChoice.getValue();
+        districtSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === selected.value) {
+                districtName = opt.text;
+            }
+        });
+    } else {
+        districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
+    }
+    
+    if (wardChoice) {
+        const selected = wardChoice.getValue();
+        wardSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === selected.value) {
+                wardName = opt.text;
+            }
+        });
+    } else {
+        wardName = wardSelect.options[wardSelect.selectedIndex]?.text || '';
+    }
     
     const data = {
         address: {
@@ -623,13 +815,13 @@ function initAvatarUpload() {
 
         // Kiểm tra loại file
         if (!file.type.startsWith('image/')) {
-            alert('Vui lòng chọn một file hình ảnh');
+            showErrorAlert('Vui lòng chọn một file hình ảnh!', document.querySelector('.max-w-2xl'));
             return;
         }
 
         // Kiểm tra kích thước (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('Kích thước file không được vượt quá 5MB');
+            showErrorAlert('Kích thước file không được vượt quá 5MB!', document.querySelector('.max-w-2xl'));
             return;
         }
 
@@ -752,16 +944,18 @@ async function handleDeleteAccount() {
             localStorage.removeItem('userData');
             document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
-            alert('Tài khoản của bạn đã được xóa vĩnh viễn.');
-            window.location.href = '/';
+            showSuccessAlert('Tài khoản của bạn đã được xóa vĩnh viễn.', document.body);
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
         } else {
             const error = await response.json();
-            alert(error.error || 'Xóa tài khoản thất bại');
+            showErrorAlert(error.error || 'Xóa tài khoản thất bại', document.body);
         }
     } catch (error) {
         hideLoadingButton(confirmDeleteBtn);
         console.error('Error:', error);
-        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        showErrorAlert('Có lỗi xảy ra. Vui lòng thử lại.', document.body);
     }
 }
 
@@ -1111,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const phoneInput = document.getElementById('phone');
             
             if (!phoneInput || !phoneInput.value) {
-                alert('Vui lòng nhập số điện thoại');
+                showErrorAlert('Vui lòng nhập số điện thoại!', document.querySelector('.max-w-2xl'));
                 return;
             }
             
@@ -1119,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validate phone
             if (!/^[0-9]{10,11}$/.test(phone)) {
-                alert('Số điện thoại không hợp lệ');
+                showErrorAlert('Số điện thoại không hợp lệ! Vui lòng nhập 10-11 chữ số.', document.querySelector('.max-w-2xl'));
                 return;
             }
             
@@ -1149,11 +1343,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('%c🔐 MÃ OTP: ' + result.otp, 'background: #4CAF50; color: white; font-size: 20px; padding: 10px; border-radius: 5px;');
                     }
                 } else {
-                    alert(result.error || 'Không thể gửi OTP');
+                    showErrorAlert(result.error || 'Không thể gửi OTP. Vui lòng thử lại!', document.querySelector('.max-w-2xl'));
                 }
             } catch (error) {
                 console.error('Send OTP error:', error);
-                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                showErrorAlert('Có lỗi xảy ra khi gửi OTP. Vui lòng thử lại!', document.querySelector('.max-w-2xl'));
             } finally {
                 // Enable button
                 verifyPhoneBtn.disabled = false;
@@ -1284,13 +1478,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('%c🔐 MÃ OTP MỚI: ' + result.otp, 'background: #4CAF50; color: white; font-size: 20px; padding: 10px; border-radius: 5px;');
                     }
                 } else {
-                    alert(result.error || 'Không thể gửi OTP');
+                    showOTPError(result.error || 'Không thể gửi OTP. Vui lòng thử lại!');
                     resendBtn.disabled = false;
                     resendBtn.innerHTML = 'Gửi lại OTP';
                 }
             } catch (error) {
                 console.error('Resend OTP error:', error);
-                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                showOTPError('Có lỗi xảy ra khi gửi lại OTP. Vui lòng thử lại!');
                 resendBtn.disabled = false;
                 resendBtn.innerHTML = 'Gửi lại OTP';
             }

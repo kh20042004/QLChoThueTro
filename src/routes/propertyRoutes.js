@@ -23,9 +23,9 @@ router.get('/', getProperties);
 router.get('/:id', getProperty);
 router.get('/radius/:zipcode/:distance', getPropertiesInRadius);
 
-// Protected routes - Chỉ landlord và admin
-router.post('/', protect, authorize('landlord', 'admin'), upload.array('images', 10), createProperty);
-router.put('/:id', protect, authorize('landlord', 'admin'), updateProperty);
-router.delete('/:id', protect, authorize('landlord', 'admin'), deleteProperty);
+// Protected routes - User, landlord và admin
+router.post('/', protect, authorize('user', 'landlord', 'admin'), upload.array('images', 10), createProperty);
+router.put('/:id', protect, authorize('user', 'landlord', 'admin'), upload.array('images', 10), updateProperty);
+router.delete('/:id', protect, authorize('user', 'landlord', 'admin'), deleteProperty);
 
 module.exports = router;

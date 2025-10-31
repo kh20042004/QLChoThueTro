@@ -46,7 +46,10 @@ const UserSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['male', 'female', 'other']
+    enum: {
+      values: ['male', 'female', 'other'],
+      message: 'Giới tính không hợp lệ. Vui lòng chọn: Nam, Nữ hoặc Khác'
+    }
   },
   avatar: {
     type: String,

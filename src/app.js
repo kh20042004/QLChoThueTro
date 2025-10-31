@@ -95,6 +95,11 @@ app.get('/properties/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-detail.html'));
 });
 
+// View Routes - Trang chi tiết phòng (alternative route)
+app.get('/property/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/property-detail.html'));
+});
+
 // View Routes - Trang đăng nhập
 app.get('/auth/login', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/auth/login.html'));
@@ -113,6 +118,11 @@ app.get('/profile', (req, res) => {
 // View Routes - Trang đăng tin
 app.get('/property/create', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-create.html'));
+});
+
+// View Routes - Trang chỉnh sửa bài đăng
+app.get('/property/edit/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/property-edit.html'));
 });
 
 // View Routes - Trang quản lý bài đăng

@@ -24,14 +24,20 @@ const storage = multer.diskStorage({
 // Filter file - Chỉ cho phép upload ảnh
 const fileFilter = (req, file, cb) => {
   // Kiểm tra loại file
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedExtensions = /\.(jpeg|jpg|png|gif|webp)$/i;
 
-  if (mimetype && extname) {
+  // Kiểm tra extension
+  const hasValidExtension = allowedExtensions.test(file.originalname);
+  
+  // Kiểm tra MIME type
+  const hasValidMimeType = allowedMimeTypes.includes(file.mimetype);
+
+  // Chấp nhận nếu extension hợp lệ (mimetype có thể không chính xác)
+  if (hasValidExtension || hasValidMimeType) {
     return cb(null, true);
   } else {
-    cb(new Error('Chỉ cho phép upload file ảnh (jpeg, jpg, png, gif)'));
+    cb(new Error('Chỉ cho phép upload file ảnh (jpeg, jpg, png, gif, webp)'));
   }
 };
 

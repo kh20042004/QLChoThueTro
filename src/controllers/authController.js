@@ -236,7 +236,7 @@ exports.updateProfile = async (req, res, next) => {
     if (phone) user.phone = phone;
     if (dob !== undefined) user.dob = dob;
     if (bio !== undefined) user.bio = bio;
-    if (gender !== undefined) user.gender = gender;
+    if (gender !== undefined && gender !== '') user.gender = gender;
 
     await user.save();
 

@@ -20,6 +20,10 @@
     <!-- Google Fonts - Font chữ Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Choices.js - Searchable Select -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+    
     <!-- CSS tùy chỉnh chung cho dự án -->
     <link rel="stylesheet" href="/css/main.css">
     
@@ -66,6 +70,57 @@
         /* Class áp dụng animation slideDown */
         .animate-slideDown {
             animation: slideDown 0.3s ease-out;  /* Thời gian: 300ms */
+        }
+        
+        /* ===== CHOICES.JS CUSTOM STYLING ===== */
+        .choices__inner {
+            border-radius: 0.5rem !important;
+            border: 1px solid #D1D5DB !important;
+            padding: 0.5rem 1rem !important;
+            min-height: 42px !important;
+            background-color: white !important;
+        }
+        
+        .choices__inner:focus,
+        .is-focused .choices__inner {
+            border-color: #3B82F6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+        
+        .choices__list--dropdown {
+            border-radius: 0.5rem !important;
+            border: 1px solid #E5E7EB !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            z-index: 1000 !important;
+            max-height: 400px !important;
+            overflow-y: auto !important;
+            position: absolute !important;
+        }
+        
+        .choices[data-type*="select-one"] .choices__list--dropdown {
+            position: absolute !important;
+        }
+        
+        .choices__list--dropdown .choices__list {
+            max-height: 400px !important;
+        }
+        
+        .choices__item--selectable {
+            padding: 0.5rem 1rem !important;
+        }
+        
+        .choices__item--selectable.is-highlighted {
+            background-color: #EFF6FF !important;
+            color: #1E40AF !important;
+        }
+        
+        .choices__input {
+            background-color: transparent !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .choices__placeholder {
+            opacity: 0.6 !important;
         }
     </style>
 </head>
