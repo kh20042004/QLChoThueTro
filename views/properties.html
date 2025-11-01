@@ -289,9 +289,13 @@
                                 </button>
                             </div>
                             
-                            <div class="text-center">
+                            <div class="text-center flex items-center justify-center gap-6">
                                 <button type="button" class="text-gray-600 hover:text-gray-800 transition-colors duration-300" id="aiSearchBtn">
                                     <i class="fas fa-magic mr-2"></i>Tìm kiếm bằng AI
+                                </button>
+                                <span class="text-gray-300">|</span>
+                                <button type="button" class="text-gray-600 hover:text-gray-800 transition-colors duration-300" id="nearbySearchBtn">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>Phòng trọ gần tôi
                                 </button>
                             </div>
                         </form>
@@ -424,6 +428,86 @@
         <button id="scrollTopBtn" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-110 opacity-0 invisible">
             <i class="fas fa-arrow-up"></i>
         </button>
+        
+        <!-- Modal: Phòng trọ gần tôi -->
+        <div id="nearbyModal" class="fixed inset-0 z-50 hidden">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" id="nearbyModalBackdrop"></div>
+            
+            <!-- Modal Content -->
+            <div class="absolute inset-0 flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden animate-fadeInUp">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-map-marker-alt text-xl"></i>
+                            <h3 class="text-xl font-bold">Phòng trọ gần tôi</h3>
+                        </div>
+                        <button id="closeNearbyModal" class="text-white hover:text-gray-200 transition-colors duration-200">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="p-6">
+                        <!-- Loading State -->
+                        <div id="nearbyLoading" class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-gray-800"></div>
+                            <p class="mt-4 text-gray-600">Đang xác định vị trí của bạn...</p>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div id="nearbyError" class="hidden text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-5xl text-yellow-500 mb-4"></i>
+                            <h4 class="text-xl font-semibold text-gray-800 mb-2">Không thể xác định vị trí</h4>
+                            <p class="text-gray-600 mb-6" id="nearbyErrorMessage">Vui lòng cho phép truy cập vị trí của bạn để sử dụng tính năng này.</p>
+                            <button id="retryLocation" class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                                <i class="fas fa-redo mr-2"></i>Thử lại
+                            </button>
+                        </div>
+                        
+                        <!-- Map Container -->
+                        <div id="nearbyMapContainer" class="hidden">
+                            <!-- Info Bar -->
+                            <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-crosshairs text-gray-600"></i>
+                                        <span class="text-sm text-gray-700">Vị trí của bạn: <span id="userLocationText" class="font-semibold">Đang xác định...</span></span>
+                                    </div>
+                                    <div class="h-4 w-px bg-gray-300"></div>
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-home text-gray-600"></i>
+                                        <span class="text-sm text-gray-700">Tìm thấy: <span id="nearbyCount" class="font-semibold text-gray-800">0</span> phòng</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label class="text-sm text-gray-700">Bán kính:</label>
+                                    <select id="radiusSelect" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                        <option value="1">1 km</option>
+                                        <option value="2" selected>2 km</option>
+                                        <option value="3">3 km</option>
+                                        <option value="5">5 km</option>
+                                        <option value="10">10 km</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Map -->
+                            <div id="nearbyMap" class="w-full h-[500px] rounded-lg shadow-inner"></div>
+                            
+                            <!-- Properties List -->
+                            <div class="mt-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3">Danh sách phòng trọ gần bạn</h4>
+                                <div id="nearbyPropertiesList" class="max-h-64 overflow-y-auto space-y-2">
+                                    <!-- Properties will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -439,6 +523,7 @@
     <!-- Properties Page Script -->
     <script src="/js/properties.js"></script>
     <script src="/js/ai-search.js"></script>
+    <script src="/js/nearby-search.js"></script>
     
     <!-- AI Chatbot Widget -->
     <link rel="stylesheet" href="/css/chatbot.css">

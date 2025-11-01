@@ -11,6 +11,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -423,7 +428,91 @@
         </div>
     </div>
 
+    <!-- Modal: Phòng trọ gần trường -->
+    <div id="nearbyRoomsModal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" id="nearbyRoomsBackdrop"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden animate-fadeInUp">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-university text-xl"></i>
+                        <h3 class="text-xl font-bold" id="nearbyModalTitle">Phòng trọ gần trường</h3>
+                    </div>
+                    <button id="closeNearbyRoomsModal" class="text-white hover:text-gray-200 transition-colors duration-200">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Body -->
+                <div class="p-6">
+                    <!-- Loading State -->
+                    <div id="nearbyRoomsLoading" class="text-center py-12">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-gray-800"></div>
+                        <p class="mt-4 text-gray-600">Đang tải danh sách phòng trọ...</p>
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div id="nearbyRoomsError" class="hidden text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-5xl text-yellow-500 mb-4"></i>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">Không thể tải danh sách phòng</h4>
+                        <p class="text-gray-600 mb-6" id="nearbyRoomsErrorMessage">Vui lòng thử lại sau.</p>
+                        <button id="retryNearbyRooms" class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                            <i class="fas fa-redo mr-2"></i>Thử lại
+                        </button>
+                    </div>
+                    
+                    <!-- Map Container -->
+                    <div id="nearbyRoomsMapContainer" class="hidden">
+                        <!-- Info Bar -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-university text-gray-600"></i>
+                                    <span class="text-sm text-gray-700">Trường: <span id="universityNameText" class="font-semibold">...</span></span>
+                                </div>
+                                <div class="h-4 w-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-home text-gray-600"></i>
+                                    <span class="text-sm text-gray-700">Tìm thấy: <span id="nearbyRoomsCount" class="font-semibold text-gray-800">0</span> phòng</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm text-gray-700">Bán kính:</label>
+                                <select id="nearbyRoomsRadius" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                    <option value="1">1 km</option>
+                                    <option value="2" selected>2 km</option>
+                                    <option value="3">3 km</option>
+                                    <option value="5">5 km</option>
+                                    <option value="10">10 km</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Map -->
+                        <div id="nearbyRoomsMap" class="w-full h-[500px] rounded-lg shadow-inner"></div>
+                        
+                        <!-- Properties List -->
+                        <div class="mt-4">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Danh sách phòng trọ gần trường</h4>
+                            <div id="nearbyRoomsPropertyList" class="max-h-64 overflow-y-auto space-y-2">
+                                <!-- Properties will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
     <script>
         const ITEMS_PER_PAGE = 12;
         let currentPage = 1;
@@ -976,10 +1065,246 @@
         }
 
         // Find nearby rooms
-        function findNearbyRooms(universityId) {
-            sessionStorage.setItem('nearUniversityId', universityId);
-            window.location.href = '/properties?university=' + universityId;
+        let nearbyRoomsMap = null;
+        let allProperties = [];
+        let currentUniversityId = null;
+        let universityMarker = null; // Lưu reference của marker trường
+        
+        async function findNearbyRooms(universityId) {
+            // Tìm thông tin trường
+            const university = allUniversities.find(u => u._id === universityId);
+            if (!university || !university.location || !university.location.coordinates) {
+                showToast('Không tìm thấy tọa độ trường học', 'error');
+                return;
+            }
+            
+            currentUniversityId = universityId;
+            
+            // Mở modal
+            const modal = document.getElementById('nearbyRoomsModal');
+            const loading = document.getElementById('nearbyRoomsLoading');
+            const error = document.getElementById('nearbyRoomsError');
+            const mapContainer = document.getElementById('nearbyRoomsMapContainer');
+            
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            mapContainer.classList.add('hidden');
+            
+            // Cập nhật tiêu đề
+            document.getElementById('nearbyModalTitle').textContent = `Phòng trọ gần ${university.name}`;
+            document.getElementById('universityNameText').textContent = university.name;
+            
+            try {
+                // Lấy danh sách properties (limit=1000 để lấy nhiều phòng hơn)
+                const response = await fetch('/api/properties?limit=1000&status=available');
+                if (!response.ok) throw new Error('Không thể tải danh sách phòng');
+                
+                const result = await response.json();
+                
+                // API trả về { success, count, data, pagination }
+                allProperties = result.data || [];
+                
+                if (!Array.isArray(allProperties)) {
+                    throw new Error('Dữ liệu phòng không hợp lệ');
+                }
+                
+                // Hiển thị bản đồ
+                loading.classList.add('hidden');
+                mapContainer.classList.remove('hidden');
+                
+                // Khởi tạo bản đồ
+                initNearbyRoomsMap(university);
+                
+                // Lọc và hiển thị phòng
+                filterAndDisplayNearbyRooms();
+                
+            } catch (err) {
+                console.error('Lỗi:', err);
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                document.getElementById('nearbyRoomsErrorMessage').textContent = err.message;
+            }
         }
+        
+        function initNearbyRoomsMap(university) {
+            const mapElement = document.getElementById('nearbyRoomsMap');
+            
+            // Xóa map cũ nếu có
+            if (nearbyRoomsMap) {
+                nearbyRoomsMap.remove();
+            }
+            
+            // Tạo map mới
+            const [lng, lat] = university.location.coordinates;
+            nearbyRoomsMap = L.map('nearbyRoomsMap').setView([lat, lng], 14);
+            
+            // Thêm tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(nearbyRoomsMap);
+            
+            // Thêm marker cho trường
+            const universityIcon = L.divIcon({
+                html: '<div class="university-marker"><i class="fas fa-university"></i></div>',
+                className: 'custom-div-icon',
+                iconSize: [100, 100],
+                iconAnchor: [50, 50],
+                popupAnchor: [0, -50]
+            });
+            
+            universityMarker = L.marker([lat, lng], { icon: universityIcon })
+                .bindPopup(`
+                    <div class="text-center p-2">
+                        <div class="text-lg font-bold text-red-600 mb-1">🏫 ${university.name}</div>
+                        <div class="text-sm text-gray-600">${university.address}</div>
+                    </div>
+                `)
+                .addTo(nearbyRoomsMap)
+                .openPopup();
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Bán kính Trái Đất (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        function filterAndDisplayNearbyRooms() {
+            const university = allUniversities.find(u => u._id === currentUniversityId);
+            if (!university) return;
+            
+            const radius = parseFloat(document.getElementById('nearbyRoomsRadius').value);
+            const [uniLng, uniLat] = university.location.coordinates;
+            
+            // Lọc properties trong bán kính
+            const nearbyProperties = allProperties
+                .filter(prop => {
+                    if (!prop.location || !prop.location.coordinates) return false;
+                    if (prop.status !== 'available') return false;
+                    
+                    const [propLng, propLat] = prop.location.coordinates;
+                    const distance = calculateDistance(uniLat, uniLng, propLat, propLng);
+                    prop.distance = distance;
+                    return distance <= radius;
+                })
+                .sort((a, b) => a.distance - b.distance);
+            
+            // Cập nhật số lượng
+            document.getElementById('nearbyRoomsCount').textContent = nearbyProperties.length;
+            
+            // Xóa markers cũ (trừ marker trường và tile layer)
+            nearbyRoomsMap.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer !== universityMarker) {
+                    nearbyRoomsMap.removeLayer(layer);
+                }
+            });
+            
+            // Thêm markers cho properties
+            nearbyProperties.forEach((prop, index) => {
+                const [propLng, propLat] = prop.location.coordinates;
+                
+                const propertyIcon = L.divIcon({
+                    html: `<div class="property-location-marker">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>`,
+                    className: 'custom-div-icon',
+                    iconSize: [50, 65],
+                    iconAnchor: [25, 65],
+                    popupAnchor: [0, -65]
+                });
+                
+                // Lấy địa chỉ đầy đủ
+                const fullAddress = prop.address?.full || prop.address?.street || 
+                                   (typeof prop.address === 'string' ? prop.address : 'Chưa có địa chỉ');
+                
+                const marker = L.marker([propLat, propLng], { icon: propertyIcon })
+                    .bindPopup(`
+                        <div class="property-popup">
+                            <h4 class="font-bold mb-2 text-blue-600">${prop.title}</h4>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                    ${fullAddress}
+                                </p>
+                                <p class="text-sm font-semibold text-gray-800">
+                                    <i class="fas fa-dollar-sign text-green-500 mr-1"></i>
+                                    ${prop.price.toLocaleString('vi-VN')} VNĐ/tháng
+                                </p>
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-ruler-combined text-blue-500 mr-1"></i>
+                                    Cách trường: <strong>${prop.distance.toFixed(2)} km</strong>
+                                </p>
+                                <a href="/property/${prop._id}" 
+                                   class="inline-block mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition w-full text-center">
+                                    <i class="fas fa-eye mr-1"></i>Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    `)
+                    .addTo(nearbyRoomsMap);
+            });
+            
+            // Hiển thị danh sách
+            displayNearbyRoomsList(nearbyProperties);
+        }
+        
+        function displayNearbyRoomsList(properties) {
+            const listContainer = document.getElementById('nearbyRoomsPropertyList');
+            
+            if (properties.length === 0) {
+                listContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Không tìm thấy phòng trọ trong bán kính này.</p>';
+                return;
+            }
+            
+            listContainer.innerHTML = properties.map(prop => {
+                const imageUrl = prop.images && prop.images.length > 0 ? prop.images[0] : 'https://via.placeholder.com/80x80?text=No+Image';
+                const fullAddress = prop.address?.full || prop.address?.street || 
+                                   (typeof prop.address === 'string' ? prop.address : 'Chưa có địa chỉ');
+                return `
+                <div class="flex gap-3 p-3 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer" onclick="window.location.href='/property/${prop._id}'">
+                    <img src="${imageUrl}" alt="${prop.title}" class="w-20 h-20 object-cover rounded" onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'">
+                    <div class="flex-1 min-w-0">
+                        <h5 class="font-semibold text-gray-800 truncate">${prop.title}</h5>
+                        <p class="text-sm text-gray-600 truncate">${fullAddress}</p>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-sm font-semibold text-gray-800">${prop.price.toLocaleString('vi-VN')} VNĐ/tháng</span>
+                            <span class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>${prop.distance.toFixed(2)} km</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        // Đóng modal
+        document.getElementById('closeNearbyRoomsModal')?.addEventListener('click', () => {
+            document.getElementById('nearbyRoomsModal').classList.add('hidden');
+        });
+        
+        document.getElementById('nearbyRoomsBackdrop')?.addEventListener('click', () => {
+            document.getElementById('nearbyRoomsModal').classList.add('hidden');
+        });
+        
+        // Thay đổi bán kính
+        document.getElementById('nearbyRoomsRadius')?.addEventListener('change', () => {
+            if (currentUniversityId) {
+                filterAndDisplayNearbyRooms();
+            }
+        });
+        
+        // Retry
+        document.getElementById('retryNearbyRooms')?.addEventListener('click', () => {
+            if (currentUniversityId) {
+                findNearbyRooms(currentUniversityId);
+            }
+        });
 
         // Update pagination
         function updatePagination() {

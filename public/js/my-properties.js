@@ -32,46 +32,77 @@ function initFilterListeners() {
     }
 }
 
-function loadProperties() {
+async function loadProperties() {
     const searchValue = document.getElementById('searchInput')?.value || '';
     const statusValue = document.getElementById('statusFilter')?.value || '';
     const sortValue = document.getElementById('sortFilter')?.value || 'newest';
 
-    // Lấy danh sách từ localStorage
-    let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-    
-    // Lọc theo tìm kiếm
-    if (searchValue) {
-        properties = properties.filter(prop => 
-            prop.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-            prop.description.toLowerCase().includes(searchValue.toLowerCase())
-        );
+    try {
+        // Lấy token
+        const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        
+        if (!token || !userData) {
+            window.location.href = '/auth/login';
+            return;
+        }
+
+        console.log('🔍 Loading properties for user:', userData.id);
+
+        // Gọi API lấy properties của user (sử dụng endpoint chuyên dụng)
+        const response = await fetch('/api/properties/my-properties', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải danh sách bài đăng');
+        }
+
+        const result = await response.json();
+        console.log('📦 API Response:', result);
+        
+        let properties = result.data || [];
+        console.log('📋 Total properties from API:', properties.length);
+        
+        // Lọc theo tìm kiếm
+        if (searchValue) {
+            properties = properties.filter(prop => 
+                prop.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+                prop.description.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+        
+        // Lọc theo trạng thái
+        if (statusValue) {
+            properties = properties.filter(prop => prop.status === statusValue);
+        }
+        
+        // Sắp xếp
+        if (sortValue === 'newest') {
+            properties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortValue === 'oldest') {
+            properties.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (sortValue === 'most-viewed') {
+            properties.sort((a, b) => (b.views || 0) - (a.views || 0));
+        }
+        
+        // Hiển thị kết quả
+        displayProperties(properties);
+        
+        // Cập nhật số lượng
+        const countElement = document.getElementById('propertyCount');
+        if (countElement) {
+            countElement.textContent = `${properties.length} bài đăng`;
+        }
+        
+        console.log('✅ Loaded properties:', properties.length);
+    } catch (error) {
+        console.error('❌ Error loading properties:', error);
+        showAlert('Không thể tải danh sách bài đăng', 'danger');
     }
-    
-    // Lọc theo trạng thái
-    if (statusValue) {
-        properties = properties.filter(prop => prop.status === statusValue);
-    }
-    
-    // Sắp xếp
-    if (sortValue === 'newest') {
-        properties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else if (sortValue === 'oldest') {
-        properties.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    } else if (sortValue === 'most-viewed') {
-        properties.sort((a, b) => (b.views || 0) - (a.views || 0));
-    }
-    
-    // Hiển thị kết quả
-    displayProperties(properties);
-    
-    // Cập nhật số lượng
-    const countElement = document.getElementById('propertyCount');
-    if (countElement) {
-        countElement.textContent = `${properties.length} bài đăng`;
-    }
-    
-    console.log('✅ Loaded properties:', properties.length);
 }
 
 function displayProperties(properties) {
@@ -216,21 +247,41 @@ function editProperty(propertyId) {
     window.location.href = `/property/edit/${propertyId}`;
 }
 
-function deleteProperty(propertyId) {
-    if (confirm('Bạn có chắc chắn muốn xóa bài đăng này?')) {
-        // Lấy danh sách từ localStorage
-        let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+async function deleteProperty(propertyId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bài đăng này?')) {
+        return;
+    }
+
+    try {
+        // Lấy token
+        const token = localStorage.getItem('token');
         
-        // Lọc bỏ property cần xóa
-        properties = properties.filter(prop => prop._id !== propertyId);
-        
-        // Lưu lại
-        localStorage.setItem('myProperties', JSON.stringify(properties));
-        
-        // Reload hiển thị
-        loadProperties();
+        if (!token) {
+            window.location.href = '/auth/login';
+            return;
+        }
+
+        // Gọi API xóa
+        const response = await fetch(`/api/properties/${propertyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Không thể xóa bài đăng');
+        }
+
+        // Reload danh sách từ server
+        await loadProperties();
         
         showAlert('Đã xóa bài đăng thành công', 'success');
+    } catch (error) {
+        console.error('❌ Error deleting property:', error);
+        showAlert(error.message || 'Không thể xóa bài đăng', 'danger');
     }
 }
 

@@ -20,20 +20,39 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initFilters() {
     const searchInput = document.querySelector('input[type="text"][placeholder*="Tìm kiếm"]');
-    const statusFilter = document.querySelectorAll('select')[0];
-    const typeFilter = document.querySelectorAll('select')[1];
+    const selects = document.querySelectorAll('select');
+    const typeFilter = selects[0]; // Loại hình
+    const statusFilter = selects[1]; // Trạng thái
+    const sortFilter = selects[2]; // Sắp xếp
 
     if (searchInput) {
-        searchInput.addEventListener('input', filterProperties);
+        searchInput.addEventListener('input', debounce(filterProperties, 300));
+    }
+
+    if (typeFilter) {
+        typeFilter.addEventListener('change', filterProperties);
     }
 
     if (statusFilter) {
         statusFilter.addEventListener('change', filterProperties);
     }
 
-    if (typeFilter) {
-        typeFilter.addEventListener('change', filterProperties);
+    if (sortFilter) {
+        sortFilter.addEventListener('change', filterProperties);
     }
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 /**
@@ -41,25 +60,44 @@ function initFilters() {
  */
 function filterProperties() {
     const searchInput = document.querySelector('input[type="text"][placeholder*="Tìm kiếm"]');
-    const statusFilter = document.querySelectorAll('select')[0];
-    const typeFilter = document.querySelectorAll('select')[1];
+    const selects = document.querySelectorAll('select');
+    const typeFilter = selects[0]; // Loại hình
+    const statusFilter = selects[1]; // Trạng thái
+    const sortFilter = selects[2]; // Sắp xếp
 
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    const statusValue = statusFilter ? statusFilter.value : '';
     const typeValue = typeFilter ? typeFilter.value : '';
+    const statusValue = statusFilter ? statusFilter.value : '';
+    const sortValue = sortFilter ? sortFilter.value : 'newest';
 
-    const filteredProperties = allProperties.filter(property => {
+    console.log('🔍 Filtering:', { searchTerm, typeValue, statusValue, sortValue });
+
+    let filteredProperties = allProperties.filter(property => {
         const matchSearch = !searchTerm || 
             property.title.toLowerCase().includes(searchTerm) ||
             property.address?.city?.toLowerCase().includes(searchTerm) ||
-            property.address?.district?.toLowerCase().includes(searchTerm);
+            property.address?.district?.toLowerCase().includes(searchTerm) ||
+            property.landlord?.name?.toLowerCase().includes(searchTerm) ||
+            property.landlord?.email?.toLowerCase().includes(searchTerm);
 
-        const matchStatus = !statusValue || property.status === statusValue;
         const matchType = !typeValue || property.propertyType === typeValue;
+        const matchStatus = !statusValue || property.status === statusValue;
 
-        return matchSearch && matchStatus && matchType;
+        return matchSearch && matchType && matchStatus;
     });
 
+    // Sắp xếp
+    if (sortValue === 'newest') {
+        filteredProperties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortValue === 'oldest') {
+        filteredProperties.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortValue === 'price-asc') {
+        filteredProperties.sort((a, b) => a.price - b.price);
+    } else if (sortValue === 'price-desc') {
+        filteredProperties.sort((a, b) => b.price - a.price);
+    }
+
+    console.log('✅ Filtered properties:', filteredProperties.length);
     renderPropertiesGrid(filteredProperties);
 }
 
@@ -120,11 +158,8 @@ async function loadProperties() {
             allProperties = result.data; // Lưu vào biến global
             renderPropertiesGrid(allProperties);
 
-            // Cập nhật số lượng properties
-            const totalPropertiesElement = document.querySelector('.text-2xl.font-bold');
-            if (totalPropertiesElement) {
-                totalPropertiesElement.textContent = result.count || result.data.length;
-            }
+            // Cập nhật stats
+            updateStats(allProperties);
         } else {
             throw new Error(result.error || 'Failed to load properties');
         }
@@ -153,66 +188,96 @@ function renderPropertiesGrid(properties) {
         return;
     }
     
-    grid.innerHTML = properties.map(property => `
-        <div class="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300">
+    grid.innerHTML = properties.map(property => {
+        const landlordName = property.landlord?.name || property.landlord?.email || 'Không rõ';
+        const imageUrl = (property.images && property.images.length > 0) 
+            ? property.images[0] 
+            : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400';
+        
+        return `
+        <div class="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer property-card" 
+             onclick="viewProperty('${property._id}')"
+             data-property-id="${property._id}">
             <div class="relative h-48">
-                <img src="${property.images && property.images.length > 0 ? property.images[0] : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400'}" 
+                <img src="${imageUrl}" 
                      alt="${property.title}" 
                      class="w-full h-full object-cover"
                      onerror="this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400'">
                 <div class="absolute top-3 right-3">
-                    <span class="px-3 py-1 ${getStatusBadgeClass(property.status)} text-xs rounded-full font-medium backdrop-blur-sm">
+                    <span class="px-3 py-1 ${getStatusBadgeClass(property.status)} text-xs rounded-full font-semibold">
                         ${getStatusLabel(property.status)}
                     </span>
                 </div>
-                ${property.landlord ? `
-                <div class="absolute bottom-3 left-3">
-                    <div class="bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-white text-xs">
-                        <i class="fas fa-user mr-1"></i>${property.landlord.name || property.landlord.email}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
+                    <div class="flex items-center justify-between text-white text-xs">
+                        <div class="flex items-center">
+                            <i class="fas fa-user mr-1"></i>
+                            <span class="font-medium">${landlordName}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-eye mr-1"></i>
+                            <span>${property.views || 0}</span>
+                        </div>
                     </div>
                 </div>
-                ` : ''}
             </div>
             <div class="p-4">
-                <h3 class="font-bold text-gray-900 mb-2 line-clamp-2">${property.title}</h3>
-                <p class="text-pink-600 font-bold text-lg mb-2">${formatPrice(property.price)}</p>
-                <p class="text-sm text-gray-600 mb-3">
-                    <i class="fas fa-map-marker-alt mr-1"></i>
+                <h3 class="font-bold text-gray-900 mb-2 line-clamp-2 hover:text-pink-600 transition-colors">${property.title}</h3>
+                <div class="flex items-baseline justify-between mb-3">
+                    <p class="text-pink-600 font-bold text-xl">${formatPrice(property.price)}</p>
+                    <p class="text-xs text-gray-500">${property.area || 0}m²</p>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">
+                    <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
                     ${property.address?.district || 'N/A'}, ${property.address?.city || 'N/A'}
                 </p>
                 <p class="text-xs text-gray-500 mb-4">
                     <i class="fas fa-calendar mr-1"></i>
                     ${formatDate(property.createdAt)}
                 </p>
-                <div class="flex space-x-2">
+                <div class="flex gap-2" onclick="event.stopPropagation()">
                     ${property.status === 'pending' ? `
-                    <button onclick="approveProperty('${property._id}')" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                    <button onclick="event.stopPropagation(); approveProperty('${property._id}')" 
+                            class="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Duyệt bất động sản">
                         <i class="fas fa-check mr-1"></i>Duyệt
                     </button>
-                    <button onclick="rejectProperty('${property._id}')" class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm">
+                    <button onclick="event.stopPropagation(); rejectProperty('${property._id}')" 
+                            class="flex-1 px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Từ chối bất động sản">
                         <i class="fas fa-times mr-1"></i>Từ chối
                     </button>
                     ` : `
-                    <button onclick="viewProperty('${property._id}')" class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                    <button onclick="event.stopPropagation(); viewProperty('${property._id}')" 
+                            class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Xem chi tiết">
                         <i class="fas fa-eye mr-1"></i>Xem
                     </button>
+                    ${property.status === 'available' ? `
+                    <button onclick="event.stopPropagation(); rejectProperty('${property._id}')" 
+                            class="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Khóa bất động sản">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    ` : ''}
                     `}
-                    <button onclick="deleteProperty('${property._id}')" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+                    <button onclick="event.stopPropagation(); deleteProperty('${property._id}')" 
+                            class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Xóa vĩnh viễn">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function getStatusLabel(status) {
     const labels = {
         'pending': 'Chờ duyệt',
-        'approved': 'Đã duyệt',
-        'available': 'Có sẵn',
+        'available': 'Sẵn sàng',
         'rented': 'Đã thuê',
-        'rejected': 'Đã từ chối',
         'inactive': 'Không hoạt động'
     };
     return labels[status] || status;
@@ -220,14 +285,12 @@ function getStatusLabel(status) {
 
 function getStatusBadgeClass(status) {
     const classes = {
-        'pending': 'bg-yellow-100 text-yellow-700',
-        'approved': 'bg-green-100 text-green-700',
-        'available': 'bg-green-100 text-green-700',
-        'rented': 'bg-blue-100 text-blue-700',
-        'rejected': 'bg-red-100 text-red-700',
-        'inactive': 'bg-gray-100 text-gray-700'
+        'pending': 'bg-yellow-500/20 text-yellow-700 border border-yellow-500/30',
+        'available': 'bg-green-500/20 text-green-700 border border-green-500/30',
+        'rented': 'bg-blue-500/20 text-blue-700 border border-blue-500/30',
+        'inactive': 'bg-red-500/20 text-red-700 border border-red-500/30'
     };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    return classes[status] || 'bg-gray-500/20 text-gray-700 border border-gray-500/30';
 }
 
 function formatPrice(price) {
@@ -347,6 +410,39 @@ async function deleteProperty(id) {
         console.error('Error deleting property:', error);
         alert('Lỗi khi xóa bất động sản. Vui lòng thử lại!');
     }
+}
+
+/**
+ * Cập nhật thống kê
+ */
+function updateStats(properties) {
+    const total = properties.length;
+    const pending = properties.filter(p => p.status === 'pending').length;
+    const available = properties.filter(p => p.status === 'available').length;
+    const inactive = properties.filter(p => p.status === 'inactive').length;
+
+    // Cập nhật các số liệu
+    const statCards = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-4 .bg-white\\/90');
+    
+    if (statCards.length >= 4) {
+        // Tổng BĐS
+        const totalEl = statCards[0].querySelector('.text-2xl.font-bold');
+        if (totalEl) totalEl.textContent = total;
+
+        // Chờ duyệt
+        const pendingEl = statCards[1].querySelector('.text-2xl.font-bold');
+        if (pendingEl) pendingEl.textContent = pending;
+
+        // Đã duyệt (available)
+        const availableEl = statCards[2].querySelector('.text-2xl.font-bold');
+        if (availableEl) availableEl.textContent = available;
+
+        // Đã khóa (inactive)
+        const inactiveEl = statCards[3].querySelector('.text-2xl.font-bold');
+        if (inactiveEl) inactiveEl.textContent = inactive;
+    }
+
+    console.log('📊 Stats updated:', { total, pending, available, inactive });
 }
 
 function initSidebar() {

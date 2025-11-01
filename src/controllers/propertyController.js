@@ -26,8 +26,15 @@ exports.getProperties = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
+    // Parse query
+    const queryObj = JSON.parse(queryStr);
+
+    // Log để debug
+    console.log('🔍 Query parameters:', req.query);
+    console.log('🔍 Parsed query object:', queryObj);
+
     // Finding resource
-    let query = Property.find(JSON.parse(queryStr)).populate('landlord', 'name email phone');
+    let query = Property.find(queryObj).populate('landlord', 'name email phone avatar');
 
     // Select Fields
     if (req.query.select) {
@@ -45,15 +52,19 @@ exports.getProperties = async (req, res, next) => {
 
     // Pagination
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    const limit = parseInt(req.query.limit, 10) || 1000; // Tăng limit lên để hiển thị tất cả properties của user
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await Property.countDocuments();
+    
+    // Count với query filter
+    const total = await Property.countDocuments(queryObj);
 
     query = query.skip(startIndex).limit(limit);
 
     // Execute query
     const properties = await query;
+
+    console.log(`✅ Found ${properties.length} properties`);
 
     // Pagination result
     const pagination = {};
@@ -75,6 +86,7 @@ exports.getProperties = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: properties.length,
+      total: total,
       pagination,
       data: properties
     });
@@ -101,9 +113,12 @@ exports.getProperty = async (req, res, next) => {
       });
     }
 
-    // Tăng view count
-    property.views += 1;
-    await property.save();
+    // Tăng view count (sử dụng $inc để tránh conflict với schema)
+    await Property.updateOne(
+      { _id: req.params.id },
+      { $inc: { views: 1 } }
+    );
+    property.views += 1; // Update local object for response
 
     res.status(200).json({
       success: true,
@@ -195,7 +210,7 @@ exports.createProperty = async (req, res, next) => {
         province: province
       },
       landlord: req.user.id,
-      status: 'pending' // Chờ duyệt
+      status: 'available' // Mặc định là available (sẵn sàng cho thuê)
     };
 
     // Handle amenities
@@ -226,11 +241,11 @@ exports.createProperty = async (req, res, next) => {
     const property = await Property.create(propertyData);
 
     // Log the action
-    console.log(`Người dùng ${req.user.id} vừa tạo tin đăng ${property._id} tại ${fullAddress} (${coordinates})`);
+    console.log(`✅ Người dùng ${req.user.id} vừa tạo tin đăng ${property._id} tại ${fullAddress} (${coordinates})`);
 
     res.status(201).json({
       success: true,
-      message: 'Đăng tin thành công! Tin đăng của bạn đang chờ duyệt.',
+      message: 'Đăng tin thành công! Tin đăng của bạn đã được đăng.',
       data: property
     });
   } catch (error) {
@@ -334,8 +349,17 @@ exports.updateProperty = async (req, res, next) => {
           ? JSON.parse(req.body.amenities)
           : req.body.amenities;
         
+        // Chỉ cập nhật nếu là object (không phải array)
         if (typeof amenitiesData === 'object' && !Array.isArray(amenitiesData)) {
-          updateData.amenities = amenitiesData;
+          // Chỉ cập nhật từng field riêng lẻ để tránh ghi đè cấu trúc
+          updateData['amenities.wifi'] = amenitiesData.wifi || false;
+          updateData['amenities.ac'] = amenitiesData.ac || false;
+          updateData['amenities.parking'] = amenitiesData.parking || false;
+          updateData['amenities.kitchen'] = amenitiesData.kitchen || false;
+          updateData['amenities.water'] = amenitiesData.water || false;
+          updateData['amenities.laundry'] = amenitiesData.laundry || false;
+          updateData['amenities.balcony'] = amenitiesData.balcony || false;
+          updateData['amenities.security'] = amenitiesData.security || false;
         }
       } catch (e) {
         console.warn('Lỗi parse amenities:', e.message);
@@ -422,6 +446,32 @@ exports.deleteProperty = async (req, res, next) => {
       data: {}
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Lấy danh sách property của user hiện tại
+ * @route   GET /api/properties/my-properties
+ * @access  Private
+ */
+exports.getMyProperties = async (req, res, next) => {
+  try {
+    console.log('🔍 Getting properties for user:', req.user.id);
+
+    const properties = await Property.find({ landlord: req.user.id })
+      .sort('-createdAt')
+      .populate('landlord', 'name email phone avatar');
+
+    console.log(`✅ Found ${properties.length} properties for user ${req.user.id}`);
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      data: properties
+    });
+  } catch (error) {
+    console.error('❌ Error getting my properties:', error);
     next(error);
   }
 };

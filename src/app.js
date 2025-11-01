@@ -95,17 +95,17 @@ app.get('/properties/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-detail.html'));
 });
 
-// View Routes - Trang đăng tin (ĐẶT TRƯỚC route :id để tránh conflict)
+// View Routes - Trang đăng tin (ĐẶT TRƯỚC :id để tránh conflict)
 app.get('/property/create', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-create.html'));
 });
 
-// View Routes - Trang chỉnh sửa bài đăng (ĐẶT TRƯỚC route :id)
+// View Routes - Trang chỉnh sửa bài đăng (ĐẶT TRƯỚC :id)
 app.get('/property/edit/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-edit.html'));
 });
 
-// View Routes - Trang chi tiết phòng (alternative route) - ĐẶT SAU các route cụ thể
+// View Routes - Trang chi tiết phòng (alternative route)
 app.get('/property/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/property-detail.html'));
 });

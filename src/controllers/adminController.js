@@ -267,9 +267,11 @@ exports.getProperties = async (req, res, next) => {
  */
 exports.approveProperty = async (req, res, next) => {
   try {
+    console.log('🔍 Approving property:', req.params.id);
+    
     const property = await Property.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved' },
+      { status: 'available' }, // Đổi thành 'available' thay vì 'approved'
       { new: true, runValidators: true }
     );
 
@@ -280,11 +282,15 @@ exports.approveProperty = async (req, res, next) => {
       });
     }
 
+    console.log('✅ Property approved:', property._id);
+
     res.status(200).json({
       success: true,
+      message: 'Đã duyệt bất động sản thành công',
       data: property
     });
   } catch (error) {
+    console.error('❌ Error approving property:', error);
     next(error);
   }
 };
@@ -296,9 +302,11 @@ exports.approveProperty = async (req, res, next) => {
  */
 exports.rejectProperty = async (req, res, next) => {
   try {
+    console.log('🔍 Rejecting property:', req.params.id);
+    
     const property = await Property.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected' },
+      { status: 'inactive' }, // Đổi thành 'inactive' thay vì 'rejected'
       { new: true, runValidators: true }
     );
 
@@ -309,11 +317,15 @@ exports.rejectProperty = async (req, res, next) => {
       });
     }
 
+    console.log('✅ Property rejected:', property._id);
+
     res.status(200).json({
       success: true,
+      message: 'Đã từ chối bất động sản',
       data: property
     });
   } catch (error) {
+    console.error('❌ Error rejecting property:', error);
     next(error);
   }
 };
@@ -325,6 +337,8 @@ exports.rejectProperty = async (req, res, next) => {
  */
 exports.deleteProperty = async (req, res, next) => {
   try {
+    console.log('🔍 Deleting property:', req.params.id);
+    
     const property = await Property.findByIdAndDelete(req.params.id);
 
     if (!property) {
@@ -334,11 +348,15 @@ exports.deleteProperty = async (req, res, next) => {
       });
     }
 
+    console.log('✅ Property deleted:', property._id);
+
     res.status(200).json({
       success: true,
+      message: 'Đã xóa bất động sản thành công',
       data: {}
     });
   } catch (error) {
+    console.error('❌ Error deleting property:', error);
     next(error);
   }
 };
