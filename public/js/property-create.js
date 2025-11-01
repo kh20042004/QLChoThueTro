@@ -775,30 +775,37 @@ function submitPropertyForm() {
     // Step 2: Địa chỉ
     formData.append('street', document.getElementById('street').value);
     
-    // Lấy giá trị từ Choices.js instances (không phải từ select.value)
+    // Lấy TÊN (label) từ Choices.js instances, không phải code
     let provinceValue = '';
     let districtValue = '';
     let wardValue = '';
     
     if (provinceChoice) {
         const provinceSelected = provinceChoice.getValue();
-        provinceValue = provinceSelected.value || '';
+        // Lấy label thay vì value (code)
+        const provinceElement = document.querySelector(`#province option[value="${provinceSelected.value}"]`);
+        provinceValue = provinceElement ? provinceElement.textContent : '';
     } else {
-        provinceValue = document.getElementById('province').value;
+        const provinceElement = document.getElementById('province');
+        provinceValue = provinceElement.options[provinceElement.selectedIndex]?.text || '';
     }
     
     if (districtChoice) {
         const districtSelected = districtChoice.getValue();
-        districtValue = districtSelected.value || '';
+        const districtElement = document.querySelector(`#district option[value="${districtSelected.value}"]`);
+        districtValue = districtElement ? districtElement.textContent : '';
     } else {
-        districtValue = document.getElementById('district').value;
+        const districtElement = document.getElementById('district');
+        districtValue = districtElement.options[districtElement.selectedIndex]?.text || '';
     }
     
     if (wardChoice) {
         const wardSelected = wardChoice.getValue();
-        wardValue = wardSelected.value || '';
+        const wardElement = document.querySelector(`#ward option[value="${wardSelected.value}"]`);
+        wardValue = wardElement ? wardElement.textContent : '';
     } else {
-        wardValue = document.getElementById('ward').value;
+        const wardElement = document.getElementById('ward');
+        wardValue = wardElement.options[wardElement.selectedIndex]?.text || '';
     }
     
     formData.append('province', provinceValue);
@@ -841,11 +848,13 @@ function submitPropertyForm() {
         },
         body: formData
     })
-    .then(response => {
+    .then(async response => {
+        const data = await response.json();
         if (!response.ok) {
-            throw new Error('Có lỗi xảy ra');
+            // Lấy thông báo lỗi từ server
+            throw new Error(data.error || data.message || 'Có lỗi xảy ra khi đăng tin');
         }
-        return response.json();
+        return data;
     })
     .then(data => {
         showAlert('Đăng tin thành công!', 'success');

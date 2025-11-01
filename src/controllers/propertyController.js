@@ -121,13 +121,27 @@ exports.getProperty = async (req, res, next) => {
  */
 exports.createProperty = async (req, res, next) => {
   try {
+    console.log('📝 === CREATE PROPERTY REQUEST ===');
+    console.log('Body:', req.body);
+    console.log('Files:', req.files?.length || 0);
+    console.log('User:', req.user?.id);
+    
     // Validate required fields
     const { type, title, description, price, area, bedrooms, bathrooms, street, province, district, ward } = req.body;
 
     if (!type || !title || !description || !price || !area || !bedrooms || !bathrooms) {
+      console.log('❌ Thiếu thông tin cơ bản');
       return res.status(400).json({
         success: false,
         error: 'Vui lòng nhập đầy đủ thông tin'
+      });
+    }
+    
+    if (!street || !province || !district || !ward) {
+      console.log('❌ Thiếu thông tin địa chỉ');
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng nhập đầy đủ địa chỉ (đường, phường, quận, tỉnh)'
       });
     }
 
