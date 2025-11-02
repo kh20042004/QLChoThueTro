@@ -24,24 +24,32 @@ const BookingSchema = new mongoose.Schema({
     required: true
   },
   startDate: {
-    type: Date,
-    required: [true, 'Vui lòng chọn ngày bắt đầu']
+    type: Date
   },
   endDate: {
-    type: Date,
-    required: [true, 'Vui lòng chọn ngày kết thúc']
+    type: Date
+  },
+  // Viewing appointment fields
+  viewingDate: {
+    type: Date
+  },
+  viewingTime: {
+    type: String
+  },
+  name: {
+    type: String
+  },
+  phone: {
+    type: String
   },
   monthlyRent: {
-    type: Number,
-    required: true
+    type: Number
   },
   deposit: {
-    type: Number,
-    required: true
+    type: Number
   },
   totalAmount: {
-    type: Number,
-    required: true
+    type: Number
   },
   status: {
     type: String,
@@ -58,6 +66,10 @@ const BookingSchema = new mongoose.Schema({
     enum: ['cash', 'transfer', 'momo', 'zalopay']
   },
   notes: {
+    type: String,
+    maxlength: 500
+  },
+  note: {
     type: String,
     maxlength: 500
   },
@@ -79,13 +91,13 @@ BookingSchema.index({ landlord: 1 });
 BookingSchema.index({ status: 1 });
 BookingSchema.index({ startDate: 1, endDate: 1 });
 
-// Middleware: Tính tổng tiền trước khi save
+// Middleware: Tính tổng tiền trước khi save (chỉ cho booking thuê dài hạn)
 BookingSchema.pre('save', function(next) {
-  if (this.isNew) {
+  if (this.isNew && this.startDate && this.endDate) {
     const startDate = new Date(this.startDate);
     const endDate = new Date(this.endDate);
     const months = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
-    this.totalAmount = (this.monthlyRent * months) + this.deposit;
+    this.totalAmount = (this.monthlyRent * months) + (this.deposit || 0);
   }
   next();
 });

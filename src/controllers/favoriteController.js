@@ -7,6 +7,7 @@
 
 const User = require('../models/User');
 const Property = require('../models/Property');
+const mongoose = require('mongoose');
 
 /**
  * @desc    Thêm property vào yêu thích
@@ -18,10 +19,21 @@ exports.addFavorite = async (req, res, next) => {
     const { propertyId } = req.params;
     const userId = req.user.id;
 
+    // Kiểm tra propertyId hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID phòng không hợp lệ' 
+      });
+    }
+
     // Kiểm tra property có tồn tại không
     const property = await Property.findById(propertyId);
     if (!property) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy phòng' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy phòng' 
+      });
     }
 
     // Lấy user
@@ -29,7 +41,10 @@ exports.addFavorite = async (req, res, next) => {
     
     // Kiểm tra đã yêu thích chưa
     if (user.favorites.includes(propertyId)) {
-      return res.status(400).json({ success: false, message: 'Bạn đã yêu thích phòng này' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bạn đã yêu thích phòng này' 
+      });
     }
 
     // Thêm vào favorites
@@ -42,7 +57,11 @@ exports.addFavorite = async (req, res, next) => {
       favorites: user.favorites
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error adding favorite:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 
@@ -56,12 +75,23 @@ exports.removeFavorite = async (req, res, next) => {
     const { propertyId } = req.params;
     const userId = req.user.id;
 
+    // Kiểm tra propertyId hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID phòng không hợp lệ' 
+      });
+    }
+
     // Lấy user
     const user = await User.findById(userId);
     
     // Kiểm tra đã yêu thích chưa
     if (!user.favorites.includes(propertyId)) {
-      return res.status(400).json({ success: false, message: 'Phòng này không có trong yêu thích' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Phòng này không có trong yêu thích' 
+      });
     }
 
     // Xóa khỏi favorites
@@ -74,7 +104,11 @@ exports.removeFavorite = async (req, res, next) => {
       favorites: user.favorites
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error removing favorite:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 

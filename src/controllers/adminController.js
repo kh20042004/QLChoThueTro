@@ -366,6 +366,47 @@ exports.deleteProperty = async (req, res, next) => {
  * @route   DELETE /api/admin/users/:id
  * @access  Private/Admin
  */
+/**
+ * @desc    Cập nhật thông tin user
+ * @route   PUT /api/admin/users/:id
+ * @access  Private/Admin
+ */
+exports.updateUser = async (req, res, next) => {
+  try {
+    const { role, status } = req.body;
+    
+    // Tạo object chứa các trường cần update
+    const updateData = {};
+    if (role) updateData.role = role;
+    if (status !== undefined) updateData.status = status;
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Không tìm thấy người dùng'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Xóa user
+ * @route   DELETE /api/admin/users/:id
+ * @access  Private/Admin
+ */
 exports.deleteUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);

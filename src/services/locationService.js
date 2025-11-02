@@ -3,20 +3,54 @@
  * LOCATION SERVICE
  * Tích hợp API Tỉnh thành - Quận huyện - Phường xã
  * API: https://provinces.open-api.vn/api/
+ * Note: Nếu SSL cert expired, sử dụng http thay vì https
  * ===================================
  */
 
 const axios = require('axios');
+const https = require('https');
 
+// Thử HTTPS trước, nếu lỗi SSL sẽ fallback sang HTTP
 const BASE_URL = 'https://provinces.open-api.vn/api';
+const BASE_URL_FALLBACK = 'http://provinces.open-api.vn/api';
+
+// Tạo axios instance với config bỏ qua SSL verification
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false
+});
+
+/**
+ * Helper function để gọi API với fallback
+ */
+async function fetchWithFallback(endpoint) {
+    try {
+        // Thử HTTPS với SSL verification disabled
+        const response = await axios.get(`${BASE_URL}${endpoint}`, {
+            httpsAgent,
+            timeout: 10000
+        });
+        return response.data;
+    } catch (error) {
+        // Nếu HTTPS fail, thử HTTP
+        try {
+            console.log(`HTTPS failed, trying HTTP for ${endpoint}`);
+            const response = await axios.get(`${BASE_URL_FALLBACK}${endpoint}`, {
+                timeout: 10000
+            });
+            return response.data;
+        } catch (fallbackError) {
+            console.error(`Both HTTPS and HTTP failed for ${endpoint}`);
+            throw error;
+        }
+    }
+}
 
 /**
  * Lấy tất cả tỉnh/thành phố
  */
 async function getAllProvinces() {
     try {
-        const response = await axios.get(`${BASE_URL}/p/`);
-        return response.data;
+        return await fetchWithFallback('/p/');
     } catch (error) {
         console.error('Error fetching provinces:', error.message);
         throw new Error('Không thể lấy danh sách tỉnh thành');
@@ -30,8 +64,7 @@ async function getAllProvinces() {
  */
 async function getProvinceByCode(provinceCode, depth = 2) {
     try {
-        const response = await axios.get(`${BASE_URL}/p/${provinceCode}?depth=${depth}`);
-        return response.data;
+        return await fetchWithFallback(`/p/${provinceCode}?depth=${depth}`);
     } catch (error) {
         console.error(`Error fetching province ${provinceCode}:`, error.message);
         throw new Error('Không thể lấy thông tin tỉnh thành');
@@ -43,8 +76,7 @@ async function getProvinceByCode(provinceCode, depth = 2) {
  */
 async function getAllDistricts() {
     try {
-        const response = await axios.get(`${BASE_URL}/d/`);
-        return response.data;
+        return await fetchWithFallback('/d/');
     } catch (error) {
         console.error('Error fetching districts:', error.message);
         throw new Error('Không thể lấy danh sách quận huyện');
@@ -58,8 +90,7 @@ async function getAllDistricts() {
  */
 async function getDistrictByCode(districtCode, depth = 2) {
     try {
-        const response = await axios.get(`${BASE_URL}/d/${districtCode}?depth=${depth}`);
-        return response.data;
+        return await fetchWithFallback(`/d/${districtCode}?depth=${depth}`);
     } catch (error) {
         console.error(`Error fetching district ${districtCode}:`, error.message);
         throw new Error('Không thể lấy thông tin quận huyện');
@@ -86,8 +117,7 @@ async function getDistrictsByProvince(provinceCode) {
  */
 async function getAllWards() {
     try {
-        const response = await axios.get(`${BASE_URL}/w/`);
-        return response.data;
+        return await fetchWithFallback('/w/');
     } catch (error) {
         console.error('Error fetching wards:', error.message);
         throw new Error('Không thể lấy danh sách phường xã');
@@ -100,8 +130,7 @@ async function getAllWards() {
  */
 async function getWardByCode(wardCode) {
     try {
-        const response = await axios.get(`${BASE_URL}/w/${wardCode}`);
-        return response.data;
+        return await fetchWithFallback(`/w/${wardCode}`);
     } catch (error) {
         console.error(`Error fetching ward ${wardCode}:`, error.message);
         throw new Error('Không thể lấy thông tin phường xã');

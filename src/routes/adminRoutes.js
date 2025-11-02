@@ -13,6 +13,7 @@ const {
   getRecentUsers,
   getActivities,
   getUsers,
+  updateUser,
   getProperties,
   approveProperty,
   rejectProperty,
@@ -34,6 +35,7 @@ router.get('/dashboard/activities', getActivities);
 
 // User management routes
 router.get('/users', getUsers);
+router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 
 // Property management routes

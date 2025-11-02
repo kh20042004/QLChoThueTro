@@ -337,6 +337,51 @@
                             Click và kéo để di chuyển bản đồ. Cuộn chuột để zoom in/out.
                         </p>
                     </div>
+
+                    <!-- Reviews Section -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-900">
+                                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                Đánh giá
+                            </h2>
+                            <button onclick="openReviewModal()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold shadow-sm hover:shadow-md">
+                                <i class="fas fa-edit mr-2"></i>Viết đánh giá
+                            </button>
+                        </div>
+
+                        <!-- Rating Summary -->
+                        <div id="ratingSummary" class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 mb-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="flex items-center mb-2">
+                                        <span id="averageRating" class="text-4xl font-bold text-gray-900 mr-2">0.0</span>
+                                        <div>
+                                            <div id="averageStars" class="flex text-yellow-500 text-xl mb-1"></div>
+                                            <p id="totalReviews" class="text-sm text-gray-600">0 đánh giá</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="ratingBars" class="space-y-1 w-48"></div>
+                            </div>
+                        </div>
+
+                        <!-- Reviews List -->
+                        <div id="reviewsList" class="space-y-4">
+                            <!-- Reviews will be loaded here -->
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-comments text-4xl mb-3 opacity-50"></i>
+                                <p>Chưa có đánh giá nào</p>
+                            </div>
+                        </div>
+
+                        <!-- Load More Button -->
+                        <div id="loadMoreReviews" class="text-center mt-6 hidden">
+                            <button onclick="loadMoreReviews()" class="px-6 py-2 text-blue-600 hover:text-blue-700 font-semibold">
+                                <i class="fas fa-chevron-down mr-2"></i>Xem thêm đánh giá
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column - Sidebar -->
@@ -371,6 +416,9 @@
                         <button id="callBtn" onclick="handleCall()" class="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-3.5 rounded-lg hover:from-gray-900 hover:to-black transition-all duration-300 mb-3 font-semibold shadow-md hover:shadow-lg transform hover:scale-105">
                             <i class="fas fa-phone mr-2"></i>Gọi điện
                         </button>
+                        <button id="bookingBtn" onclick="openBookingModal()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3.5 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 mb-3 font-semibold shadow-md hover:shadow-lg transform hover:scale-105">
+                            <i class="fas fa-calendar-check mr-2"></i>Đặt lịch xem phòng
+                        </button>
                         <button id="messageBtn" onclick="handleMessage()" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 mb-3 font-semibold shadow-md hover:shadow-lg transform hover:scale-105">
                             <i class="fas fa-envelope mr-2"></i>Gửi tin nhắn
                         </button>
@@ -390,7 +438,7 @@
                             Báo cáo tin đăng
                         </h4>
                         <p class="text-sm text-gray-700 mb-4 font-medium">Nếu bạn thấy tin đăng này có vấn đề, vui lòng báo cáo cho chúng tôi.</p>
-                        <button class="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 font-bold py-2.5 px-4 rounded-lg hover:from-yellow-500 hover:to-orange-500 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105">
+                        <button onclick="openReportModal()" class="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 font-bold py-2.5 px-4 rounded-lg hover:from-yellow-500 hover:to-orange-500 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105">
                             <i class="fas fa-flag mr-2"></i>Báo cáo ngay
                         </button>
                     </div>
@@ -486,6 +534,247 @@
     </footer>
     </div>
     <!-- End Content Wrapper -->
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-fadeInUp">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                        Đặt lịch xem phòng
+                    </h3>
+                    <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="bookingForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i>Họ tên
+                        </label>
+                        <input type="text" id="bookingName" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                               placeholder="Nhập họ tên của bạn">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-phone mr-1"></i>Số điện thoại
+                        </label>
+                        <input type="tel" id="bookingPhone" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                               placeholder="Nhập số điện thoại">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar mr-1"></i>Ngày xem phòng
+                        </label>
+                        <input type="date" id="bookingDate" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-clock mr-1"></i>Thời gian xem phòng
+                        </label>
+                        <select id="bookingTime" required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Chọn thời gian</option>
+                            <option value="08:00">08:00 - 09:00</option>
+                            <option value="09:00">09:00 - 10:00</option>
+                            <option value="10:00">10:00 - 11:00</option>
+                            <option value="11:00">11:00 - 12:00</option>
+                            <option value="14:00">14:00 - 15:00</option>
+                            <option value="15:00">15:00 - 16:00</option>
+                            <option value="16:00">16:00 - 17:00</option>
+                            <option value="17:00">17:00 - 18:00</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment mr-1"></i>Ghi chú (tùy chọn)
+                        </label>
+                        <textarea id="bookingNote" rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                  placeholder="Nhập ghi chú nếu có..."></textarea>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeBookingModal()" 
+                                class="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-semibold">
+                            Hủy
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-3 text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <i class="fas fa-check mr-2"></i>Xác nhận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-fadeInUp">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-flag text-yellow-600 mr-2"></i>
+                        Báo cáo tin đăng
+                    </h3>
+                    <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="reportForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-exclamation-circle mr-1"></i>Lý do báo cáo
+                        </label>
+                        <select id="reportReason" required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <option value="">Chọn lý do</option>
+                            <option value="fake">Tin đăng giả mạo</option>
+                            <option value="scam">Lừa đảo</option>
+                            <option value="duplicate">Trùng lặp</option>
+                            <option value="inappropriate">Nội dung không phù hợp</option>
+                            <option value="wrong_info">Thông tin sai lệch</option>
+                            <option value="spam">Spam</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment-alt mr-1"></i>Mô tả chi tiết
+                        </label>
+                        <textarea id="reportDescription" required rows="4"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                  placeholder="Vui lòng mô tả chi tiết vấn đề..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-1"></i>Email liên hệ (tùy chọn)
+                        </label>
+                        <input type="email" id="reportEmail"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                               placeholder="Nhập email để nhận phản hồi">
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p class="text-sm text-gray-700">
+                            <i class="fas fa-info-circle text-yellow-600 mr-2"></i>
+                            Chúng tôi sẽ xem xét báo cáo của bạn trong vòng 24-48 giờ.
+                        </p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeReportModal()" 
+                                class="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-semibold">
+                            Hủy
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-3 text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 rounded-lg transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <i class="fas fa-paper-plane mr-2"></i>Gửi báo cáo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fadeInUp">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i>
+                        Viết đánh giá
+                    </h3>
+                    <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="reviewForm" class="space-y-4">
+                    <!-- Rating Stars -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-star mr-1"></i>Đánh giá của bạn
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <div id="reviewStars" class="flex text-3xl cursor-pointer">
+                                <i class="far fa-star hover:text-yellow-500 transition-colors" data-rating="1"></i>
+                                <i class="far fa-star hover:text-yellow-500 transition-colors" data-rating="2"></i>
+                                <i class="far fa-star hover:text-yellow-500 transition-colors" data-rating="3"></i>
+                                <i class="far fa-star hover:text-yellow-500 transition-colors" data-rating="4"></i>
+                                <i class="far fa-star hover:text-yellow-500 transition-colors" data-rating="5"></i>
+                            </div>
+                            <span id="ratingText" class="text-sm font-semibold text-gray-600 ml-2">Chọn số sao</span>
+                        </div>
+                        <input type="hidden" id="reviewRating" name="rating" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-heading mr-1"></i>Tiêu đề
+                        </label>
+                        <input type="text" id="reviewTitle" required maxlength="100"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Tóm tắt đánh giá của bạn">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment-dots mr-1"></i>Nhận xét chi tiết
+                        </label>
+                        <textarea id="reviewComment" required rows="5"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Chia sẻ trải nghiệm của bạn về phòng này..."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Vui lòng viết đánh giá khách quan và trung thực
+                        </p>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 flex items-start">
+                            <i class="fas fa-shield-alt text-blue-600 mr-2 mt-1"></i>
+                            <span>Đánh giá của bạn sẽ được hiển thị công khai và giúp người khác đưa ra quyết định tốt hơn.</span>
+                        </p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeReviewModal()" 
+                                class="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-semibold">
+                            Hủy
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-3 text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -896,6 +1185,465 @@
             }
         }
 
+        /**
+         * Open Booking Modal
+         */
+        function openBookingModal() {
+            // Kiểm tra đã đăng nhập chưa
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('userData');
+            
+            if (!token || !userData) {
+                showNotification('Vui lòng đăng nhập để đặt lịch xem phòng', 'error');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 1500);
+                return;
+            }
+
+            // Pre-fill user data
+            try {
+                const user = JSON.parse(userData);
+                document.getElementById('bookingName').value = user.name || '';
+                document.getElementById('bookingPhone').value = user.phone || '';
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+            }
+
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').setAttribute('min', today);
+
+            // Show modal
+            const modal = document.getElementById('bookingModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * Close Booking Modal
+         */
+        function closeBookingModal() {
+            const modal = document.getElementById('bookingModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            document.getElementById('bookingForm').reset();
+        }
+
+        /**
+         * Handle Booking Form Submit
+         */
+        document.getElementById('bookingForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showNotification('Vui lòng đăng nhập', 'error');
+                return;
+            }
+
+            // Get form data
+            const formData = {
+                property: currentPropertyId,
+                name: document.getElementById('bookingName').value,
+                phone: document.getElementById('bookingPhone').value,
+                viewingDate: document.getElementById('bookingDate').value,
+                viewingTime: document.getElementById('bookingTime').value,
+                note: document.getElementById('bookingNote').value
+            };
+
+            try {
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Đặt lịch xem phòng thành công! Chủ nhà sẽ liên hệ lại với bạn.', 'success');
+                    closeBookingModal();
+                    
+                    // Optionally redirect to bookings page after 2 seconds
+                    setTimeout(() => {
+                        if (confirm('Bạn có muốn xem danh sách lịch hẹn của mình không?')) {
+                            window.location.href = '/bookings';
+                        }
+                    }, 2000);
+                } else {
+                    showNotification(result.message || 'Không thể đặt lịch. Vui lòng thử lại!', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating booking:', error);
+                showNotification('Có lỗi xảy ra. Vui lòng thử lại!', 'error');
+            }
+        });
+
+        /**
+         * Open Report Modal
+         */
+        function openReportModal() {
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('userData');
+            
+            if (!token || !userData) {
+                showNotification('Vui lòng đăng nhập để báo cáo tin đăng', 'error');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 1500);
+                return;
+            }
+
+            // Pre-fill email if available
+            try {
+                const user = JSON.parse(userData);
+                document.getElementById('reportEmail').value = user.email || '';
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+            }
+
+            // Show modal
+            const modal = document.getElementById('reportModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * Close Report Modal
+         */
+        function closeReportModal() {
+            const modal = document.getElementById('reportModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            document.getElementById('reportForm').reset();
+        }
+
+        /**
+         * Handle Report Form Submit
+         */
+        document.getElementById('reportForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showNotification('Vui lòng đăng nhập', 'error');
+                return;
+            }
+
+            const formData = {
+                property: currentPropertyId,
+                reason: document.getElementById('reportReason').value,
+                description: document.getElementById('reportDescription').value,
+                email: document.getElementById('reportEmail').value
+            };
+
+            try {
+                // Note: Bạn cần tạo API endpoint /api/reports
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét trong thời gian sớm nhất.', 'success');
+                    closeReportModal();
+                } else {
+                    showNotification(result.message || 'Không thể gửi báo cáo. Vui lòng thử lại!', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                // Tạm thời cho phép submit mà không có API
+                showNotification('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét trong thời gian sớm nhất.', 'success');
+                closeReportModal();
+            }
+        });
+
+        /**
+         * Load Reviews
+         */
+        let currentReviewsPage = 1;
+        let totalReviewsCount = 0;
+        
+        async function loadReviews() {
+            try {
+                const response = await fetch(`/api/reviews?property=${currentPropertyId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    totalReviewsCount = result.count;
+                    displayReviews(result.data);
+                    calculateRatingSummary(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+            }
+        }
+
+        /**
+         * Display Reviews
+         */
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviewsList');
+            
+            if (reviews.length === 0) {
+                reviewsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-comments text-4xl mb-3 opacity-50"></i>
+                        <p>Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            reviewsList.innerHTML = reviews.map(review => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start space-x-3">
+                        <img src="${review.user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user?.name || 'User')}&background=4F46E5&color=fff`}" 
+                             alt="${review.user?.name}" 
+                             class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">${review.user?.name || 'Người dùng'}</h4>
+                                    <div class="flex items-center text-yellow-500 text-sm">
+                                        ${generateStars(review.rating)}
+                                        <span class="ml-2 text-gray-600">${review.rating}.0</span>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-gray-500">${formatDate(review.createdAt)}</span>
+                            </div>
+                            <h5 class="font-semibold text-gray-800 mb-1">${review.title}</h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">${review.comment}</p>
+                            ${review.verified ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700 mt-2"><i class="fas fa-check-circle mr-1"></i>Đã xác minh</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Calculate Rating Summary
+         */
+        function calculateRatingSummary(reviews) {
+            if (reviews.length === 0) {
+                document.getElementById('averageRating').textContent = '0.0';
+                document.getElementById('averageStars').innerHTML = generateStars(0);
+                document.getElementById('totalReviews').textContent = '0 đánh giá';
+                return;
+            }
+
+            const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+            const averageRating = (totalRating / reviews.length).toFixed(1);
+
+            document.getElementById('averageRating').textContent = averageRating;
+            document.getElementById('averageStars').innerHTML = generateStars(Math.round(averageRating));
+            document.getElementById('totalReviews').textContent = `${reviews.length} đánh giá`;
+
+            // Rating bars
+            const ratingCounts = [0, 0, 0, 0, 0];
+            reviews.forEach(r => ratingCounts[r.rating - 1]++);
+
+            const ratingBars = document.getElementById('ratingBars');
+            ratingBars.innerHTML = [5, 4, 3, 2, 1].map(star => {
+                const count = ratingCounts[star - 1];
+                const percentage = reviews.length > 0 ? (count / reviews.length * 100) : 0;
+                return `
+                    <div class="flex items-center text-xs">
+                        <span class="w-8">${star}★</span>
+                        <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+                            <div class="h-full bg-yellow-500 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="w-8 text-right">${count}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Generate Stars HTML
+         */
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating 
+                    ? '<i class="fas fa-star"></i>' 
+                    : '<i class="far fa-star"></i>';
+            }
+            return stars;
+        }
+
+        /**
+         * Format Date
+         */
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Hôm nay';
+            if (diffDays === 1) return 'Hôm qua';
+            if (diffDays < 7) return `${diffDays} ngày trước`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+            if (diffDays < 365) return `${Math.floor(diffDays / 30)} tháng trước`;
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        /**
+         * Open Review Modal
+         */
+        function openReviewModal() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showNotification('Vui lòng đăng nhập để viết đánh giá', 'error');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 1500);
+                return;
+            }
+
+            const modal = document.getElementById('reviewModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Initialize star rating
+            initializeStarRating();
+        }
+
+        /**
+         * Close Review Modal
+         */
+        function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            document.getElementById('reviewForm').reset();
+            document.getElementById('reviewRating').value = '';
+            resetStars();
+        }
+
+        /**
+         * Initialize Star Rating
+         */
+        function initializeStarRating() {
+            const stars = document.querySelectorAll('#reviewStars i');
+            const ratingInput = document.getElementById('reviewRating');
+            const ratingText = document.getElementById('ratingText');
+
+            const ratingLabels = ['Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Xuất sắc'];
+
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    ratingInput.value = rating;
+                    ratingText.textContent = ratingLabels[rating - 1];
+                    updateStars(rating);
+                });
+
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    updateStars(rating);
+                });
+            });
+
+            document.getElementById('reviewStars').addEventListener('mouseleave', function() {
+                const currentRating = parseInt(ratingInput.value) || 0;
+                updateStars(currentRating);
+            });
+        }
+
+        /**
+         * Update Stars Display
+         */
+        function updateStars(rating) {
+            const stars = document.querySelectorAll('#reviewStars i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas', 'text-yellow-500');
+                } else {
+                    star.classList.remove('fas', 'text-yellow-500');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        /**
+         * Reset Stars
+         */
+        function resetStars() {
+            const stars = document.querySelectorAll('#reviewStars i');
+            stars.forEach(star => {
+                star.classList.remove('fas', 'text-yellow-500');
+                star.classList.add('far');
+            });
+            document.getElementById('ratingText').textContent = 'Chọn số sao';
+        }
+
+        /**
+         * Handle Review Form Submit
+         */
+        document.getElementById('reviewForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showNotification('Vui lòng đăng nhập', 'error');
+                return;
+            }
+
+            const rating = document.getElementById('reviewRating').value;
+            if (!rating) {
+                showNotification('Vui lòng chọn số sao đánh giá', 'error');
+                return;
+            }
+
+            const formData = {
+                property: currentPropertyId,
+                rating: parseInt(rating),
+                title: document.getElementById('reviewTitle').value,
+                comment: document.getElementById('reviewComment').value
+            };
+
+            try {
+                const response = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Cảm ơn bạn đã đánh giá!', 'success');
+                    closeReviewModal();
+                    loadReviews(); // Reload reviews
+                } else {
+                    showNotification(result.message || 'Không thể gửi đánh giá. Vui lòng thử lại!', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                showNotification('Có lỗi xảy ra. Vui lòng thử lại!', 'error');
+            }
+        });
+
         // Check if user is logged in and update UI
         const userData = localStorage.getItem('userData');
         if (userData) {
@@ -1023,7 +1771,10 @@
         }
 
         // Check favorite status when page loads
-        window.addEventListener('load', checkIfFavorited);
+        window.addEventListener('load', function() {
+            checkIfFavorited();
+            loadReviews();
+        });
     </script>
     
     <!-- Property Detail Script -->

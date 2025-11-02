@@ -67,20 +67,35 @@ router.post('/', protect, async (req, res, next) => {
     if (!property) {
       return res.status(404).json({
         success: false,
-        error: 'Không tìm thấy phòng'
+        message: 'Không tìm thấy phòng'
       });
     }
 
-    // Thêm landlord và giá
+    // Thêm landlord
     req.body.landlord = property.landlord;
-    req.body.monthlyRent = property.price;
-    req.body.deposit = property.deposit || property.price;
+    
+    // Nếu không có startDate/endDate, đây là viewing appointment
+    if (!req.body.startDate && !req.body.endDate) {
+      // Chỉ cần viewingDate và viewingTime
+      req.body.status = 'pending';
+    } else {
+      // Booking thuê dài hạn
+      req.body.monthlyRent = property.price;
+      req.body.deposit = property.deposit || property.price;
+    }
 
     const booking = await Booking.create(req.body);
+    
+    // Populate để trả về thông tin đầy đủ
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('property', 'title price address images')
+      .populate('tenant', 'name email phone')
+      .populate('landlord', 'name email phone');
 
     res.status(201).json({
       success: true,
-      data: booking
+      message: 'Đặt lịch xem phòng thành công',
+      data: populatedBooking
     });
   } catch (error) {
     next(error);

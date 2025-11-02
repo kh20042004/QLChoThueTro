@@ -206,6 +206,15 @@ function renderUsersTable(users) {
                     <button onclick="editUser('${user._id}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Chỉnh sửa">
                         <i class="fas fa-edit"></i>
                     </button>
+                    ${(user.status || 'active') !== 'blocked' ? `
+                    <button onclick="banUser('${user._id}')" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Khóa tài khoản">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    ` : `
+                    <button onclick="unbanUser('${user._id}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Mở khóa tài khoản">
+                        <i class="fas fa-unlock"></i>
+                    </button>
+                    `}
                     <button onclick="deleteUser('${user._id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -280,16 +289,207 @@ function formatDate(dateString) {
 /**
  * User actions
  */
-function viewUser(userId) {
-    console.log('View user:', userId);
-    // TODO: Show user detail modal
-    alert('Chức năng xem chi tiết user đang phát triển');
+async function viewUser(userId) {
+    const user = allUsers.find(u => u._id === userId);
+    if (!user) {
+        alert('Không tìm thấy người dùng!');
+        return;
+    }
+
+    // Lấy số lượng properties của user nếu là landlord
+    let propertiesCount = 0;
+    if (user.role === 'landlord') {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/properties?landlord=${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                propertiesCount = result.data?.length || 0;
+            }
+        } catch (error) {
+            console.error('Error fetching user properties:', error);
+        }
+    }
+
+    // Hiển thị modal
+    const modal = document.getElementById('userModal');
+    const modalContent = document.getElementById('userModalContent');
+    
+    modalContent.innerHTML = `
+        <div class="p-6">
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-6">
+                <div class="flex items-center space-x-4">
+                    <img src="${user.avatar || getAvatarPlaceholder(user.name)}" 
+                         alt="${user.name}" 
+                         class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                         onerror="this.src='${getAvatarPlaceholder(user.name)}'">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">${user.name}</h3>
+                        <div class="flex items-center space-x-2 mt-2">
+                            <span class="px-3 py-1 ${getRoleBadgeClass(user.role)} text-xs rounded-full font-medium">
+                                ${getRoleLabel(user.role)}
+                            </span>
+                            <span class="px-3 py-1 ${getStatusBadgeClass(user.status || 'active')} text-xs rounded-full font-medium">
+                                ${getStatusLabel(user.status || 'active')}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Thông tin chi tiết -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-500 mb-1">Email</div>
+                    <div class="font-medium text-gray-900">${user.email}</div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-500 mb-1">Số điện thoại</div>
+                    <div class="font-medium text-gray-900">${user.phone || 'N/A'}</div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-500 mb-1">Ngày tham gia</div>
+                    <div class="font-medium text-gray-900">${formatDate(user.createdAt)}</div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-500 mb-1">Số dư</div>
+                    <div class="font-medium text-gray-900">${(user.balance || 0).toLocaleString('vi-VN')} VNĐ</div>
+                </div>
+                ${user.role === 'landlord' ? `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-gray-500 mb-1">Số tin đăng</div>
+                    <div class="font-medium text-gray-900">${propertiesCount}</div>
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-3 border-t pt-4">
+                <button onclick="closeUserModal()" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    Đóng
+                </button>
+                <button onclick="editUser('${user._id}')" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
 }
 
-function editUser(userId) {
-    console.log('Edit user:', userId);
-    // TODO: Show edit modal
-    alert('Chức năng chỉnh sửa user đang phát triển');
+async function editUser(userId) {
+    const user = allUsers.find(u => u._id === userId);
+    if (!user) {
+        alert('Không tìm thấy người dùng!');
+        return;
+    }
+
+    const modal = document.getElementById('userModal');
+    const modalContent = document.getElementById('userModalContent');
+    
+    modalContent.innerHTML = `
+        <div class="p-6">
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Chỉnh sửa người dùng</h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form id="editUserForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tên người dùng</label>
+                    <input type="text" value="${user.name}" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" value="${user.email}" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vai trò</label>
+                    <select id="userRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                        <option value="landlord" ${user.role === 'landlord' ? 'selected' : ''}>Landlord</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                    <select id="userStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                        <option value="active" ${(user.status || 'active') === 'active' ? 'selected' : ''}>Hoạt động</option>
+                        <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>Không hoạt động</option>
+                        <option value="blocked" ${user.status === 'blocked' ? 'selected' : ''}>Đã khóa</option>
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-3 border-t pt-4 mt-6">
+                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-white bg-pink-600 hover:bg-pink-700 rounded-lg transition-colors">
+                        <i class="fas fa-save mr-2"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+
+    // Xử lý submit form
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateUserData(userId);
+    });
+}
+
+async function updateUserData(userId) {
+    const role = document.getElementById('userRole').value;
+    const status = document.getElementById('userStatus').value;
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ role, status })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update user');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Đã cập nhật thông tin người dùng thành công!');
+            closeUserModal();
+            loadUsers(); // Reload danh sách
+        } else {
+            throw new Error(result.error || 'Failed to update user');
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Lỗi khi cập nhật thông tin người dùng. Vui lòng thử lại!');
+    }
 }
 
 async function deleteUser(userId) {
@@ -323,6 +523,76 @@ async function deleteUser(userId) {
     } catch (error) {
         console.error('Error deleting user:', error);
         alert('Lỗi khi xóa người dùng. Vui lòng thử lại!');
+    }
+}
+
+async function banUser(userId) {
+    if (!confirm('Bạn có chắc chắn muốn khóa tài khoản người dùng này?')) {
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'blocked' })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to ban user');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Đã khóa tài khoản người dùng thành công!');
+            loadUsers(); // Reload danh sách
+        } else {
+            throw new Error(result.error || 'Failed to ban user');
+        }
+    } catch (error) {
+        console.error('Error banning user:', error);
+        alert('Lỗi khi khóa tài khoản người dùng. Vui lòng thử lại!');
+    }
+}
+
+async function unbanUser(userId) {
+    if (!confirm('Bạn có chắc chắn muốn mở khóa tài khoản người dùng này?')) {
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'active' })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to unban user');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Đã mở khóa tài khoản người dùng thành công!');
+            loadUsers(); // Reload danh sách
+        } else {
+            throw new Error(result.error || 'Failed to unban user');
+        }
+    } catch (error) {
+        console.error('Error unbanning user:', error);
+        alert('Lỗi khi mở khóa tài khoản người dùng. Vui lòng thử lại!');
     }
 }
 
