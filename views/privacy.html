@@ -104,7 +104,7 @@
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
           </a>
           <a href="/universities" class="text-gray-700 hover:text-gray-900 relative group transition-colors">
-            🎓 Trường ĐH
+            Trường ĐH
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
           </a>
         </div>
@@ -127,6 +127,10 @@
           <button class="p-2 text-gray-600 hover:text-gray-900 relative transition-colors" title="Yêu thích">
             <i class="fas fa-heart text-lg"></i>
             <span id="favoriteBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+          </button>
+          <button onclick="window.location.href='/chat'" class="p-2 text-gray-600 hover:text-gray-900 relative transition-colors" title="Tin nhắn">
+            <i class="fas fa-comments text-lg"></i>
+            <span id="chatBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
           </button>
           <a href="/property/create" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
             <i class="fas fa-plus me-1"></i>Đăng tin
@@ -174,7 +178,7 @@
         <a href="/properties" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Tìm phòng</a>
         <a href="/about" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Giới thiệu</a>
         <a href="/contact" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Liên hệ</a>
-        <a href="/universities" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">🎓 Trường ĐH</a>
+        <a href="/universities" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Trường ĐH</a>
         <div class="flex gap-2 mt-4">
           <a href="/auth/login" class="flex-1 px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-center">Đăng nhập</a>
           <a href="/auth/register" class="flex-1 px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-center">Đăng ký</a>

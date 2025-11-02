@@ -7,6 +7,7 @@
 
 const Property = require('../models/Property');
 const geocodingService = require('../services/geocodingService');
+const { uploadMultipleToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
  * @desc    Lấy danh sách tất cả property
@@ -227,9 +228,25 @@ exports.createProperty = async (req, res, next) => {
       }
     }
 
-    // Handle images - chỉ lưu URL paths
+    // Handle images - Upload lên Cloudinary
     if (req.files && req.files.length > 0) {
-      propertyData.images = req.files.map(file => `/uploads/${file.filename}`);
+      console.log(`📤 Đang upload ${req.files.length} ảnh lên Cloudinary...`);
+      
+      try {
+        // Upload tất cả ảnh lên Cloudinary
+        const uploadResults = await uploadMultipleToCloudinary(req.files, 'properties');
+        
+        // Lưu URLs từ Cloudinary vào database
+        propertyData.images = uploadResults.map(result => result.url);
+        
+        console.log(`✅ Đã upload ${uploadResults.length} ảnh lên Cloudinary`);
+      } catch (uploadError) {
+        console.error('❌ Lỗi upload ảnh:', uploadError);
+        return res.status(500).json({
+          success: false,
+          error: 'Lỗi khi upload ảnh. Vui lòng thử lại.'
+        });
+      }
     } else {
       return res.status(400).json({
         success: false,
@@ -249,19 +266,9 @@ exports.createProperty = async (req, res, next) => {
       data: property
     });
   } catch (error) {
-    // Delete uploaded files if property creation fails
-    if (req.files && req.files.length > 0) {
-      const fs = require('fs');
-      const path = require('path');
-      req.files.forEach(file => {
-        const filePath = path.join(__dirname, '../../public/uploads', file.filename);
-        fs.unlink(filePath, (err) => {
-          if (err) console.error('Lỗi xóa file:', err);
-        });
-      });
-    }
-
-    console.error('Lỗi tạo property:', error);
+    // Không cần xóa local files vì đã upload lên Cloudinary
+    // Cloudinary sẽ tự động xóa files local sau khi upload
+    console.error('❌ Lỗi tạo property:', error);
     next(error);
   }
 };
@@ -384,10 +391,23 @@ exports.updateProperty = async (req, res, next) => {
       }
     }
     
-    // Thêm ảnh mới
+    // Thêm ảnh mới - Upload lên Cloudinary
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/${file.filename}`);
-      finalImages = [...finalImages, ...newImages];
+      console.log(`📤 Đang upload ${req.files.length} ảnh mới lên Cloudinary...`);
+      
+      try {
+        const uploadResults = await uploadMultipleToCloudinary(req.files, 'properties');
+        const newImages = uploadResults.map(result => result.url);
+        finalImages = [...finalImages, ...newImages];
+        
+        console.log(`✅ Đã upload ${uploadResults.length} ảnh mới`);
+      } catch (uploadError) {
+        console.error('❌ Lỗi upload ảnh:', uploadError);
+        return res.status(500).json({
+          success: false,
+          error: 'Lỗi khi upload ảnh. Vui lòng thử lại.'
+        });
+      }
     }
     
     // Cập nhật images nếu có thay đổi

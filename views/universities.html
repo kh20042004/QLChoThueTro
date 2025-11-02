@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎓 Trường Đại Học - HomeRent</title>
+    <title>Trường Đại Học - HomeRent</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -111,6 +111,112 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        
+        /* University marker styles - Kích thước vừa phải như Google Maps */
+        .university-marker {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+            animation: pulse-university 2s infinite;
+            border: 3px solid white;
+            position: relative;
+            z-index: 1000 !important;
+        }
+
+        .university-marker::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        }
+
+        .university-marker i {
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+            font-weight: 700 !important;
+        }
+
+        @keyframes pulse-university {
+            0% {
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 8px rgba(220, 38, 38, 0.2);
+            }
+            100% {
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+            }
+        }
+
+        /* Property location marker styles - Pin đỏ cho vị trí phòng */
+        .property-location-marker {
+            color: #dc2626;
+            font-size: 36px !important;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+            position: relative;
+            width: 36px !important;
+            height: 48px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .property-location-marker i {
+            position: relative;
+            z-index: 1;
+            animation: bounce-marker 2s infinite;
+        }
+
+        @keyframes bounce-marker {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Property popup styles */
+        .property-popup {
+            min-width: 250px;
+        }
+
+        .property-popup a {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: block !important;
+        }
+
+        .property-popup a:hover {
+            background-color: #1d4ed8 !important;
+        }
+
+        /* Leaflet popup content */
+        .leaflet-popup-content {
+            margin: 12px !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px !important;
+        }
+        
+        /* Custom div icon - Remove default styles */
+        .custom-div-icon {
+            background: transparent !important;
+            border: none !important;
+        }
     </style>
 </head>
 <body class="font-sans text-gray-800">
@@ -140,7 +246,7 @@
                             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
                         </a>
                         <a href="/universities" class="text-gray-900 font-semibold transition-colors duration-300 relative group">
-                            🎓 Trường ĐH
+                            Trường ĐH
                             <span class="absolute bottom-0 left-0 w-full h-0.5 bg-gray-800"></span>
                         </a>
                         <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
@@ -176,6 +282,12 @@
                             <i class="fas fa-heart text-xl"></i>
                             <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
                         </a>
+                        
+                        <!-- Chat/Messages -->
+                        <button onclick="window.location.href='/chat'" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Tin nhắn">
+                            <i class="fas fa-comments text-xl"></i>
+                            <span id="chatBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                        </button>
                         
                         <!-- Post Property -->
                         <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md" title="Đăng tin">
@@ -221,7 +333,7 @@
                     <div class="flex flex-col space-y-3 mt-4">
                         <a href="/" class="text-gray-700 hover:text-gray-900 py-2">Trang chủ</a>
                         <a href="/properties" class="text-gray-700 hover:text-gray-900 py-2">Tìm phòng</a>
-                        <a href="/universities" class="text-gray-900 font-semibold py-2">🎓 Trường ĐH</a>
+                        <a href="/universities" class="text-gray-900 font-semibold py-2">Trường ĐH</a>
                         <a href="/about" class="text-gray-700 hover:text-gray-900 py-2">Giới thiệu</a>
                         <a href="/contact" class="text-gray-700 hover:text-gray-900 py-2">Liên hệ</a>
                         
@@ -270,7 +382,7 @@
         <!-- Hero Section -->
         <section class="py-16 bg-gradient-to-br from-gray-600 to-gray-800 text-white">
             <div class="container mx-auto px-4 text-center">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fadeInUp">🎓 Trường Đại Học TP.HCM</h1>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fadeInUp">Trường Đại Học TP.HCM</h1>
                 <p class="text-lg text-gray-300 animate-fadeInUp delay-100">Tìm kiếm trường đại học và phòng trọ gần trường bạn mong muốn</p>
             </div>
         </section>
@@ -1149,9 +1261,9 @@
             const universityIcon = L.divIcon({
                 html: '<div class="university-marker"><i class="fas fa-university"></i></div>',
                 className: 'custom-div-icon',
-                iconSize: [100, 100],
-                iconAnchor: [50, 50],
-                popupAnchor: [0, -50]
+                iconSize: [48, 48],
+                iconAnchor: [24, 24],
+                popupAnchor: [0, -24]
             });
             
             universityMarker = L.marker([lat, lng], { icon: universityIcon })
@@ -1215,9 +1327,9 @@
                         <i class="fas fa-map-marker-alt"></i>
                     </div>`,
                     className: 'custom-div-icon',
-                    iconSize: [50, 65],
-                    iconAnchor: [25, 65],
-                    popupAnchor: [0, -65]
+                    iconSize: [36, 48],
+                    iconAnchor: [18, 48],
+                    popupAnchor: [0, -48]
                 });
                 
                 // Lấy địa chỉ đầy đủ

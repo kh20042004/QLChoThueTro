@@ -722,20 +722,20 @@ img {
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
 }
 
-/* University marker styles - RẤT TO */
+/* University marker styles - ICON TO HƠN */
 .university-marker {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    width: 100px;
-    height: 100px;
+    width: 140px !important;
+    height: 140px !important;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 50px;
-    box-shadow: 0 10px 35px rgba(220, 38, 38, 0.8), 0 0 0 6px rgba(255, 255, 255, 0.95), 0 0 0 12px rgba(220, 38, 38, 0.5);
+    font-size: 70px !important;
+    box-shadow: 0 15px 45px rgba(220, 38, 38, 0.9), 0 0 0 8px rgba(255, 255, 255, 0.95), 0 0 0 16px rgba(220, 38, 38, 0.6);
     animation: pulse-university 2s infinite;
-    border: 5px solid white;
+    border: 6px solid white;
     position: relative;
     z-index: 1000 !important;
 }
@@ -752,7 +752,8 @@ img {
 .university-marker i {
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+    font-weight: 900 !important;
 }
 
 @keyframes pulse-university {

@@ -51,6 +51,14 @@ const UserSchema = new mongoose.Schema({
       message: 'Giới tính không hợp lệ. Vui lòng chọn: Nam, Nữ hoặc Khác'
     }
   },
+  // Địa chỉ người dùng (lưu trữ giống cấu trúc Property.address)
+  address: {
+    street: { type: String },
+    ward:   { type: String },
+    district:{ type: String },
+    city:   { type: String },
+    full:   { type: String }
+  },
   avatar: {
     type: String,
     default: '/images/default-avatar.png'

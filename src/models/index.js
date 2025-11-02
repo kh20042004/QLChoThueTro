@@ -10,11 +10,15 @@ const Property = require('./Property');
 const Booking = require('./Booking');
 const Review = require('./Review');
 const University = require('./University');
+const Conversation = require('./Conversation');
+const Message = require('./Message');
 
 module.exports = {
   User,
   Property,
   Booking,
   Review,
-  University
+  University,
+  Conversation,
+  Message
 };

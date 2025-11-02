@@ -6,6 +6,7 @@
  */
 
 const User = require('../models/User');
+const { uploadToCloudinary } = require('../config/cloudinary');
 
 /**
  * @desc    Đăng ký tài khoản mới
@@ -267,10 +268,23 @@ exports.updateAddress = async (req, res, next) => {
   try {
     const { address } = req.body;
 
-    if (!address) {
+    if (!address || typeof address !== 'object') {
       return res.status(400).json({
         success: false,
         error: 'Vui lòng cung cấp thông tin địa chỉ'
+      });
+    }
+
+    // Chấp nhận cả "city" hoặc "province" từ client
+    const street = (address.street || '').trim();
+    const ward = (address.ward || '').trim();
+    const district = (address.district || '').trim();
+    const city = ((address.city || address.province) || '').trim();
+
+    if (!street || !ward || !district || !city) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng nhập đầy đủ địa chỉ (đường, phường, quận, tỉnh/thành phố)'
       });
     }
 
@@ -282,13 +296,21 @@ exports.updateAddress = async (req, res, next) => {
       });
     }
 
-    // Note: User model hiện tại không có address fields
-    // Nếu cần, bạn có thể thêm vào schema
+    const full = `${street}, ${ward}, ${district}, ${city}`;
 
-    res.status(200).json({
+    user.address = {
+      street,
+      ward,
+      district,
+      city,
+      full
+    };
+    await user.save();
+
+    return res.status(200).json({
       success: true,
       message: 'Địa chỉ đã được cập nhật',
-      data: address
+      data: user.address
     });
   } catch (error) {
     next(error);
@@ -389,16 +411,28 @@ exports.uploadAvatar = async (req, res, next) => {
 
     const user = await User.findById(req.user.id);
     
-    // Lưu đường dẫn ảnh (có thể sử dụng cloudinary hoặc S3)
-    const avatarPath = `/uploads/${req.file.filename}`;
-    user.avatar = avatarPath;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Avatar đã được tải lên',
-      avatar: avatarPath
-    });
+    // Upload ảnh lên Cloudinary
+    console.log('📤 Đang upload avatar lên Cloudinary...');
+    
+    try {
+      const uploadResult = await uploadToCloudinary(req.file.path, 'avatars');
+      user.avatar = uploadResult.url;
+      await user.save();
+      
+      console.log('✅ Avatar đã được upload lên Cloudinary');
+      
+      res.status(200).json({
+        success: true,
+        message: 'Avatar đã được tải lên',
+        avatar: uploadResult.url
+      });
+    } catch (uploadError) {
+      console.error('❌ Lỗi upload avatar:', uploadError);
+      return res.status(500).json({
+        success: false,
+        error: 'Lỗi khi upload avatar. Vui lòng thử lại.'
+      });
+    }
   } catch (error) {
     next(error);
   }

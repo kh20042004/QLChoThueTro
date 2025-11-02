@@ -69,6 +69,7 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/universities', require('./routes/universityRoutes'));
 app.use('/api/locations', require('./routes/locationRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {
@@ -153,6 +154,11 @@ app.get('/favorites', (req, res) => {
 // View Routes - Trang đặt phòng của tôi
 app.get('/bookings', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/bookings.html'));
+});
+
+// View Routes - Trang chat/tin nhắn
+app.get('/chat', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/chat.html'));
 });
 
 // View Routes - Câu hỏi thường gặp

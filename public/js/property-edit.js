@@ -663,7 +663,8 @@ async function loadLocationData() {
 // Load districts
 async function loadDistricts(provinceCode) {
     try {
-        const response = await fetch(`/api/locations/districts/${provinceCode}`);
+        // Đúng endpoint: /api/locations/provinces/:provinceCode/districts
+        const response = await fetch(`/api/locations/provinces/${provinceCode}/districts`);
         const data = await response.json();
         
         if (data.success && districtChoice) {
@@ -685,7 +686,8 @@ async function loadDistricts(provinceCode) {
 // Load wards
 async function loadWards(districtCode) {
     try {
-        const response = await fetch(`/api/locations/wards/${districtCode}`);
+        // Đúng endpoint: /api/locations/districts/:districtCode/wards
+        const response = await fetch(`/api/locations/districts/${districtCode}/wards`);
         const data = await response.json();
         
         if (data.success && wardChoice) {

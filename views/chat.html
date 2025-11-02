@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tin nhắn - HomeRent</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+
+        /* Animation */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Chat Layout */
+        .chat-container {
+            height: calc(100vh - 180px);
+        }
+
+        .conversation-list {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .messages-area {
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message-input-area {
+            height: 80px;
+        }
+
+        /* Active conversation highlight */
+        .conversation-item.active {
+            background-color: #EFF6FF;
+            border-left: 3px solid #3B82F6;
+        }
+
+        /* Online status */
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #10B981;
+            border-radius: 50%;
+            border: 2px solid white;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+
+        .offline-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #6B7280;
+            border-radius: 50%;
+            border: 2px solid white;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Radial Gradient Background -->
+    <div class="fixed inset-0 w-full h-full z-0" style="background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #1d2125 100%);"></div>
+    
+    <!-- Content Wrapper -->
+    <div class="relative z-10">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+            <nav class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <a href="/" class="flex items-center space-x-2 group">
+                        <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                        <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                    </a>
+                    
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Trang chủ
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Tìm phòng
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/universities" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Trường ĐH
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Giới thiệu
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                        <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group">
+                            Liên hệ
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-hover:w-full transition-all duration-300"></span>
+                        </a>
+                    </div>
+                    
+                    <!-- Auth Buttons (Guest) -->
+                    <div class="hidden md:flex items-center space-x-3" id="navbarGuest">
+                        <a href="/auth/login" class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fas fa-sign-in-alt mr-1"></i>Đăng nhập
+                        </a>
+                        <a href="/auth/register" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                            <i class="fas fa-user-plus mr-1"></i>Đăng ký
+                        </a>
+                    </div>
+                    
+                    <!-- User Menu (Logged in) -->
+                    <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
+                        <!-- Notifications -->
+                        <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                        </a>
+                        
+                        <!-- Favorites -->
+                        <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                            <i class="fas fa-heart text-xl"></i>
+                            <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                        </a>
+                        
+                        <!-- Chat/Messages - Active -->
+                        <a href="/chat" class="relative p-2 text-blue-600 hover:text-blue-700 transition-colors duration-300">
+                            <i class="fas fa-comments text-xl"></i>
+                            <span id="chatBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                        </a>
+                        
+                        <!-- Post Property -->
+                        <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                            <i class="fas fa-plus mr-1"></i>Đăng tin
+                        </a>
+                        
+                        <!-- User Dropdown -->
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2">
+                                <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                                <span class="text-gray-700" id="userName">Người dùng</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                            </button>
+                            
+                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown">
+                                <div class="p-3 border-b border-gray-100">
+                                    <p class="text-sm text-gray-500" id="userEmail">user@example.com</p>
+                                </div>
+                                <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-user mr-2 text-gray-500"></i>Hồ sơ cá nhân
+                                </a>
+                                <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-calendar mr-2 text-gray-500"></i>Đơn đặt phòng
+                                </a>
+                                <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-home mr-2 text-gray-500"></i>Nhà/phòng của tôi
+                                </a>
+                                <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-cog mr-2 text-gray-500"></i>Cài đặt
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden chat-container">
+                <div class="grid grid-cols-12 h-full">
+                    <!-- Conversations Sidebar -->
+                    <div class="col-span-12 md:col-span-4 border-r border-gray-200">
+                        <!-- Search -->
+                        <div class="p-4 border-b border-gray-200">
+                            <div class="relative">
+                                <input type="text" id="searchConversations" 
+                                       placeholder="Tìm kiếm cuộc trò chuyện..." 
+                                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <!-- Conversation List -->
+                        <div class="conversation-list overflow-y-auto" style="max-height: calc(100vh - 250px);" id="conversationsList">
+                            <!-- Conversations will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Chat Area -->
+                    <div class="col-span-12 md:col-span-8 flex flex-col">
+                        <!-- Empty Chat State -->
+                        <div class="flex-1 flex items-center justify-center" id="emptyChatState">
+                            <div class="text-center p-8">
+                                <i class="fas fa-comment-dots text-6xl text-gray-300 mb-4"></i>
+                                <h3 class="text-xl font-semibold text-gray-700 mb-2">Chọn một cuộc trò chuyện</h3>
+                                <p class="text-gray-500">Chọn cuộc trò chuyện từ danh sách bên trái để bắt đầu nhắn tin</p>
+                            </div>
+                        </div>
+
+                        <!-- Active Chat (hidden by default) -->
+                        <div id="chatArea" class="flex-1 flex flex-col" style="display: none;">
+                            <!-- Chat Header -->
+                            <div class="p-4 border-b border-gray-200 bg-white">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="relative">
+                                            <img id="chatUserAvatar" src="https://via.placeholder.com/48" alt="Avatar" class="w-12 h-12 rounded-full object-cover">
+                                            <div class="online-dot" id="onlineStatus"></div>
+                                        </div>
+                                        <div>
+                                            <h3 id="chatUserName" class="font-semibold text-gray-900">Người dùng</h3>
+                                            <p id="chatStatus" class="text-sm text-gray-500">Đang hoạt động</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Gọi điện">
+                                            <i class="fas fa-phone"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Thông tin">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Messages Area -->
+                            <div class="flex-1 overflow-y-auto p-4 bg-gray-50" id="messagesContainer" style="max-height: calc(100vh - 350px);">
+                                <!-- Messages will be loaded here -->
+                            </div>
+
+                            <!-- Message Input Area -->
+                            <div class="message-input-area p-4 bg-white border-t border-gray-200">
+                                <form id="messageForm" class="flex items-end space-x-2" onsubmit="return false;">
+                                    <button type="button" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Đính kèm file">
+                                        <i class="fas fa-paperclip text-xl"></i>
+                                    </button>
+                                    <button type="button" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Emoji">
+                                        <i class="fas fa-smile text-xl"></i>
+                                    </button>
+                                    <textarea id="messageInput" 
+                                              rows="1" 
+                                              placeholder="Nhập tin nhắn..." 
+                                              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                              style="max-height: 120px;"></textarea>
+                                    <button type="button" id="sendMessageBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                                        <i class="fas fa-paper-plane mr-2"></i>Gửi
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script src="/js/chat.js"></script>
+    
+    <script>
+        // Handle logout
+        function handleLogout(event) {
+            event.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            window.location.href = '/';
+        }
+
+        // Check if user is logged in
+        const userData = localStorage.getItem('userData');
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            // Redirect to login if not authenticated
+            window.location.href = '/auth/login?redirect=/chat';
+        }
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                document.getElementById('navbarGuest').style.display = 'none';
+                document.getElementById('navbarUser').style.display = 'flex';
+                
+                // Update user info
+                document.getElementById('userName').textContent = user.name || 'Người dùng';
+                document.getElementById('userEmail').textContent = user.email || 'user@example.com';
+                
+                // Update avatar
+                if (user.avatar) {
+                    document.getElementById('userAvatar').src = user.avatar;
+                } else {
+                    const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${initials}&background=6B7280&color=fff`;
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+        }
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                alert('Mobile menu - To be implemented');
+            });
+        }
+
+        // Auto-resize textarea
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+    </script>
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-mZLF4UVrpi/QTWPA7BjNPEnkIfRFn4ZEO3Qt/HeMKbPwzOlLgjGCfZPKfYUNdRkM" crossorigin="anonymous"></script>
+    
+    <!-- Chat.js -->
+    <script src="/js/chat.js"></script>
+</body>
+</html>
+
