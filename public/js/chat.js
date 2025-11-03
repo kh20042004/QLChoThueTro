@@ -478,6 +478,11 @@ function handleMessageReceived(message, conversation) {
   // Cập nhật conversation list
   loadConversations();
   
+  // Update global chat badge if function exists (from chat-badge.js)
+  if (typeof window.updateChatBadge === 'function') {
+    window.updateChatBadge();
+  }
+  
   // Nếu đang mở conversation này, append message
   if (currentConversationId === message.conversation) {
     appendMessage(message);

@@ -16,6 +16,69 @@ let districtChoice = null;
 let wardChoice = null;
 
 // ===================================
+// HELPER FUNCTIONS - Format Price
+// ===================================
+
+/**
+ * Format số thành chuỗi có dấu chấm ngăn cách hàng nghìn
+ * VD: 5000000 -> "5.000.000"
+ */
+function formatNumber(num) {
+    if (!num) return '';
+    // Loại bỏ tất cả ký tự không phải số
+    const numStr = num.toString().replace(/\D/g, '');
+    // Thêm dấu chấm ngăn cách
+    return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/**
+ * Loại bỏ format và trả về số thuần
+ * VD: "5.000.000" -> 5000000
+ */
+function parseFormattedNumber(str) {
+    if (!str) return 0;
+    return parseInt(str.toString().replace(/\./g, ''), 10) || 0;
+}
+
+/**
+ * Chuyển đổi số thành chữ (đọc số tiền)
+ * VD: 5000000 -> "Năm triệu"
+ */
+function numberToWords(num) {
+    if (!num || num === 0) return '';
+    
+    const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+    const teens = ['mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu', 'mười bảy', 'mười tám', 'mười chín'];
+    
+    if (num >= 1000000000) {
+        const ty = Math.floor(num / 1000000000);
+        const trieu = Math.floor((num % 1000000000) / 1000000);
+        const ngan = Math.floor((num % 1000000) / 1000);
+        
+        let result = ty + ' tỷ';
+        if (trieu > 0) result += ' ' + trieu + ' triệu';
+        if (ngan > 0) result += ' ' + ngan + ' nghìn';
+        return result;
+    } else if (num >= 1000000) {
+        const trieu = Math.floor(num / 1000000);
+        const ngan = Math.floor((num % 1000000) / 1000);
+        
+        let result = trieu + ' triệu';
+        if (ngan > 0) result += ' ' + ngan + ' nghìn';
+        return result;
+    } else if (num >= 1000) {
+        const ngan = Math.floor(num / 1000);
+        const tram = num % 1000;
+        
+        let result = ngan + ' nghìn';
+        if (tram > 0) result += ' ' + tram;
+        return result;
+    }
+    
+    return num.toString();
+}
+
+// ===================================
 // 1. KHỞI TẠO TRANG
 // ===================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -767,7 +830,12 @@ function submitPropertyForm() {
     formData.append('type', document.getElementById('propertyType').value);
     formData.append('title', document.getElementById('title').value);
     formData.append('description', document.getElementById('description').value);
-    formData.append('price', document.getElementById('price').value);
+    
+    // Parse giá từ format có dấu chấm
+    const priceInput = document.getElementById('price');
+    const priceValue = parseFormattedNumber(priceInput.value);
+    formData.append('price', priceValue);
+    
     formData.append('area', document.getElementById('area').value);
     formData.append('bedrooms', document.getElementById('bedrooms').value);
     formData.append('bathrooms', document.getElementById('bathrooms').value);
@@ -942,10 +1010,106 @@ function initEventListeners() {
         });
     });
 
-    // Xử lý thay đổi đơn vị giá
-    const priceUnit = document.getElementById('priceUnit');
+    // Xử lý format giá tiền
     const priceInput = document.getElementById('price');
+    const priceUnit = document.getElementById('priceUnit');
     
+    if (priceInput) {
+        priceInput.addEventListener('input', function(e) {
+            const unit = priceUnit ? priceUnit.value : 'trieu-thang';
+            
+            // Kiểm tra xem có phải đơn vị triệu hoặc USD (cho phép số thập phân)
+            const allowDecimal = unit === 'trieu-thang' || unit === 'trieu-nam' || unit === 'usd-thang';
+            
+            if (allowDecimal) {
+                // Cho phép số và dấu chấm thập phân (chỉ 1 dấu chấm, tối đa 2 chữ số sau chấm)
+                let value = e.target.value;
+                
+                // Loại bỏ ký tự không hợp lệ (giữ lại số và dấu chấm)
+                value = value.replace(/[^\d.]/g, '');
+                
+                // Chỉ cho phép 1 dấu chấm
+                const parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                // Giới hạn 2 chữ số sau dấu chấm
+                if (parts.length === 2 && parts[1].length > 2) {
+                    value = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                e.target.value = value;
+            } else {
+                // Đơn vị VNĐ - format với dấu chấm ngăn cách hàng nghìn
+                // Lấy giá trị và loại bỏ tất cả dấu chấm
+                const value = e.target.value.replace(/\./g, '');
+                
+                // Chỉ cho phép số
+                if (value && !/^\d+$/.test(value)) {
+                    e.target.value = e.target.value.slice(0, -1);
+                    return;
+                }
+                
+                // Format lại với dấu chấm ngăn cách
+                if (value) {
+                    e.target.value = formatNumber(value);
+                }
+            }
+        });
+        
+        priceInput.addEventListener('blur', function(e) {
+            const unit = priceUnit ? priceUnit.value : 'trieu-thang';
+            const allowDecimal = unit === 'trieu-thang' || unit === 'trieu-nam' || unit === 'usd-thang';
+            
+            let value;
+            if (allowDecimal) {
+                // Với đơn vị triệu/USD, giữ nguyên số thập phân
+                value = parseFloat(e.target.value) || 0;
+            } else {
+                // Với đơn vị VNĐ, parse số đã format
+                value = parseFormattedNumber(e.target.value);
+            }
+            
+            if (value > 0 && priceUnit) {
+                // Hiển thị text đọc số tiền
+                let priceText = '';
+                
+                if (unit === 'trieu-thang') {
+                    // Giá tính theo triệu/tháng - hiển thị với số thập phân nếu có
+                    if (value % 1 === 0) {
+                        priceText = `(${numberToWords(value)} triệu đồng/tháng)`;
+                    } else {
+                        priceText = `(${value} triệu đồng/tháng)`;
+                    }
+                } else if (unit === 'vnd-thang') {
+                    // Giá tính theo VNĐ/tháng
+                    priceText = `(${numberToWords(value)} đồng/tháng)`;
+                } else if (unit === 'vnd-ngay') {
+                    // Giá tính theo VNĐ/ngày
+                    priceText = `(${numberToWords(value)} đồng/ngày)`;
+                } else if (unit === 'trieu-nam') {
+                    // Giá tính theo triệu/năm - hiển thị với số thập phân nếu có
+                    if (value % 1 === 0) {
+                        priceText = `(${numberToWords(value)} triệu đồng/năm)`;
+                    } else {
+                        priceText = `(${value} triệu đồng/năm)`;
+                    }
+                } else if (unit === 'usd-thang') {
+                    // Giá tính theo USD/tháng - hiển thị với số thập phân
+                    priceText = `($${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USD/tháng)`;
+                }
+                
+                // Hiển thị text nếu có element
+                const priceTextEl = document.getElementById('priceText');
+                if (priceTextEl) {
+                    priceTextEl.textContent = priceText;
+                }
+            }
+        });
+    }
+    
+    // Xử lý thay đổi đơn vị giá
     if (priceUnit) {
         priceUnit.addEventListener('change', function() {
             if (this.value === 'thoa-thuan') {
@@ -956,16 +1120,58 @@ function initEventListeners() {
                 priceInput.style.backgroundColor = '#e9ecef';
                 priceInput.style.color = '#999';
                 priceInput.removeAttribute('required');
+                
+                // Xóa text hiển thị
+                const priceTextEl = document.getElementById('priceText');
+                if (priceTextEl) {
+                    priceTextEl.textContent = '';
+                }
             } else {
                 // Các option khác - unlock input giá
                 priceInput.disabled = false;
-                priceInput.placeholder = '0';
                 priceInput.style.backgroundColor = 'white';
                 priceInput.style.color = 'inherit';
                 priceInput.setAttribute('required', 'required');
+                
+                // Cập nhật placeholder theo đơn vị
+                const placeholders = {
+                    'trieu-thang': 'VD: 2.5 hoặc 5 (triệu/tháng)',
+                    'vnd-thang': 'VD: 5.000.000',
+                    'vnd-ngay': 'VD: 200.000',
+                    'trieu-nam': 'VD: 60 hoặc 30.5 (triệu/năm)',
+                    'usd-thang': 'VD: 500 hoặc 500.50'
+                };
+                priceInput.placeholder = placeholders[this.value] || '0';
+                
+                // Chuyển đổi format khi đổi đơn vị
+                const currentValue = priceInput.value;
+                if (currentValue) {
+                    const allowDecimal = this.value === 'trieu-thang' || this.value === 'trieu-nam' || this.value === 'usd-thang';
+                    const previousAllowDecimal = priceInput.dataset.allowDecimal === 'true';
+                    
+                    if (allowDecimal && !previousAllowDecimal) {
+                        // Chuyển từ format VNĐ (có dấu chấm ngăn cách) sang format thập phân
+                        const numValue = parseFormattedNumber(currentValue);
+                        priceInput.value = numValue.toString();
+                    } else if (!allowDecimal && previousAllowDecimal) {
+                        // Chuyển từ format thập phân sang format VNĐ (có dấu chấm ngăn cách)
+                        const numValue = parseFloat(currentValue) || 0;
+                        priceInput.value = formatNumber(Math.round(numValue));
+                    }
+                    
+                    // Lưu trạng thái hiện tại
+                    priceInput.dataset.allowDecimal = allowDecimal.toString();
+                    
+                    // Cập nhật text hiển thị
+                    priceInput.dispatchEvent(new Event('blur'));
+                }
             }
             clearFieldError('price');
         });
+        
+        // Khởi tạo trạng thái ban đầu
+        const initialAllowDecimal = priceUnit.value === 'trieu-thang' || priceUnit.value === 'trieu-nam' || priceUnit.value === 'usd-thang';
+        priceInput.dataset.allowDecimal = initialAllowDecimal.toString();
     }
 
     // Cập nhật trạng thái nút

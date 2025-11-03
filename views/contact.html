@@ -166,7 +166,7 @@
                         <!-- Notifications -->
                         <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
                             <i class="fas fa-bell text-xl"></i>
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                            <span id="notificationBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">id="notificationBadge" style="display: none;">0</span>
                         </a>
                         
                         <!-- Favorites -->
@@ -450,6 +450,8 @@
     <script src="/js/main.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/contact.js"></script>
+    <script src="/js/chat-badge.js"></script>
+    <script src="/js/notification-badge.js"></script>
     
     <!-- Favorites -->
     <script src="/js/favorites.js"></script>
@@ -509,3 +511,4 @@
     </script>
 </body>
 </html>
+

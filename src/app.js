@@ -70,6 +70,7 @@ app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/universities', require('./routes/universityRoutes'));
 app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {

@@ -12,6 +12,7 @@ const Review = require('./Review');
 const University = require('./University');
 const Conversation = require('./Conversation');
 const Message = require('./Message');
+const Notification = require('./Notification');
 
 module.exports = {
   User,
@@ -20,5 +21,6 @@ module.exports = {
   Review,
   University,
   Conversation,
-  Message
+  Message,
+  Notification
 };

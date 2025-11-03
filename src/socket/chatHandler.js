@@ -5,7 +5,7 @@
  * ===================================
  */
 
-const { Message, Conversation, User } = require('../models');
+const { Message, Conversation, User, Notification } = require('../models');
 const jwt = require('jsonwebtoken');
 
 // Map để lưu userId -> socketId
@@ -132,6 +132,31 @@ module.exports = (io) => {
               lastMessageTime: message.createdAt
             }
           });
+        }
+
+        // Tạo notification cho người nhận (nếu offline hoặc không ở trong conversation)
+        if (!receiverSocketId) {
+          try {
+            const notification = await Notification.create({
+              user: receiverId,
+              type: 'message_received',
+              title: 'Tin nhắn mới',
+              message: `${socket.user.name} đã gửi tin nhắn cho bạn`,
+              link: `/chat?conversation=${conversationId}`,
+              metadata: {
+                senderId: userId,
+                senderName: socket.user.name,
+                conversationId: conversationId
+              }
+            });
+
+            // Nếu người nhận online, emit notification event
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit('notification:new', notification);
+            }
+          } catch (error) {
+            console.error('Error creating message notification:', error);
+          }
         }
 
         // Gửi lại cho người gửi (confirmation)
