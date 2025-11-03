@@ -216,6 +216,11 @@ app.get('/admin/reports', (req, res) => {
 app.get('/admin/settings', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/admin/dashboard.html'));
 });
+
+// Chrome DevTools - Ignore this request
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  res.status(404).end();
+});
  
 // 404 handler - chỉ cho các route HTML, bỏ qua static files
 app.use((req, res, next) => {

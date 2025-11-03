@@ -422,6 +422,9 @@
                         <button id="messageBtn" onclick="handleMessage()" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 mb-3 font-semibold shadow-md hover:shadow-lg transform hover:scale-105">
                             <i class="fas fa-envelope mr-2"></i>Gửi tin nhắn
                         </button>
+                        <button id="zaloBtn" onclick="handleZalo()" class="w-full bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3.5 rounded-lg hover:from-blue-500 hover:to-blue-600 transition-all duration-300 mb-3 font-semibold shadow-md hover:shadow-lg transform hover:scale-105">
+                            <i class="fas fa-comment-dots mr-2"></i>Gửi tin Zalo
+                        </button>
                         <button id="saveBtn" onclick="handleSaveProperty(event)" 
                                 class="w-full py-3.5 rounded-lg transition-all duration-300 mb-3 favorite-btn font-semibold shadow-md hover:shadow-lg transform hover:scale-105 bg-gradient-to-r from-pink-100 to-red-100 text-red-600 hover:from-pink-200 hover:to-red-200 border-2 border-red-200"
                                 data-favorite-property=""
@@ -780,8 +783,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/favorites.js"></script>
+    <script src="/js/auth.js?v=2.0"></script>
+    <script src="/js/favorites.js?v=2.0"></script>
     
     <script>
         // Get property ID from URL
@@ -875,8 +878,11 @@
                 
                 // Store landlord info for call and chat functions
                 landlordPhone = property.landlord.phone || '';
-                landlordId = property.landlord._id || property.landlord;
-                currentPropertyId = property._id;
+                // Đảm bảo landlordId là string
+                landlordId = (property.landlord._id || property.landlord).toString();
+                currentPropertyId = property._id.toString();
+                
+                console.log('Landlord Info:', { landlordId, landlordPhone, currentPropertyId }); // Debug log
                 
                 const phoneContainer = document.getElementById('landlord-phone');
                 phoneContainer.innerHTML = `
@@ -1119,11 +1125,30 @@
          * Show Notification
          */
         function showNotification(message, type = 'success') {
-            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            let bgColor, icon;
+            
+            switch(type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    icon = 'check-circle';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    icon = 'exclamation-circle';
+                    break;
+                case 'info':
+                    bgColor = 'bg-blue-500';
+                    icon = 'info-circle';
+                    break;
+                default:
+                    bgColor = 'bg-gray-500';
+                    icon = 'bell';
+            }
+            
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 ${bgColor} text-white animate-slideDown flex items-center gap-3`;
             notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} text-xl"></i>
+                <i class="fas fa-${icon} text-xl"></i>
                 <span class="font-semibold">${message}</span>
             `;
             document.body.appendChild(notification);
@@ -1150,10 +1175,16 @@
             // Kiểm tra có landlordId không
             if (!landlordId) {
                 showNotification('Không tìm thấy thông tin chủ nhà', 'error');
+                console.error('landlordId is missing:', landlordId);
                 return;
             }
 
+            // Hiển thị loading
+            showNotification('Đang tạo cuộc trò chuyện...', 'info');
+            
             try {
+                console.log('Creating conversation with:', { landlordId, currentPropertyId }); // Debug
+                
                 // Tạo hoặc lấy conversation với landlord
                 const response = await fetch('/api/chat/conversations', {
                     method: 'POST',
@@ -1168,20 +1199,119 @@
                 });
 
                 const data = await response.json();
+                console.log('API Response:', data); // Debug
 
-                if (data.success) {
-                    // Lưu conversation ID vào localStorage để chat.js mở
+                if (data.success && data.data) {
+                    // Lưu conversation ID vào localStorage
                     localStorage.setItem('openConversationId', data.data._id);
-                    localStorage.setItem('openConversationUser', JSON.stringify(data.data.participants.find(p => p._id !== landlordId)));
+                    
+                    // Tìm user khác (không phải currentUser) - với error handling
+                    try {
+                        const userDataStr = localStorage.getItem('userData');
+                        if (userDataStr) {
+                            const userData = JSON.parse(userDataStr);
+                            const currentUserId = userData._id;
+                            
+                            console.log('Current User ID:', currentUserId); // Debug
+                            console.log('Participants:', data.data.participants); // Debug
+                            
+                            if (data.data.participants && Array.isArray(data.data.participants)) {
+                                const otherUser = data.data.participants.find(p => {
+                                    const participantId = p._id || p;
+                                    return participantId.toString() !== currentUserId.toString();
+                                });
+                                
+                                if (otherUser) {
+                                    localStorage.setItem('openConversationUser', JSON.stringify(otherUser));
+                                    console.log('Other User:', otherUser); // Debug
+                                }
+                            }
+                        }
+                    } catch (parseError) {
+                        console.warn('Error parsing user data:', parseError);
+                        // Không cần throw error, vẫn có thể mở chat
+                    }
+                    
+                    console.log('Redirecting to chat...'); // Debug
                     
                     // Chuyển đến trang chat
                     window.location.href = '/chat';
                 } else {
                     showNotification(data.message || 'Không thể mở chat', 'error');
+                    console.error('API Error:', data);
                 }
             } catch (error) {
                 console.error('Error opening chat:', error);
-                showNotification('Có lỗi xảy ra khi mở chat', 'error');
+                showNotification('Có lỗi xảy ra khi mở chat: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Handle Zalo - Gửi tin nhắn qua Zalo
+         */
+        function handleZalo() {
+            // Kiểm tra có landlordPhone không
+            if (!landlordPhone) {
+                showNotification('Chưa có thông tin số điện thoại để liên hệ Zalo', 'error');
+                return;
+            }
+
+            // Clean phone number (remove spaces, dashes, parentheses)
+            const cleanPhone = landlordPhone.replace(/[\s\-\(\)]/g, '');
+            
+            // Kiểm tra số điện thoại Việt Nam hợp lệ
+            if (!cleanPhone.match(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/)) {
+                showNotification('Số điện thoại không hợp lệ để gửi Zalo', 'error');
+                return;
+            }
+
+            // Format số điện thoại cho Zalo
+            // Nếu bắt đầu bằng 0, đổi thành +84
+            let zaloPhone = cleanPhone;
+            if (cleanPhone.startsWith('0')) {
+                zaloPhone = '+84' + cleanPhone.substring(1);
+            } else if (!cleanPhone.startsWith('+84')) {
+                zaloPhone = '+84' + cleanPhone;
+            }
+
+            // Mở trực tiếp Zalo (không cần modal xác nhận)
+            openZalo(zaloPhone);
+        }
+
+        /**
+         * Open Zalo with phone number - Mở trực tiếp trang Zalo chat
+         */
+        function openZalo(phone) {
+            // Zalo deep link format: https://zalo.me/{phone_number}
+            // Remove + from phone number for Zalo
+            const zaloNumber = phone.replace('+', '');
+            const zaloUrl = `https://zalo.me/${zaloNumber}`;
+            
+            // Hiển thị thông báo đang mở Zalo
+            showNotification('Đang mở Zalo...', 'success');
+            
+            // Try to open Zalo app first (for mobile)
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                // Mobile device - try to open Zalo app
+                const zaloAppUrl = `zalo://conversation?phone=${zaloNumber}`;
+                
+                // Try app first
+                window.location.href = zaloAppUrl;
+                
+                // Fallback to web after 500ms if app not installed
+                setTimeout(() => {
+                    window.open(zaloUrl, '_blank');
+                }, 500);
+            } else {
+                // Desktop - open Zalo web in new tab
+                const zaloWindow = window.open(zaloUrl, '_blank');
+                
+                if (zaloWindow) {
+                    zaloWindow.focus();
+                } else {
+                    // Popup blocked
+                    showNotification('Vui lòng cho phép popup để mở Zalo', 'error');
+                }
             }
         }
 
@@ -1778,6 +1908,18 @@
     </script>
     
     <!-- Property Detail Script -->
-    <script src="/js/property-detail.js"></script>
+    <script src="/js/property-detail.js?v=2.0"></script>
+    
+    <!-- Prevent errors from missing functions -->
+    <script>
+        // Override console errors for missing functions
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('initializeChat')) {
+                e.preventDefault();
+                console.log('initializeChat is not needed on this page');
+                return true;
+            }
+        });
+    </script>
 </body>
 </html>

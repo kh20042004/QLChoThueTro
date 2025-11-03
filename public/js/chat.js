@@ -5,10 +5,21 @@
  * ===================================
  */
 
-// Socket.IO connection
-let socket = null;
-let currentConversationId = null;
-let currentReceiverId = null;
+// Prevent duplicate declaration if script loaded twice
+if (typeof window.chatSocket === 'undefined') {
+  window.chatSocket = null;
+}
+if (typeof window.chatCurrentConversationId === 'undefined') {
+  window.chatCurrentConversationId = null;
+}
+if (typeof window.chatCurrentReceiverId === 'undefined') {
+  window.chatCurrentReceiverId = null;
+}
+
+// Use global variables to prevent redeclaration
+let socket = window.chatSocket;
+let currentConversationId = window.chatCurrentConversationId;
+let currentReceiverId = window.chatCurrentReceiverId;
 let typingTimeout = null;
 
 // State
@@ -157,14 +168,24 @@ function renderConversations(conversations) {
     return;
   }
 
-  container.innerHTML = conversations.map(conv => `
+  // Filter out conversations with missing otherUser
+  const validConversations = conversations.filter(conv => {
+    if (!conv.otherUser || !conv.otherUser._id) {
+      console.warn('Invalid conversation (missing otherUser):', conv);
+      return false;
+    }
+    return true;
+  });
+
+  container.innerHTML = validConversations.map(conv => `
     <div class="conversation-item p-4 hover:bg-gray-50 cursor-pointer border-b transition-colors ${currentConversationId === conv._id ? 'bg-blue-50' : ''}"
          data-id="${conv._id}"
-         onclick="openConversation('${conv._id}', '${conv.otherUser._id}', '${conv.otherUser.name}', '${conv.otherUser.avatar || ''}')">
+         onclick="openConversation('${conv._id}', '${conv.otherUser._id}', '${escapeHtml(conv.otherUser.name)}', '${conv.otherUser.avatar || ''}')">
       <div class="flex items-start space-x-3">
         <div class="relative flex-shrink-0">
-          <img src="${conv.otherUser.avatar || 'https://via.placeholder.com/40'}" 
-               alt="${conv.otherUser.name}" 
+          <img src="${conv.otherUser.avatar || '/images/default-avatar.png'}" 
+               onerror="this.src='/images/default-avatar.png'"
+               alt="${escapeHtml(conv.otherUser.name)}" 
                class="w-12 h-12 rounded-full object-cover">
           <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${state.onlineUsers.has(conv.otherUser._id) ? 'bg-green-500' : 'bg-gray-400'}"
                 id="status-${conv.otherUser._id}"></span>
@@ -512,14 +533,20 @@ function debounce(func, wait) {
 async function checkAndOpenPendingConversation() {
   const openConversationId = localStorage.getItem('openConversationId');
   
+  console.log('🔍 Checking for pending conversation:', openConversationId); // Debug
+  
   if (openConversationId) {
-    // Đợi một chút để conversations load xong
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Đợi conversations load xong (tăng timeout lên 1000ms)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('📋 Current conversations:', state.conversations); // Debug
     
     // Tìm conversation trong danh sách
     const conversation = state.conversations.find(c => c._id === openConversationId);
     
-    if (conversation) {
+    console.log('✅ Found conversation:', conversation); // Debug
+    
+    if (conversation && conversation.otherUser && conversation.otherUser._id) {
       // Mở conversation
       await openConversation(
         conversation._id,
@@ -533,10 +560,40 @@ async function checkAndOpenPendingConversation() {
       if (conversationElement) {
         conversationElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      
+      console.log('✅ Conversation opened successfully'); // Debug
+    } else {
+      console.warn('⚠️ Conversation not found in list or missing otherUser, reloading...'); // Debug
+      // Nếu không tìm thấy, reload conversations và thử lại
+      await loadConversations();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const retryConversation = state.conversations.find(c => c._id === openConversationId);
+      if (retryConversation && retryConversation.otherUser && retryConversation.otherUser._id) {
+        await openConversation(
+          retryConversation._id,
+          retryConversation.otherUser._id,
+          retryConversation.otherUser.name,
+          retryConversation.otherUser.avatar || ''
+        );
+        console.log('✅ Conversation opened on retry'); // Debug
+      } else {
+        console.error('❌ Could not open conversation - missing data'); // Debug
+      }
     }
     
     // Xóa flag sau khi đã xử lý
     localStorage.removeItem('openConversationId');
     localStorage.removeItem('openConversationUser');
   }
+}
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }

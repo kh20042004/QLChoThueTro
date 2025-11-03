@@ -96,6 +96,7 @@ async function handleRegister(e) {
     const phone = document.getElementById('phone')?.value;
     const password = document.getElementById('password')?.value;
     const confirmPassword = document.getElementById('confirmPassword')?.value;
+    const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
 
     // Validation
     if (!name || !email || !phone || !password || !confirmPassword) {
@@ -121,14 +122,15 @@ async function handleRegister(e) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, email, phone, password })
+            body: JSON.stringify({ name, email, phone, password, role })
         });
 
         const data = await response.json();
         hideLoading();
 
         if (data.success) {
-            showAlert('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+            const roleText = role === 'landlord' ? 'chủ nhà' : 'người thuê';
+            showAlert(`Đăng ký thành công với vai trò ${roleText}! Vui lòng đăng nhập.`, 'success');
 
             // Chuyển hướng về trang đăng nhập sau 2 giây
             setTimeout(() => {

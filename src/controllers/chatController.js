@@ -32,13 +32,23 @@ exports.getConversations = async (req, res) => {
         p => p._id.toString() !== userId.toString()
       );
 
+      // Xử lý unreadCount - có thể là Map hoặc Object
+      let unreadCount = 0;
+      if (conv.unreadCount) {
+        if (typeof conv.unreadCount.get === 'function') {
+          unreadCount = conv.unreadCount.get(userId.toString()) || 0;
+        } else if (typeof conv.unreadCount === 'object') {
+          unreadCount = conv.unreadCount[userId.toString()] || 0;
+        }
+      }
+
       return {
         _id: conv._id,
         otherUser,
         property: conv.propertyId,
         lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessageTime,
-        unreadCount: conv.unreadCount?.get(userId.toString()) || 0,
+        unreadCount,
         createdAt: conv.createdAt,
         updatedAt: conv.updatedAt
       };

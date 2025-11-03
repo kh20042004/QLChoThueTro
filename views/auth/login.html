@@ -5,112 +5,248 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Đăng nhập - Hệ Thống Cho Thuê Nhà/Phòng Trọ</title>
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-  <!-- App styles -->
-  <link rel="stylesheet" href="/css/auth.css" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   
   <style>
-    /* Radial gradient background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #475569 100%);
-      z-index: -1;
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     
-    body {
-      position: relative;
-      min-height: 100vh;
+    .animate-gradient {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .input-focus:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
   </style>
 </head>
-<body>
-  <div class="card auth-card">
-    <div class="auth-header">
-      <div class="brand">
-        <div class="logo">🏠</div>
-        <span>Room Rental System</span>
-      </div>
-      <h1 class="auth-title mb-0">Đăng nhập</h1>
-      <p class="auth-subtitle">Chào mừng bạn quay lại</p>
-    </div>
-
-    <div class="card-body">
-      <form id="loginForm" novalidate>
-        <div class="mb-3">
-          <label for="email" class="form-label">Email</label>
-          <input
-            type="email"
-            class="form-control"
-            id="email"
-            name="email"
-            placeholder="name@example.com"
-            required
-          />
-        </div>
-
-        <div class="mb-2">
-          <label for="password" class="form-label">Mật khẩu</label>
-          <input
-            type="password"
-            class="form-control"
-            id="password"
-            name="password"
-            placeholder="••••••••"
-            minlength="6"
-            required
-          />
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember" />
-            <label class="form-check-label" for="remember">
-              Ghi nhớ đăng nhập
-            </label>
+<body class="animate-gradient min-h-screen flex items-center justify-center p-4">
+  
+  <div class="w-full max-w-6xl mx-auto">
+    <div class="glass-card rounded-3xl shadow-2xl overflow-hidden">
+      <div class="grid md:grid-cols-2 gap-0">
+        
+        <!-- Left Side - Branding & Illustration -->
+        <div class="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-indigo-600 to-purple-600 p-12 text-white relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
+            <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full"></div>
+            <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-white rounded-full"></div>
           </div>
-          <a href="#" class="small-text text-decoration-none">Quên mật khẩu?</a>
+          
+          <div class="relative z-10 text-center">
+            <div class="mb-6 float-animation">
+              <i class="fas fa-home text-8xl"></i>
+            </div>
+            <h2 class="text-4xl font-bold mb-4">Chào Mừng Trở Lại!</h2>
+            <p class="text-lg text-indigo-100 mb-8">Đăng nhập để tiếp tục quản lý nhà trọ của bạn</p>
+            
+            <div class="space-y-4 text-left max-w-sm mx-auto">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i class="fas fa-search text-2xl"></i>
+                </div>
+                <div>
+                  <div class="font-semibold">Tìm kiếm dễ dàng</div>
+                  <div class="text-sm text-indigo-100">Hàng ngàn phòng trọ</div>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i class="fas fa-shield-alt text-2xl"></i>
+                </div>
+                <div>
+                  <div class="font-semibold">An toàn & Bảo mật</div>
+                  <div class="text-sm text-indigo-100">Thông tin được mã hóa</div>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i class="fas fa-headset text-2xl"></i>
+                </div>
+                <div>
+                  <div class="font-semibold">Hỗ trợ 24/7</div>
+                  <div class="text-sm text-indigo-100">Luôn sẵn sàng giúp đỡ</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-gradient w-100 py-2" data-original-text="Đăng nhập">
-          Đăng nhập
-        </button>
-      </form>
-
-      <div class="divider my-4">
-        Hoặc
+        
+        <!-- Right Side - Login Form -->
+        <div class="p-8 md:p-12">
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-6 md:hidden">
+              <i class="fas fa-home text-3xl text-indigo-600"></i>
+              <span class="text-xl font-bold text-gray-800">Room Rental</span>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Đăng Nhập</h1>
+            <p class="text-gray-600">Chào mừng bạn quay lại với chúng tôi</p>
+          </div>
+          
+          <form id="loginForm" class="space-y-5">
+            
+            <!-- Email Input -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-envelope mr-1"></i>Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="name@example.com"
+                required
+                class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all"
+              />
+            </div>
+            
+            <!-- Password Input -->
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-lock mr-1"></i>Mật khẩu
+              </label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  minlength="6"
+                  required
+                  class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all pr-12"
+                />
+                <button
+                  type="button"
+                  onclick="togglePassword()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <i id="toggleIcon" class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Remember & Forgot Password -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  name="remember"
+                  class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">Ghi nhớ đăng nhập</span>
+              </label>
+              <a href="#" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                Quên mật khẩu?
+              </a>
+            </div>
+            
+            <!-- Login Button -->
+            <button
+              type="submit"
+              class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+            >
+              <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
+            </button>
+          </form>
+          
+          <!-- Divider -->
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-4 bg-white text-gray-500">Hoặc đăng nhập bằng</span>
+            </div>
+          </div>
+          
+          <!-- Google Login -->
+          <a
+            href="/api/auth/google"
+            class="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:border-gray-400"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.9895 10.1871C19.9895 9.36767 19.9214 8.76973 19.7742 8.14966H10.1992V11.848H15.8195C15.7062 12.7671 15.0943 14.1512 13.7346 15.0813L13.7155 15.2051L16.7429 17.4969L16.9527 17.5174C18.879 15.7789 19.9895 13.221 19.9895 10.1871Z" fill="#4285F4"/>
+              <path d="M10.1993 19.9313C12.9527 19.9313 15.2643 19.0454 16.9527 17.5174L13.7346 15.0813C12.8734 15.6682 11.7176 16.0779 10.1993 16.0779C7.50243 16.0779 5.21352 14.3395 4.39759 11.9366L4.27799 11.9466L1.13003 14.3273L1.08887 14.4391C2.76588 17.6945 6.21061 19.9313 10.1993 19.9313Z" fill="#34A853"/>
+              <path d="M4.39748 11.9366C4.18219 11.3166 4.05759 10.6521 4.05759 9.96565C4.05759 9.27909 4.18219 8.61473 4.38615 7.99466L4.38045 7.8626L1.19304 5.44366L1.08875 5.49214C0.397576 6.84305 0.000976562 8.36008 0.000976562 9.96565C0.000976562 11.5712 0.397576 13.0882 1.08875 14.4391L4.39748 11.9366Z" fill="#FBBC05"/>
+              <path d="M10.1993 3.85336C12.1142 3.85336 13.406 4.66168 14.1425 5.33717L17.0207 2.59107C15.253 0.985496 12.9527 0 10.1993 0C6.2106 0 2.76588 2.23672 1.08887 5.49214L4.38626 7.99466C5.21352 5.59183 7.50242 3.85336 10.1993 3.85336Z" fill="#EB4335"/>
+            </svg>
+            <span class="font-medium text-gray-700">Đăng nhập bằng Google</span>
+          </a>
+          
+          <!-- Sign Up Link -->
+          <div class="mt-6 text-center">
+            <p class="text-gray-600">
+              Chưa có tài khoản?
+              <a href="/auth/register" class="text-indigo-600 hover:text-indigo-700 font-medium">
+                Đăng ký ngay
+              </a>
+            </p>
+          </div>
+          
+          <!-- Statistics -->
+          <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div class="text-2xl font-bold text-indigo-600">10,000+</div>
+                <div class="text-sm text-gray-600">Người dùng</div>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-purple-600">5,000+</div>
+                <div class="text-sm text-gray-600">Phòng trọ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
       </div>
-
-      <!-- Nut dang nhap bang Google -->
-      <div class="d-grid gap-2 mb-3">
-        <a href="/api/auth/google" class="btn btn-outline-danger py-2 d-flex align-items-center justify-content-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16">
-            <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"/>
-          </svg>
-          Đăng nhập bằng Google
-        </a>
-      </div>
-
-      <div class="d-grid gap-2">
-        <a class="btn btn-outline-secondary py-2" href="/auth/register">
-          Tạo tài khoản mới 
-        </a>
-      </div>
-    </div>
-
-    <div class="auth-footer text-center">
-      Chưa có tài khoản?
-      <a href="/auth/register" class="text-decoration-none">Đăng ký ngay</a>
     </div>
   </div>
-
-  <!-- Bootstrap JS (optional) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+      }
+    }
+  </script>
   
   <!-- Auth JS -->
   <script src="/js/auth.js"></script>
