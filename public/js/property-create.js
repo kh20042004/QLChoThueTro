@@ -882,6 +882,7 @@ function submitPropertyForm() {
 
     // Step 3: Tiện nghi
     const amenities = {
+        // Tiện nghi cơ bản
         wifi: document.getElementById('wifi')?.checked || false,
         ac: document.getElementById('ac')?.checked || false,
         parking: document.getElementById('parking')?.checked || false,
@@ -889,7 +890,28 @@ function submitPropertyForm() {
         water: document.getElementById('water')?.checked || false,
         laundry: document.getElementById('laundry')?.checked || false,
         balcony: document.getElementById('balcony')?.checked || false,
-        security: document.getElementById('security')?.checked || false
+        security: document.getElementById('security')?.checked || false,
+        // Tiện nghi bổ sung
+        tv: document.getElementById('tv')?.checked || false,
+        refrigerator: document.getElementById('refrigerator')?.checked || false,
+        bed: document.getElementById('bed')?.checked || false,
+        sofa: document.getElementById('sofa')?.checked || false,
+        desk: document.getElementById('desk')?.checked || false,
+        microwave: document.getElementById('microwave')?.checked || false,
+        // Tiện nghi nâng cao
+        elevator: document.getElementById('elevator')?.checked || false,
+        gym: document.getElementById('gym')?.checked || false,
+        pool: document.getElementById('pool')?.checked || false,
+        garden: document.getElementById('garden')?.checked || false,
+        bbq: document.getElementById('bbq')?.checked || false,
+        lounge: document.getElementById('lounge')?.checked || false,
+        // Tiện nghi an toàn & khác
+        cctv: document.getElementById('cctv')?.checked || false,
+        alarm: document.getElementById('alarm')?.checked || false,
+        petFriendly: document.getElementById('petFriendly')?.checked || false,
+        soundproof: document.getElementById('soundproof')?.checked || false,
+        heating: document.getElementById('heating')?.checked || false,
+        storage: document.getElementById('storage')?.checked || false
     };
     formData.append('amenities', JSON.stringify(amenities));
 

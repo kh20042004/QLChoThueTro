@@ -422,60 +422,190 @@
                                     <i class="fas fa-th mr-2 text-gray-600"></i>Tiện Nghi
                                 </h5>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <!-- Tiện nghi cơ bản -->
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="wifi" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="wifi" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-wifi mr-2 text-gray-500"></i>WiFi
+                                            <i class="fas fa-wifi mr-2 text-blue-500"></i>WiFi
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="ac" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="ac" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-snowflake mr-2 text-gray-500"></i>Điều hòa
+                                            <i class="fas fa-snowflake mr-2 text-blue-500"></i>Điều hòa
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="parking" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="parking" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-car mr-2 text-gray-500"></i>Chỗ đỗ xe
+                                            <i class="fas fa-car mr-2 text-blue-500"></i>Chỗ đỗ xe
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="kitchen" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="kitchen" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-utensils mr-2 text-gray-500"></i>Bếp
+                                            <i class="fas fa-utensils mr-2 text-blue-500"></i>Bếp
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="water" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="water" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-water mr-2 text-gray-500"></i>Nước nóng
+                                            <i class="fas fa-water mr-2 text-blue-500"></i>Nước nóng
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="laundry" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="laundry" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-shirt mr-2 text-gray-500"></i>Máy giặt
+                                            <i class="fas fa-shirt mr-2 text-blue-500"></i>Máy giặt
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="balcony" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="balcony" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-tree mr-2 text-gray-500"></i>Ban công
+                                            <i class="fas fa-tree mr-2 text-blue-500"></i>Ban công
                                         </label>
                                     </div>
 
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="security" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="security" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-shield-alt mr-2 text-gray-500"></i>An ninh 24/7
+                                            <i class="fas fa-shield-alt mr-2 text-blue-500"></i>An ninh 24/7
+                                        </label>
+                                    </div>
+
+                                    <!-- Tiện nghi bổ sung -->
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="tv" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="tv" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-tv mr-2 text-green-500"></i>TV
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="refrigerator" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="refrigerator" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-snowflake mr-2 text-green-500"></i>Tủ lạnh
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="bed" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="bed" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-bed mr-2 text-green-500"></i>Giường
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="sofa" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="sofa" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-chair mr-2 text-green-500"></i>Sofa
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="desk" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="desk" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-desk mr-2 text-green-500"></i>Bàn làm việc
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="microwave" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="microwave" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-fire mr-2 text-green-500"></i>Lò vi sóng
+                                        </label>
+                                    </div>
+
+                                    <!-- Tiện nghi nâng cao -->
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="elevator" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="elevator" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-arrow-up mr-2 text-purple-500"></i>Thang máy
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="gym" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="gym" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-dumbbell mr-2 text-purple-500"></i>Phòng gym
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="pool" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="pool" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-water mr-2 text-purple-500"></i>Hồ bơi
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="garden" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="garden" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-leaf mr-2 text-purple-500"></i>Sân vườn
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="bbq" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="bbq" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-fire mr-2 text-purple-500"></i>Khu nướng BBQ
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="lounge" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="lounge" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-couch mr-2 text-purple-500"></i>Sảnh chờ
+                                        </label>
+                                    </div>
+
+                                    <!-- Tiện nghi an toàn & khác -->
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="cctv" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="cctv" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-video mr-2 text-red-500"></i>Camera CCTV
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="alarm" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="alarm" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-bell mr-2 text-red-500"></i>Chuông cảnh báo
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="petFriendly" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="petFriendly" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-paw mr-2 text-red-500"></i>Cho phép nuôi pet
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="soundproof" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="soundproof" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-volume-mute mr-2 text-red-500"></i>Cách âm
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="heating" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="heating" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-fire mr-2 text-red-500"></i>Sưởi ấm
+                                        </label>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" id="storage" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
+                                        <label for="storage" class="text-gray-700 cursor-pointer flex-1">
+                                            <i class="fas fa-box mr-2 text-red-500"></i>Kho lưu trữ
                                         </label>
                                     </div>
                                 </div>
