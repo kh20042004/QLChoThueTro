@@ -18,7 +18,8 @@ const {
   approveProperty,
   rejectProperty,
   deleteProperty,
-  deleteUser
+  deleteUser,
+  getNotifications
 } = require('../controllers/adminController');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -43,5 +44,8 @@ router.get('/properties', getProperties);
 router.put('/properties/:id/approve', approveProperty);
 router.put('/properties/:id/reject', rejectProperty);
 router.delete('/properties/:id', deleteProperty);
+
+// Notification routes
+router.get('/notifications', getNotifications);
 
 module.exports = router;

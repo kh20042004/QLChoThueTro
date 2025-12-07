@@ -5,31 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giới Thiệu - HomeRent</title>
     
-    <!-- Tailwind CSS -->
+    
+    <!-- Tailwind CSS via jsDelivr -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        secondary: '#60A5FA',
-                        accent: '#93C5FD',
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     
     <style>
         /* Custom animations */
@@ -603,6 +590,16 @@
             icon.classList.toggle('rotate-180');
         }
     </script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
 </body>
 </html>
 

@@ -168,13 +168,17 @@
 }
 
 .form-control.is-invalid,
-.form-select.is-invalid {
-    border-color: #dc3545;
+.form-select.is-invalid,
+input.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
 .form-control.is-valid,
-.form-select.is-valid {
-    border-color: #198754;
+.form-select.is-valid,
+input.is-valid {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
 }
 
 /* ===================================
@@ -251,8 +255,16 @@
     animation: fadeIn 0.3s ease;
 }
 
+.tab-content.hidden {
+    display: none !important;
+}
+
 .tab-content.d-none {
     display: none !important;
+}
+
+.tab-content.active {
+    display: block !important;
 }
 
 @keyframes fadeIn {

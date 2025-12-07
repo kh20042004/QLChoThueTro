@@ -9,10 +9,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Bài Đăng - HomeRent</title>
     
+    
+    <!-- Tailwind CSS via jsDelivr -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- ===== Thư viện CSS ===== -->
     <!-- Tailwind CSS - Framework CSS utility-first -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- Font Awesome - Icon library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -24,7 +25,13 @@
     
     <!-- ===== Cấu hình Tailwind CSS ===== -->
     <script>
-        tailwind.config = {
+        // Đợi Tailwind CDN load xong
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof tailwind !== 'undefined') {
+                tailwind.config = {
+                    corePlugins: {
+                        preflight: false, // Tắt reset CSS của Tailwind
+                    },
             theme: {
                 extend: {
                     colors: {
@@ -40,6 +47,8 @@
                 }
             }
         }
+            }
+        });
     </script>
     
     <!-- ===== Style tùy chỉnh và Animation ===== -->
@@ -397,6 +406,16 @@
     <!-- AI Chatbot Widget -->
     <link rel="stylesheet" href="/css/chatbot.css">
     <script src="/js/chatbot.js"></script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
 </body>
 </html>
 

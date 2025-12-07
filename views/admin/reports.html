@@ -69,11 +69,37 @@
                                 <i class="fas fa-download mr-2"></i>Xuất báo cáo
                             </button>
 
-                            <!-- Notifications -->
-                            <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                                <i class="fas fa-bell text-xl"></i>
-                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">5</span>
-                            </button>
+                            <!-- Notification Button -->
+                            <div class="relative">
+                                <button id="notificationButton" 
+                                        onclick="toggleNotificationDropdown()"
+                                        class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <i class="fas fa-bell text-xl"></i>
+                                    <span class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 items-center justify-center rounded-full font-semibold" style="display: none;">0</span>
+                                </button>
+                                
+                                <!-- Notification Dropdown -->
+                                <div id="notificationDropdown" 
+                                     class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[500px] overflow-hidden">
+                                    <!-- Header -->
+                                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                        <h3 class="font-semibold text-gray-900">Thông báo</h3>
+                                        <span class="text-xs text-gray-500"><span class="notification-badge">0</span> chưa đọc</span>
+                                    </div>
+                                    
+                                    <!-- Notification List -->
+                                    <div id="notificationList" class="overflow-y-auto max-h-[400px]">
+                                        <!-- Notifications will be rendered here -->
+                                    </div>
+                                    
+                                    <!-- Footer -->
+                                    <div class="px-4 py-3 border-t border-gray-200 text-center">
+                                        <a href="/admin/notifications" class="text-sm text-pink-600 hover:text-pink-700 font-medium">
+                                            Xem tất cả thông báo
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- User Menu -->
                             <div class="relative group">
@@ -119,7 +145,7 @@
                         </a>
                         <a href="/admin/properties" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                             <i class="fas fa-home w-5"></i>
-                            <span>Bất động sản</span>
+                            <span>Bài đăng</span>
                         </a>
                         <a href="/admin/bookings" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                             <i class="fas fa-calendar-check w-5"></i>
@@ -303,6 +329,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="/js/admin/notifications.js"></script>
     <script src="/js/admin/reports.js"></script>
 </body>
 </html>

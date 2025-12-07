@@ -44,6 +44,49 @@ const ReviewSchema = new mongoose.Schema({
   verified: {
     type: Boolean,
     default: false
+  },
+  reviewType: {
+    type: String,
+    enum: ['viewing', 'rented'],
+    required: [true, 'Vui lòng xác định loại đánh giá']
+  },
+  booking: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    required: true
+  },
+  // Moderation fields
+  moderationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  trustScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 50
+  },
+  autoApproved: {
+    type: Boolean,
+    default: false
+  },
+  autoRejected: {
+    type: Boolean,
+    default: false
+  },
+  moderationReason: {
+    type: String
+  },
+  moderationDetails: {
+    type: Object
+  },
+  moderatedAt: {
+    type: Date
+  },
+  moderatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true,
@@ -55,6 +98,8 @@ const ReviewSchema = new mongoose.Schema({
 ReviewSchema.index({ property: 1, user: 1 }, { unique: true });
 ReviewSchema.index({ property: 1 });
 ReviewSchema.index({ user: 1 });
+ReviewSchema.index({ moderationStatus: 1 });
+ReviewSchema.index({ trustScore: 1 });
 
 // Static method: Tính average rating cho property
 ReviewSchema.statics.getAverageRating = async function(propertyId) {

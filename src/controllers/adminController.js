@@ -9,6 +9,7 @@ const User = require('../models/User');
 const Property = require('../models/Property');
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
+const Notification = require('../models/Notification');
 
 /**
  * @desc    Lấy thống kê tổng quan cho dashboard
@@ -167,8 +168,8 @@ exports.getActivities = async (req, res, next) => {
     const recentBookings = await Booking.find()
       .sort({ createdAt: -1 })
       .limit(3)
-      .populate('user', 'name')
-      .select('user createdAt');
+      .populate('tenant', 'name')
+      .select('tenant createdAt');
 
     // Merge và sắp xếp theo thời gian
     const activities = [];
@@ -198,7 +199,7 @@ exports.getActivities = async (req, res, next) => {
     recentBookings.forEach(booking => {
       activities.push({
         type: 'booking_created',
-        user: booking.user?.name || 'Unknown',
+        user: booking.tenant?.name || 'Unknown',
         message: 'đã đặt phòng',
         time: booking.createdAt,
         icon: 'calendar',
@@ -268,12 +269,18 @@ exports.getProperties = async (req, res, next) => {
 exports.approveProperty = async (req, res, next) => {
   try {
     console.log('🔍 Approving property:', req.params.id);
+    console.log('👤 Admin:', req.user.id);
     
     const property = await Property.findByIdAndUpdate(
       req.params.id,
-      { status: 'available' }, // Đổi thành 'available' thay vì 'approved'
+      { 
+        status: 'available',
+        moderationDecision: 'auto_approved', // ✅ FIX: Thêm moderationDecision để hiển thị trên trang công khai
+        moderatedAt: new Date(),
+        moderatedBy: req.user.id
+      },
       { new: true, runValidators: true }
-    );
+    ).populate('landlord', 'name email');
 
     if (!property) {
       return res.status(404).json({
@@ -283,10 +290,29 @@ exports.approveProperty = async (req, res, next) => {
     }
 
     console.log('✅ Property approved:', property._id);
+    console.log(`   Status: ${property.status}`);
+    console.log(`   ML Decision: ${property.moderationDecision}`);
+
+    // Tạo thông báo cho chủ nhà
+    if (property.landlord && property.landlord._id) {
+      try {
+        await Notification.create({
+          user: property.landlord._id,
+          type: 'property_approved',
+          title: 'Bài đăng đã được duyệt',
+          message: `Chúc mừng! Bài đăng "${property.title}" của bạn đã được admin phê duyệt và đang hiển thị công khai.`,
+          link: `/properties/${property._id}`,
+          relatedProperty: property._id
+        });
+        console.log(`📧 Sent approval notification to user ${property.landlord._id}`);
+      } catch (notifError) {
+        console.error('❌ Error creating approval notification:', notifError);
+      }
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Đã duyệt bất động sản thành công',
+      message: 'Đã duyệt bất động sản thành công và gửi thông báo',
       data: property
     });
   } catch (error) {
@@ -303,12 +329,19 @@ exports.approveProperty = async (req, res, next) => {
 exports.rejectProperty = async (req, res, next) => {
   try {
     console.log('🔍 Rejecting property:', req.params.id);
+    console.log('👤 Admin:', req.user.id);
+    
+    const { reason } = req.body;
     
     const property = await Property.findByIdAndUpdate(
       req.params.id,
-      { status: 'inactive' }, // Đổi thành 'inactive' thay vì 'rejected'
+      { 
+        status: 'rejected',
+        moderatedAt: new Date(),
+        moderatedBy: req.user.id
+      },
       { new: true, runValidators: true }
-    );
+    ).populate('landlord', 'name email');
 
     if (!property) {
       return res.status(404).json({
@@ -317,11 +350,29 @@ exports.rejectProperty = async (req, res, next) => {
       });
     }
 
-    console.log('✅ Property rejected:', property._id);
+    console.log('❌ Property rejected:', property._id);
+
+    // Tạo thông báo cho chủ nhà
+    if (property.landlord && property.landlord._id) {
+      try {
+        const rejectReason = reason || 'Bài đăng không đạt tiêu chuẩn của hệ thống';
+        await Notification.create({
+          user: property.landlord._id,
+          type: 'property_rejected',
+          title: 'Bài đăng bị từ chối',
+          message: `Bài đăng "${property.title}" của bạn đã bị admin từ chối. Lý do: ${rejectReason}. Vui lòng chỉnh sửa và đăng lại.`,
+          link: `/my-properties`,
+          relatedProperty: property._id
+        });
+        console.log(`📧 Sent rejection notification to user ${property.landlord._id}`);
+      } catch (notifError) {
+        console.error('❌ Error creating rejection notification:', notifError);
+      }
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Đã từ chối bất động sản',
+      message: 'Đã từ chối bất động sản và gửi thông báo',
       data: property
     });
   } catch (error) {
@@ -426,3 +477,92 @@ exports.deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Lấy thông báo cho admin
+ * @route   GET /api/admin/notifications
+ * @access  Private/Admin
+ */
+exports.getNotifications = async (req, res, next) => {
+  try {
+    const notifications = [];
+
+    // 1. Bài đăng mới chờ duyệt
+    const pendingProperties = await Property.find({ status: 'pending' })
+      .populate('landlord', 'name avatar')
+      .sort('-createdAt')
+      .limit(10)
+      .select('title createdAt landlord');
+
+    pendingProperties.forEach(property => {
+      notifications.push({
+        id: `property-${property._id}`,
+        type: 'pending_property',
+        title: 'Bài đăng mới chờ duyệt',
+        message: `${property.landlord?.name || 'User'} đã đăng: ${property.title}`,
+        link: `/admin/properties`,
+        avatar: property.landlord?.avatar || 'https://aic.com.vn/avatar-fb-mac-dinh/',
+        time: property.createdAt,
+        isRead: false
+      });
+    });
+
+    // 2. Booking mới
+    const recentBookings = await Booking.find({ status: 'pending' })
+      .populate('tenant', 'name avatar')
+      .populate('property', 'title')
+      .sort('-createdAt')
+      .limit(5)
+      .select('tenant property createdAt');
+
+    recentBookings.forEach(booking => {
+      notifications.push({
+        id: `booking-${booking._id}`,
+        type: 'new_booking',
+        title: 'Booking mới',
+        message: `${booking.tenant?.name || 'User'} đã đặt: ${booking.property?.title}`,
+        link: `/admin/bookings`,
+        avatar: booking.tenant?.avatar || 'https://aic.com.vn/avatar-fb-mac-dinh/',
+        time: booking.createdAt,
+        isRead: false
+      });
+    });
+
+    // 3. Review mới
+    const recentReviews = await Review.find()
+      .populate('user', 'name avatar')
+      .populate('property', 'title')
+      .sort('-createdAt')
+      .limit(5)
+      .select('user property rating createdAt');
+
+    recentReviews.forEach(review => {
+      notifications.push({
+        id: `review-${review._id}`,
+        type: 'new_review',
+        title: 'Đánh giá mới',
+        message: `${review.user?.name || 'User'} đã đánh giá ${review.rating}⭐: ${review.property?.title}`,
+        link: `/admin/reviews`,
+        avatar: review.user?.avatar || 'https://aic.com.vn/avatar-fb-mac-dinh/',
+        time: review.createdAt,
+        isRead: false
+      });
+    });
+
+    // Sắp xếp theo thời gian mới nhất
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    // Giới hạn tổng số thông báo
+    const limitedNotifications = notifications.slice(0, 20);
+
+    res.status(200).json({
+      success: true,
+      count: limitedNotifications.length,
+      unreadCount: limitedNotifications.filter(n => !n.isRead).length,
+      data: limitedNotifications
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

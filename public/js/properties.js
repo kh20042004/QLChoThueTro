@@ -7,17 +7,143 @@ let allProperties = [];
 let filteredProperties = [];
 let currentPage = 1;
 const itemsPerPage = 9; // 3x3 grid
+let smartSearch = null; // Smart Search instance
 
 /**
  * Initialize properties page
  */
 async function initPropertiesPage() {
     try {
+        // Khởi tạo Smart Search
+        smartSearch = new SmartSearch();
+        
         await loadProperties();
         setupEventListeners();
+        setupSmartSearch(); // Setup NLP search
         applyURLFilters(); // Apply filters from URL params
     } catch (error) {
         console.error('Error initializing properties page:', error);
+    }
+}
+
+/**
+ * Setup Smart Search (NLP)
+ */
+function setupSmartSearch() {
+    const nlpInput = document.getElementById('propertiesNlpSearch');
+    const voiceBtn = document.getElementById('propertiesVoiceBtn');
+    
+    if (nlpInput) {
+        // Enter key to search
+        nlpInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSmartSearch(nlpInput.value);
+            }
+        });
+    }
+    
+    // Voice search
+    if (voiceBtn && 'webkitSpeechRecognition' in window) {
+        voiceBtn.addEventListener('click', () => {
+            startVoiceSearch(nlpInput);
+        });
+    }
+}
+
+/**
+ * Voice Search
+ */
+function startVoiceSearch(inputElement) {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'vi-VN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => {
+        console.log('🎤 Voice search started');
+        if (inputElement) {
+            inputElement.placeholder = '🎤 Đang nghe...';
+        }
+    };
+    
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log('Voice result:', transcript);
+        
+        if (inputElement) {
+            inputElement.value = transcript;
+            inputElement.placeholder = 'Tìm kiếm thông minh...';
+        }
+        
+        performSmartSearch(transcript);
+    };
+    
+    recognition.onerror = (event) => {
+        console.error('Voice search error:', event.error);
+        if (inputElement) {
+            inputElement.placeholder = 'Tìm kiếm thông minh...';
+        }
+        alert('Lỗi tìm kiếm giọng nói. Vui lòng thử lại!');
+    };
+    
+    recognition.onend = () => {
+        console.log('🎤 Voice search ended');
+        if (inputElement) {
+            inputElement.placeholder = 'Tìm kiếm thông minh...';
+        }
+    };
+    
+    recognition.start();
+}
+
+/**
+ * Perform Smart Search
+ */
+function performSmartSearch(query) {
+    if (!query || !query.trim()) {
+        alert('Vui lòng nhập câu tìm kiếm!');
+        return;
+    }
+    
+    console.log('🔍 Smart searching:', query);
+    
+    // Perform search
+    const result = smartSearch.search(query, allProperties);
+    
+    console.log('Search result:', result);
+    
+    // Show result summary
+    const summary = smartSearch.generateSummary(result.filters);
+    showSearchSummary(query, summary, result.count);
+    
+    // Update filtered properties
+    filteredProperties = result.data;
+    currentPage = 1;
+    renderProperties();
+    
+    // Scroll to results
+    document.querySelector('#featuredProperties').scrollIntoView({ behavior: 'smooth' });
+}
+
+/**
+ * Show search summary
+ */
+function showSearchSummary(query, summary, count) {
+    // Tìm header section
+    const headerSection = document.querySelector('.text-2xl.font-bold.text-gray-900.mb-2');
+    if (headerSection) {
+        headerSection.innerHTML = `
+            Kết quả tìm kiếm
+            <div style="font-size: 0.9rem; font-weight: normal; color: #3498db; margin-top: 0.5rem;">
+                🔍 "${query}" → ${summary}
+            </div>
+        `;
+        
+        const descElement = headerSection.nextElementSibling;
+        if (descElement) {
+            descElement.textContent = `Tìm thấy ${count} phòng phù hợp với yêu cầu`;
+        }
     }
 }
 
@@ -186,7 +312,7 @@ function createPropertyCard(property) {
  * Setup event listeners
  */
 function setupEventListeners() {
-    // Search form submit
+    // Search form submit - CHỈ lọc khi bấm nút "Tìm kiếm"
     const searchForm = document.getElementById('searchForm');
     if (searchForm) {
         searchForm.addEventListener('submit', function(e) {
@@ -195,25 +321,10 @@ function setupEventListeners() {
         });
     }
     
-    // Filter by type
-    const typeSelect = document.querySelector('select[name="type"]');
-    if (typeSelect) {
-        typeSelect.addEventListener('change', filterProperties);
-    }
+    // ❌ BỎ: Không tự động lọc khi thay đổi dropdown
+    // Chỉ lọc khi user bấm nút "Tìm kiếm"
     
-    // Filter by location
-    const locationSelect = document.querySelector('select[name="location"]');
-    if (locationSelect) {
-        locationSelect.addEventListener('change', filterProperties);
-    }
-    
-    // Filter by price
-    const priceSelect = document.querySelector('select[name="price"]');
-    if (priceSelect) {
-        priceSelect.addEventListener('change', filterProperties);
-    }
-    
-    // Sort
+    // Sort - Vẫn tự động sắp xếp khi thay đổi
     const sortSelect = document.querySelector('select[name="sort"]');
     if (sortSelect) {
         sortSelect.addEventListener('change', sortProperties);
@@ -272,16 +383,34 @@ function filterProperties() {
     const selectedPrice = priceSelect?.value || '';
     
     filteredProperties = allProperties.filter(property => {
-        // Filter by type
-        if (selectedType && property.type !== selectedType) {
-            return false;
+        // Filter by type (sử dụng propertyType thay vì type)
+        if (selectedType) {
+            const propertyType = property.propertyType || '';
+            
+            // Normalize để so sánh (hỗ trợ cả format cũ và mới)
+            const typeMapping = {
+                'phong-tro': 'Phòng trọ',
+                'nha-nguyen-can': 'Nhà nguyên căn',
+                'can-ho': 'Căn hộ',
+                'chung-cu-mini': 'Chung cư mini'
+            };
+            
+            const normalizedPropertyType = typeMapping[propertyType] || propertyType;
+            const normalizedSelectedType = typeMapping[selectedType] || selectedType;
+            
+            if (normalizedPropertyType !== normalizedSelectedType) {
+                return false;
+            }
         }
         
         // Filter by location (city)
         if (selectedLocation) {
             const propertyCity = property.address?.city || property.location?.province || '';
-            // Exact match or contains (for flexibility)
-            if (propertyCity !== selectedLocation && !propertyCity.includes(selectedLocation)) {
+            // So sánh không phân biệt hoa thường và loại bỏ dấu
+            const normalizedCity = propertyCity.toLowerCase().replace(/\./g, '').replace(/tp\s*/g, '');
+            const normalizedFilter = selectedLocation.toLowerCase().replace(/\./g, '').replace(/tp\s*/g, '');
+            
+            if (!normalizedCity.includes(normalizedFilter) && !normalizedFilter.includes(normalizedCity)) {
                 return false;
             }
         }

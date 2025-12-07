@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Tin Cho Thuê - HomeRent</title>
     
-    <!-- Tailwind CSS -->
+    
+    <!-- Tailwind CSS via jsDelivr -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,25 +21,6 @@
     <!-- Choices.js - Searchable Select -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
     <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6B7280',
-                        secondary: '#9CA3AF',
-                        accent: '#4B5563',
-                        light: '#F9FAFB',
-                        dark: '#1F2937'
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     
     <style>
         /* Custom animations */
@@ -817,6 +802,16 @@
 
        
     </script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
 </body>
 </html>
 

@@ -1,11 +1,12 @@
 /**
  * ===================================
  * AI CHAT CONTROLLER
- * Xử lý chat với Gemini AI
+ * Xử lý chat với Gemini AI + NLP Search
  * ===================================
  */
 
 const geminiService = require('../services/geminiService');
+const nlpSearchService = require('../services/nlpSearchService');
 
 /**
  * @desc    Chat với AI assistant
@@ -31,8 +32,22 @@ exports.chat = async (req, res, next) => {
 
     const result = await geminiService.chat(message, chatHistory);
 
+    // Handle quota exceeded or fallback
+    if (result.quotaExceeded && !result.fallbackUsed) {
+      return res.status(200).json({
+        success: true,
+        quotaExceeded: true,
+        data: {
+          message: result.message || 'AI đang quá tải. Vui lòng thử lại sau ít phút. 😔',
+          timestamp: result.timestamp || new Date()
+        },
+        error: result.error
+      });
+    }
+
     res.status(200).json({
       success: result.success,
+      usingGroq: result.usingGroq || false,
       data: {
         message: result.message,
         timestamp: result.timestamp
@@ -148,11 +163,49 @@ exports.aiSearch = async (req, res, next) => {
       });
     }
 
-    // Lấy danh sách properties để AI có thể gợi ý
+    // Lấy danh sách properties để AI có thể gợi ý - SMART FILTERING
     const Property = require('../models/Property');
-    const properties = await Property.find({ status: 'available' })
-      .select('title propertyType price address area bedrooms amenities')
-      .limit(50) // Giới hạn để không quá tải
+    
+    // Extract filtering hints from message
+    const messageLower = message.toLowerCase();
+    let smartQuery = { status: 'available' };
+    
+    // Detect city/location from message
+    const cities = ['hồ chí minh', 'hcm', 'sài gòn', 'saigon', 'hà nội', 'hanoi', 'đà nẵng', 'danang', 'cần thơ', 'cantho'];
+    const districts = ['quận 1', 'quận 2', 'quận 3', 'quận 4', 'quận 5', 'quận 6', 'quận 7', 'quận 8', 'quận 9', 'quận 10', 'quận 11', 'quận 12', 
+                      'thủ đức', 'bình thạnh', 'tân bình', 'phú nhuận', 'gò vấp', 'bình tân'];
+    
+    // Location filter
+    for (const city of cities) {
+      if (messageLower.includes(city)) {
+        smartQuery['address.city'] = { $regex: city, $options: 'i' };
+        break;
+      }
+    }
+    
+    for (const district of districts) {
+      if (messageLower.includes(district)) {
+        smartQuery['address.district'] = { $regex: district, $options: 'i' };
+        break;
+      }
+    }
+    
+    // Price filter from message (detect number + triệu/tr/trieu)
+    const priceMatch = messageLower.match(/(\d+(?:\.\d+)?)\s*(?:triệu|tr|trieu)/);
+    if (priceMatch) {
+      const maxPrice = parseFloat(priceMatch[1]) * 1.3; // +30% flexibility
+      smartQuery.price = { $lte: maxPrice };
+    }
+    
+    // Property type filter
+    if (messageLower.includes('phòng trọ')) smartQuery.propertyType = 'phòng trọ';
+    else if (messageLower.includes('chung cư') || messageLower.includes('chung cu')) smartQuery.propertyType = 'chung cư mini';
+    else if (messageLower.includes('nhà nguyên căn') || messageLower.includes('nha nguyen can')) smartQuery.propertyType = 'nhà nguyên căn';
+    
+    const properties = await Property.find(smartQuery)
+      .select('title price address.district address.city area propertyType amenities') // Fields cần thiết
+      .sort({ createdAt: -1 }) // Ưu tiên phòng mới
+      .limit(25) // Tăng lên 25 để có nhiều lựa chọn hơn
       .lean();
 
     // Convert history format
@@ -163,9 +216,57 @@ exports.aiSearch = async (req, res, next) => {
 
     const result = await geminiService.searchWithAI(message, chatHistory, properties);
 
-    // Nếu có propertyIds, fetch thông tin chi tiết
+    // Nếu quota exceeded và không có fallback, dùng traditional search
     let recommendedProperties = [];
-    if (result.propertyIds && result.propertyIds.length > 0) {
+    let fallbackUsed = false;
+    let usingGroq = result.usingGroq || false;
+    
+    if (result.quotaExceeded && !result.usingGroq) {
+      // Fallback: Traditional keyword search
+      console.log('AI quota exceeded, falling back to traditional search');
+      fallbackUsed = true;
+      
+      // Extract keywords from message
+      const messageLower = message.toLowerCase();
+      const keywords = messageLower.split(/\s+/).filter(w => w.length > 2);
+      
+      // Build search query with keyword matching
+      const searchConditions = [];
+      
+      // Search in multiple fields
+      keywords.forEach(keyword => {
+        searchConditions.push(
+          { title: { $regex: keyword, $options: 'i' } },
+          { description: { $regex: keyword, $options: 'i' } },
+          { 'address.city': { $regex: keyword, $options: 'i' } },
+          { 'address.district': { $regex: keyword, $options: 'i' } },
+          { 'address.ward': { $regex: keyword, $options: 'i' } }
+        );
+      });
+      
+      const searchQuery = {
+        status: 'available',
+        $or: searchConditions.length > 0 ? searchConditions : [
+          { status: 'available' } // Return all available if no keywords
+        ]
+      };
+      
+      recommendedProperties = await Property.find(searchQuery)
+        .select('title propertyType price address area bedrooms bathrooms amenities images status')
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+      
+      // If no results with keywords, return latest properties
+      if (recommendedProperties.length === 0) {
+        recommendedProperties = await Property.find({ status: 'available' })
+          .select('title propertyType price address area bedrooms bathrooms amenities images status')
+          .sort({ createdAt: -1 })
+          .limit(6)
+          .lean();
+      }
+    } else if (result.propertyIds && result.propertyIds.length > 0) {
+      // Nếu có propertyIds từ AI, fetch thông tin chi tiết
       recommendedProperties = await Property.find({
         _id: { $in: result.propertyIds }
       })
@@ -174,10 +275,12 @@ exports.aiSearch = async (req, res, next) => {
     }
 
     res.status(200).json({
-      success: result.success,
+      success: true,
+      fallbackUsed: fallbackUsed,
+      usingGroq: usingGroq,
       data: {
         message: result.message,
-        isComplete: result.isComplete,
+        isComplete: result.isComplete || fallbackUsed,
         propertyIds: result.propertyIds || [],
         properties: recommendedProperties,
         timestamp: result.timestamp
@@ -279,6 +382,88 @@ exports.analyzeImage = async (req, res, next) => {
       error: result.error
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    NLP Search - Tìm kiếm bằng ngôn ngữ tự nhiên
+ * @route   POST /api/ai/nlp-search
+ * @access  Public
+ */
+exports.nlpSearch = async (req, res, next) => {
+  try {
+    const { query, limit } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng nhập câu tìm kiếm'
+      });
+    }
+
+    console.log('🔍 NLP Search Request:', query);
+
+    const result = await nlpSearchService.searchWithNLP(query, { limit: limit || 50 });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('❌ NLP Search Controller Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * @desc    Multi-language Search - Hỗ trợ nhiều ngôn ngữ
+ * @route   POST /api/ai/multilang-search
+ * @access  Public
+ */
+exports.multiLangSearch = async (req, res, next) => {
+  try {
+    const { query, limit } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter search query / Vui lòng nhập câu tìm kiếm'
+      });
+    }
+
+    console.log('🌐 Multi-language Search Request:', query);
+
+    const result = await nlpSearchService.searchMultiLanguage(query, { limit: limit || 50 });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('❌ Multi-language Search Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * @desc    Parse query - Phân tích câu tìm kiếm
+ * @route   POST /api/ai/parse-query
+ * @access  Public
+ */
+exports.parseQuery = async (req, res, next) => {
+  try {
+    const { query } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vui lòng nhập câu tìm kiếm'
+      });
+    }
+
+    const parsed = await nlpSearchService.parseNaturalLanguageQuery(query);
+
+    res.status(200).json({
+      success: true,
+      data: parsed
+    });
+  } catch (error) {
+    console.error('❌ Parse Query Error:', error);
     next(error);
   }
 };

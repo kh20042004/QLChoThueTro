@@ -138,6 +138,25 @@ const PropertySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  contact: {
+    name: {
+      type: String,
+      default: 'Chủ nhà'
+    },
+    phone: {
+      type: String,
+      required: [true, 'Vui lòng nhập số điện thoại liên hệ']
+    },
+    email: {
+      type: String
+    },
+    zalo: {
+      type: String
+    },
+    facebook: {
+      type: String
+    }
+  },
   status: {
     type: String,
     enum: ['available', 'rented', 'pending', 'inactive'],
@@ -164,6 +183,45 @@ const PropertySchema = new mongoose.Schema({
     type: Number,
     min: 0,
     max: 100
+  },
+  // Moderation fields (ML Analysis for Admin)
+  moderationScore: {
+    type: Number,
+    min: 0,
+    max: 1,
+    default: null
+  },
+  moderationReasons: [{
+    type: String
+  }],
+  moderationSuggestions: [{
+    type: String
+  }],
+  moderationDecision: {
+    type: String,
+    enum: ['auto_approved', 'pending_review', 'rejected'],
+    default: 'pending_review'
+  },
+  moderationDetails: {
+    rule_score: Number,
+    ml_score: Number,
+    completeness_score: Number,
+    text_score: Number,
+    image_score: Number,
+    price_score: Number
+  },
+  predictedPrice: {
+    type: Number,
+    default: null
+  },
+  moderatedAt: {
+    type: Date,
+    default: null
+  },
+  moderatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   }
 }, {
   timestamps: true,

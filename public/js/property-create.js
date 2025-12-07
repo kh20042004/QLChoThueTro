@@ -100,11 +100,23 @@ document.addEventListener('DOMContentLoaded', function() {
     initImageUpload();
     updateProgressBar();
     
-    // Khởi tạo dropdown vị trí (nếu có dữ liệu từ backend)
-    loadLocationData();
+    // 🆕 Khởi tạo Goong Address Autocomplete
+    if (typeof initGoongAutocomplete === 'function') {
+        initGoongAutocomplete();
+    }
     
-    // Khởi tạo searchable select boxes
-    initSearchableSelects();
+    // Khởi tạo dropdown vị trí (nếu có dữ liệu từ backend) - CÓ THỂ XÓA SAU
+    // loadLocationData();
+    
+    // Khởi tạo searchable select boxes - CÓ THỂ XÓA SAU
+    // initSearchableSelects();
+    
+    // 🆕 Khởi tạo Nearby POI listeners
+    setupNearbyPoiListeners();
+    
+    // Expose hàm collect data ra window để price-prediction.js có thể dùng
+    window.collectPropertyFormData = collectPropertyFormData;
+    window.changeStep = changeStep; // Expose luôn changeStep để price-prediction dùng
     
     console.log('Trang đăng tin đã khởi tạo thành công');
 });
@@ -817,95 +829,95 @@ function handleWardChange() {
 // ===================================
 // 8. XỬ LÝ GỬI BIỂU MẪU
 // ===================================
-// ===================================
-function submitPropertyForm() {
-    if (!validateCurrentStep()) {
-        return;
-    }
 
-    // Thu thập dữ liệu từ biểu mẫu
-    const formData = new FormData();
-
-    // Step 1: Thông tin cơ bản
-    formData.append('type', document.getElementById('propertyType').value);
-    formData.append('title', document.getElementById('title').value);
-    formData.append('description', document.getElementById('description').value);
+/**
+ * HÀM CHUNG: Thu thập dữ liệu form cho cả AI prediction và submission
+ * Trả về plain JS object với đầy đủ thông tin theo cấu trúc chuẩn
+ * @returns {Object} Dữ liệu form đã chuẩn hóa
+ */
+function collectPropertyFormData() {
+    console.log('📊 Thu thập dữ liệu form...');
     
-    // Parse giá từ format có dấu chấm
+    // ĐỌC TỪ HIDDEN FIELDS (Goong Autocomplete)
+    const street = document.getElementById('street')?.value || '';
+    const ward = document.getElementById('ward')?.value || '';
+    const district = document.getElementById('district')?.value || '';
+    const province = document.getElementById('province')?.value || '';
+    const fullAddress = document.getElementById('address')?.value || '';
+    const latitude = parseFloat(document.getElementById('latitude')?.value) || 0;
+    const longitude = parseFloat(document.getElementById('longitude')?.value) || 0;
+    
+    // Map province -> city cho AI (chỉ hỗ trợ 3 thành phố chính)
+    let cityForAI = '';
+    const provinceLower = province.toLowerCase();
+    if (provinceLower.includes('hồ chí minh') || provinceLower.includes('hcm') || provinceLower.includes('tp.hcm')) {
+        cityForAI = 'HCM';
+    } else if (provinceLower.includes('hà nội') || provinceLower.includes('hanoi')) {
+        cityForAI = 'HaNoi';
+    } else if (provinceLower.includes('đà nẵng') || provinceLower.includes('da nang')) {
+        cityForAI = 'DaNang';
+    }
+    
+    // Map room_type cho AI dựa vào propertyType + is_studio
+    const propertyType = document.getElementById('propertyType').value;
+    const isStudio = document.getElementById('is_studio')?.checked || false;
+    let roomTypeForAI = '';
+    
+    if (isStudio) {
+        roomTypeForAI = 'Studio';
+    } else {
+        // Map theo propertyType
+        if (propertyType === 'phong-tro' || propertyType === 'homestay') {
+            roomTypeForAI = 'Phòng trọ';
+        } else if (propertyType === 'can-ho' || propertyType === 'chung-cu-mini' || propertyType === 'nha-nguyen-can') {
+            roomTypeForAI = 'Căn hộ dịch vụ';
+        } else {
+            roomTypeForAI = 'Phòng trọ'; // Default
+        }
+    }
+    
+    // Lấy giá và parse đúng format
     const priceInput = document.getElementById('price');
-    const priceValue = parseFormattedNumber(priceInput.value);
-    formData.append('price', priceValue);
+    const priceUnit = document.getElementById('priceUnit').value;
+    let priceValue = 0;
     
-    formData.append('area', document.getElementById('area').value);
-    formData.append('bedrooms', document.getElementById('bedrooms').value);
-    formData.append('bathrooms', document.getElementById('bathrooms').value);
-
-    // Step 2: Địa chỉ
-    formData.append('street', document.getElementById('street').value);
-    
-    // Lấy TÊN (label) từ Choices.js instances, không phải code
-    let provinceValue = '';
-    let districtValue = '';
-    let wardValue = '';
-    
-    if (provinceChoice) {
-        const provinceSelected = provinceChoice.getValue();
-        // Lấy label thay vì value (code)
-        const provinceElement = document.querySelector(`#province option[value="${provinceSelected.value}"]`);
-        provinceValue = provinceElement ? provinceElement.textContent : '';
+    if (priceUnit === 'trieu-thang' || priceUnit === 'trieu-nam' || priceUnit === 'usd-thang') {
+        // Đơn vị triệu/USD - có thể có số thập phân
+        priceValue = parseFloat(priceInput.value) || 0;
     } else {
-        const provinceElement = document.getElementById('province');
-        provinceValue = provinceElement.options[provinceElement.selectedIndex]?.text || '';
+        // Đơn vị VNĐ - parse số đã format
+        priceValue = parseFormattedNumber(priceInput.value);
     }
     
-    if (districtChoice) {
-        const districtSelected = districtChoice.getValue();
-        const districtElement = document.querySelector(`#district option[value="${districtSelected.value}"]`);
-        districtValue = districtElement ? districtElement.textContent : '';
-    } else {
-        const districtElement = document.getElementById('district');
-        districtValue = districtElement.options[districtElement.selectedIndex]?.text || '';
-    }
-    
-    if (wardChoice) {
-        const wardSelected = wardChoice.getValue();
-        const wardElement = document.querySelector(`#ward option[value="${wardSelected.value}"]`);
-        wardValue = wardElement ? wardElement.textContent : '';
-    } else {
-        const wardElement = document.getElementById('ward');
-        wardValue = wardElement.options[wardElement.selectedIndex]?.text || '';
-    }
-    
-    formData.append('province', provinceValue);
-    formData.append('district', districtValue);
-    formData.append('ward', wardValue);
-
-    // Step 3: Tiện nghi
+    // Thu thập amenities
     const amenities = {
-        // Tiện nghi cơ bản
+        // Tiện nghi quan trọng cho AI (sử dụng ID mới has_*)
+        has_mezzanine: document.getElementById('has_mezzanine')?.checked || false,
+        has_wc: document.getElementById('has_wc')?.checked || false,
+        has_ac: document.getElementById('has_ac')?.checked || false,
+        has_furniture: document.getElementById('has_furniture')?.checked || false,
+        has_balcony: document.getElementById('has_balcony')?.checked || false,
+        has_kitchen: document.getElementById('has_kitchen')?.checked || false,
+        has_parking: document.getElementById('has_parking')?.checked || false,
+        has_window: document.getElementById('has_window')?.checked || false,
+        
+        // Các tiện nghi bổ sung (chỉ để hiển thị, không gửi cho AI)
         wifi: document.getElementById('wifi')?.checked || false,
-        ac: document.getElementById('ac')?.checked || false,
-        parking: document.getElementById('parking')?.checked || false,
-        kitchen: document.getElementById('kitchen')?.checked || false,
         water: document.getElementById('water')?.checked || false,
         laundry: document.getElementById('laundry')?.checked || false,
-        balcony: document.getElementById('balcony')?.checked || false,
         security: document.getElementById('security')?.checked || false,
-        // Tiện nghi bổ sung
         tv: document.getElementById('tv')?.checked || false,
         refrigerator: document.getElementById('refrigerator')?.checked || false,
         bed: document.getElementById('bed')?.checked || false,
         sofa: document.getElementById('sofa')?.checked || false,
         desk: document.getElementById('desk')?.checked || false,
         microwave: document.getElementById('microwave')?.checked || false,
-        // Tiện nghi nâng cao
         elevator: document.getElementById('elevator')?.checked || false,
         gym: document.getElementById('gym')?.checked || false,
         pool: document.getElementById('pool')?.checked || false,
         garden: document.getElementById('garden')?.checked || false,
         bbq: document.getElementById('bbq')?.checked || false,
         lounge: document.getElementById('lounge')?.checked || false,
-        // Tiện nghi an toàn & khác
         cctv: document.getElementById('cctv')?.checked || false,
         alarm: document.getElementById('alarm')?.checked || false,
         petFriendly: document.getElementById('petFriendly')?.checked || false,
@@ -913,7 +925,94 @@ function submitPropertyForm() {
         heating: document.getElementById('heating')?.checked || false,
         storage: document.getElementById('storage')?.checked || false
     };
-    formData.append('amenities', JSON.stringify(amenities));
+    
+    // Cấu trúc dữ liệu chuẩn
+    const formData = {
+        // Thông tin cơ bản
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        room_type: roomTypeForAI, // 'Studio', 'Phòng trọ', 'Căn hộ dịch vụ' cho AI
+        propertyType: document.getElementById('propertyType').value, // phong-tro, nha-nguyen-can cho backend
+        acreage: parseFloat(document.getElementById('area').value) || 0,
+        is_studio: isStudio,
+        
+        // Vị trí (từ Goong Autocomplete)
+        location: {
+            city: cityForAI, // 'HCM', 'HaNoi', 'DaNang' hoặc rỗng
+            cityText: province, // Tên đầy đủ tỉnh/thành phố
+            district: district, // "Quận 1", "Quận Hoàn Kiếm"
+            ward: ward, // "Phường Phạm Ngũ Lão"
+            address: fullAddress, // Địa chỉ đầy đủ từ Goong
+            street: street,
+            latitude: latitude,
+            longitude: longitude
+        },
+        
+        // Giá
+        price: {
+            value: priceValue,
+            unit: priceUnit,
+            // Chuyển sang VNĐ cho AI nếu cần
+            valueInVND: priceUnit === 'trieu-thang' ? priceValue * 1000000 : 
+                        priceUnit === 'vnd-thang' ? priceValue : 
+                        priceUnit === 'trieu-nam' ? (priceValue * 1000000) / 12 :
+                        0
+        },
+        
+        // Tiện nghi
+        amenities: amenities,
+        
+        // Thông tin phòng
+        bedrooms: parseInt(document.getElementById('bedrooms').value) || 0,
+        bathrooms: parseInt(document.getElementById('bathrooms').value) || 0,
+        
+        // Thông tin liên hệ (nếu đã điền)
+        contact: {
+            name: document.getElementById('contactName')?.value.trim() || '',
+            phone: document.getElementById('contactPhone')?.value.trim() || '',
+            allowCall: document.getElementById('allowCall')?.checked || false,
+            allowSms: document.getElementById('allowSms')?.checked || false
+        }
+    };
+    
+    console.log('✅ Dữ liệu form đã thu thập:', formData);
+    return formData;
+}
+
+// ===================================
+function submitPropertyForm() {
+    if (!validateCurrentStep()) {
+        return;
+    }
+
+    // Thu thập dữ liệu từ hàm chung
+    const propertyData = collectPropertyFormData();
+    
+    // Chuyển sang FormData để submit
+    const formData = new FormData();
+
+    // Step 1: Thông tin cơ bản
+    formData.append('type', propertyData.propertyType); // ✅ Gửi propertyType (slug) cho backend, không phải room_type (text AI)
+    formData.append('title', propertyData.title);
+    formData.append('description', propertyData.description);
+    formData.append('price', propertyData.price.value);
+    formData.append('priceUnit', propertyData.price.unit);
+    formData.append('area', propertyData.acreage);
+    formData.append('bedrooms', propertyData.bedrooms);
+    formData.append('bathrooms', propertyData.bathrooms);
+    formData.append('isStudio', propertyData.is_studio);
+
+    // Step 2: Địa chỉ - gửi text và coordinates từ Goong
+    formData.append('street', propertyData.location.street);
+    formData.append('province', propertyData.location.cityText);
+    formData.append('district', propertyData.location.district);
+    formData.append('ward', propertyData.location.ward);
+    formData.append('address', propertyData.location.address); // Địa chỉ đầy đủ
+    formData.append('latitude', propertyData.location.latitude);
+    formData.append('longitude', propertyData.location.longitude);
+
+    // Step 3: Tiện nghi
+    formData.append('amenities', JSON.stringify(propertyData.amenities));
 
     // Step 4: Ảnh
     uploadedImages.forEach((image, index) => {
@@ -921,9 +1020,10 @@ function submitPropertyForm() {
     });
 
     // Step 5: Thông tin liên hệ
-    formData.append('contactName', document.getElementById('contactName').value);
-    formData.append('contactPhone', document.getElementById('contactPhone').value);
-    formData.append('allowCalls', document.getElementById('allowCall')?.checked || false);
+    formData.append('contactName', propertyData.contact.name);
+    formData.append('contactPhone', propertyData.contact.phone);
+    formData.append('allowCalls', propertyData.contact.allowCall);
+    formData.append('allowSMS', propertyData.contact.allowSms);
     formData.append('allowSMS', document.getElementById('allowSms')?.checked || false);
 
     // Gửi yêu cầu
@@ -1204,3 +1304,355 @@ function initEventListeners() {
 // 10. THÔNG BÁO - Sử dụng showAlert từ auth.js
 // ===================================
 // showAlert function được định nghĩa trong auth.js và đã được load trước
+
+// ===================================
+// 11. NEARBY POI - GỢI Ý XUNG QUANH
+// ===================================
+
+// Config API ngrok cho POI
+const NGROK_BASE_URL = "https://mattie-nonencyclopaedic-qualifiedly.ngrok-free.dev"; // ⚠️ THAY BẰNG NGROK URL THẬT
+const NEARBY_POI_API_URL = `${NGROK_BASE_URL}/nearby-poi`;
+
+// Biến lưu POI data
+let currentPoiData = null;
+
+/**
+ * Map province text → city code cho API
+ * Dùng provinceText (tên tỉnh) thay vì provinceValue (ID số)
+ */
+function getPoiCityCode(provinceText) {
+    const provinceTextLower = (provinceText || '').toLowerCase();
+    if (provinceTextLower.includes('hồ chí minh') || provinceTextLower.includes('hcm') || provinceTextLower.includes('tp.hcm')) {
+        return 'HCM';
+    } else if (provinceTextLower.includes('hà nội') || provinceTextLower.includes('hanoi')) {
+        return 'HaNoi';
+    } else if (provinceTextLower.includes('đà nẵng') || provinceTextLower.includes('da nang')) {
+        return 'DaNang';
+    }
+    return null; // Không hỗ trợ
+}
+
+/**
+ * Format khoảng cách từ mét sang text đẹp
+ */
+function formatDistance(distanceM) {
+    if (distanceM < 1000) {
+        return `${Math.round(distanceM)}m`;
+    } else {
+        return `${(distanceM / 1000).toFixed(1)}km`;
+    }
+}
+
+/**
+ * Tạo POI chip/pill HTML
+ */
+function createPoiChip(poi, iconClass, colorClass) {
+    return `
+        <div class="inline-flex items-center gap-2 px-3 py-2 bg-white border-2 ${colorClass} rounded-lg text-sm shadow-sm">
+            <i class="${iconClass}"></i>
+            <div>
+                <div class="font-semibold text-gray-800">${poi.name}</div>
+                <div class="text-xs text-gray-600">Cách ~${formatDistance(poi.distance_m)}</div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Gọi API lấy POI xung quanh địa chỉ
+ */
+async function fetchNearbyPOI() {
+    console.log('📍 Fetching nearby POI...');
+    
+    // Lấy thông tin địa chỉ từ hidden fields (Goong Autocomplete)
+    const fullAddress = document.getElementById('address')?.value || '';
+    const province = document.getElementById('province')?.value || '';
+    
+    // Validate input
+    if (!fullAddress || !province) {
+        console.warn('⚠️ Chưa đủ thông tin địa chỉ để tìm POI');
+        hideNearbyPoiContainer();
+        return;
+    }
+    
+    // Get city code từ province text
+    const cityCode = getPoiCityCode(province);
+    
+    console.log('🔎 Full address:', fullAddress);
+    console.log('🔎 Province:', province);
+    console.log('🔎 City code:', cityCode);
+    
+    if (!cityCode) {
+        console.warn('⚠️ Province không thuộc HCM/Hà Nội/Đà Nẵng, không tìm POI');
+        hideNearbyPoiContainer();
+        return;
+    }
+    
+    // Show container + loading
+    showNearbyPoiLoading();
+    
+    try {
+        const payload = {
+            city: cityCode,
+            address: fullAddress
+        };
+        
+        console.log('📤 POI API payload:', payload);
+        
+        const response = await fetch(NEARBY_POI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        console.log('📥 POI API response:', data);
+        
+        if (!response.ok || data.error) {
+            console.error('❌ POI API error:', data.error || data.message);
+            showNearbyPoiError();
+            return;
+        }
+        
+        // Lưu data và hiển thị
+        currentPoiData = data;
+        displayNearbyPoi(data);
+        
+    } catch (error) {
+        console.error('❌ Error fetching POI:', error);
+        showNearbyPoiError();
+    }
+}
+
+/**
+ * Hiển thị POI results
+ */
+function displayNearbyPoi(data) {
+    const container = document.getElementById('nearbyPoiContainer');
+    const loadingEl = document.getElementById('poiLoading');
+    const errorEl = document.getElementById('poiError');
+    const resultsEl = document.getElementById('poiResults');
+    
+    // Hide loading, show results
+    loadingEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+    
+    // Check if có POI nào không
+    const totalPois = (data.universities?.length || 0) + 
+                      (data.hospitals?.length || 0) + 
+                      (data.malls?.length || 0) + 
+                      (data.metros?.length || 0) + 
+                      (data.bus_stations?.length || 0);
+    
+    if (totalPois === 0) {
+        errorEl.classList.remove('hidden');
+        resultsEl.classList.add('hidden');
+        return;
+    }
+    
+    resultsEl.classList.remove('hidden');
+    
+    // Render Universities
+    if (data.universities && data.universities.length > 0) {
+        const uniDiv = document.getElementById('poiUniversities');
+        const uniList = document.getElementById('universitiesList');
+        uniDiv.classList.remove('hidden');
+        uniList.innerHTML = data.universities.map(poi => 
+            createPoiChip(poi, 'fas fa-university', 'border-blue-400')
+        ).join('');
+    } else {
+        document.getElementById('poiUniversities').classList.add('hidden');
+    }
+    
+    // Render Hospitals
+    if (data.hospitals && data.hospitals.length > 0) {
+        const hospDiv = document.getElementById('poiHospitals');
+        const hospList = document.getElementById('hospitalsList');
+        hospDiv.classList.remove('hidden');
+        hospList.innerHTML = data.hospitals.map(poi => 
+            createPoiChip(poi, 'fas fa-hospital', 'border-red-400')
+        ).join('');
+    } else {
+        document.getElementById('poiHospitals').classList.add('hidden');
+    }
+    
+    // Render Malls
+    if (data.malls && data.malls.length > 0) {
+        const mallDiv = document.getElementById('poiMalls');
+        const mallList = document.getElementById('mallsList');
+        mallDiv.classList.remove('hidden');
+        mallList.innerHTML = data.malls.map(poi => 
+            createPoiChip(poi, 'fas fa-shopping-cart', 'border-purple-400')
+        ).join('');
+    } else {
+        document.getElementById('poiMalls').classList.add('hidden');
+    }
+    
+    // Render Transport (Metro + Bus)
+    const transports = [...(data.metros || []), ...(data.bus_stations || [])];
+    if (transports.length > 0) {
+        const transDiv = document.getElementById('poiTransport');
+        const transList = document.getElementById('transportList');
+        transDiv.classList.remove('hidden');
+        transList.innerHTML = transports.map(poi => 
+            createPoiChip(poi, 'fas fa-subway', 'border-orange-400')
+        ).join('');
+    } else {
+        document.getElementById('poiTransport').classList.add('hidden');
+    }
+    
+    console.log(`✅ Displayed ${totalPois} POIs`);
+}
+
+/**
+ * Show/Hide helper functions
+ */
+function showNearbyPoiLoading() {
+    const container = document.getElementById('nearbyPoiContainer');
+    const loadingEl = document.getElementById('poiLoading');
+    const errorEl = document.getElementById('poiError');
+    const resultsEl = document.getElementById('poiResults');
+    
+    container.classList.remove('hidden');
+    loadingEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
+    resultsEl.classList.add('hidden');
+}
+
+function showNearbyPoiError() {
+    const loadingEl = document.getElementById('poiLoading');
+    const errorEl = document.getElementById('poiError');
+    const resultsEl = document.getElementById('poiResults');
+    
+    loadingEl.classList.add('hidden');
+    errorEl.classList.remove('hidden');
+    resultsEl.classList.add('hidden');
+}
+
+function hideNearbyPoiContainer() {
+    const container = document.getElementById('nearbyPoiContainer');
+    container.classList.add('hidden');
+    currentPoiData = null;
+}
+
+/**
+ * Áp dụng POI vào mô tả (Step 1)
+ */
+function applyPoiToDescription() {
+    if (!currentPoiData) {
+        console.warn('⚠️ Không có POI data để apply');
+        return;
+    }
+    
+    // Lấy textarea mô tả
+    const descriptionEl = document.getElementById('description');
+    if (!descriptionEl) {
+        console.error('❌ Không tìm thấy textarea #description');
+        return;
+    }
+    
+    // Build câu mô tả
+    const parts = [];
+    
+    // Lấy 1-2 POI tiêu biểu mỗi loại
+    const topUniversity = currentPoiData.universities?.[0];
+    const topHospital = currentPoiData.hospitals?.[0];
+    const topMall = currentPoiData.malls?.[0];
+    
+    if (topUniversity) {
+        parts.push(`${topUniversity.name} (khoảng ${formatDistance(topUniversity.distance_m)})`);
+    }
+    
+    if (topHospital) {
+        parts.push(`${topHospital.name} (khoảng ${formatDistance(topHospital.distance_m)})`);
+    }
+    
+    if (topMall) {
+        parts.push(`${topMall.name} (khoảng ${formatDistance(topMall.distance_m)})`);
+    }
+    
+    if (parts.length === 0) {
+        console.warn('⚠️ Không có POI nào để tạo mô tả');
+        return;
+    }
+    
+    // Tạo câu hoàn chỉnh
+    let suggestionText = '';
+    
+    if (topUniversity && topHospital) {
+        suggestionText = `Phòng nằm gần ${parts.slice(0, 2).join(' và ')}, rất thuận tiện cho sinh viên và người đi làm.`;
+    } else if (topUniversity) {
+        suggestionText = `Phòng nằm gần ${parts[0]}, phù hợp cho sinh viên.`;
+    } else if (topMall) {
+        suggestionText = `Gần ${parts[0]}, tiện lợi cho mua sắm và giải trí.`;
+    } else {
+        suggestionText = `Phòng nằm gần ${parts[0]}.`;
+    }
+    
+    // Thêm thông tin khác nếu có
+    if (parts.length > 2) {
+        suggestionText += ` Khu vực cũng gần ${parts.slice(2).join(', ')}.`;
+    }
+    
+    // Append vào description
+    const currentDesc = descriptionEl.value.trim();
+    if (currentDesc) {
+        descriptionEl.value = currentDesc + '\n\n' + suggestionText;
+    } else {
+        descriptionEl.value = suggestionText;
+    }
+    
+    console.log('✅ Applied POI to description:', suggestionText);
+    
+    // Show notification
+    if (typeof showAlert === 'function') {
+        showAlert('✅ Đã thêm gợi ý vào mô tả!', 'success');
+    }
+    
+    // Scroll to description field nếu không ở Step 1
+    if (currentStep !== 1) {
+        changeStep(1);
+        setTimeout(() => {
+            descriptionEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            descriptionEl.focus();
+        }, 500);
+    }
+}
+
+/**
+ * Setup event listeners cho POI
+ */
+function setupNearbyPoiListeners() {
+    // Lắng nghe khi blur ô street
+    const streetEl = document.getElementById('street');
+    if (streetEl) {
+        streetEl.addEventListener('blur', () => {
+            // Delay 500ms để đảm bảo user đã chọn ward/district
+            setTimeout(() => {
+                fetchNearbyPOI();
+            }, 500);
+        });
+    }
+    
+    // Lắng nghe khi change ward (sau khi chọn xong address đầy đủ)
+    const wardEl = document.getElementById('ward');
+    if (wardEl) {
+        wardEl.addEventListener('change', () => {
+            if (streetEl && streetEl.value.trim()) {
+                fetchNearbyPOI();
+            }
+        });
+    }
+    
+    // Nút "Áp dụng vào mô tả"
+    const applyBtn = document.getElementById('applyPoiToDescription');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyPoiToDescription);
+    }
+    
+    console.log('✅ Nearby POI listeners đã được setup');
+}
+
+// Gọi setup khi DOM ready (thêm vào cuối file)

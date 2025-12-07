@@ -5,38 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trường Đại Học - HomeRent</title>
     
-    <!-- Tailwind CSS -->
+    
+    <!-- Tailwind CSS via jsDelivr -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
+    <!-- Goong Map CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet" />
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6B7280',
-                        secondary: '#9CA3AF',
-                        accent: '#4B5563',
-                        light: '#F9FAFB',
-                        dark: '#1F2937'
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     
     <style>
         /* Custom animations */
@@ -115,19 +98,18 @@
         /* University marker styles - Kích thước vừa phải như Google Maps */
         .university-marker {
             background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            width: 48px !important;
-            height: 48px !important;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px !important;
+            font-size: 24px;
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
             animation: pulse-university 2s infinite;
             border: 3px solid white;
-            position: relative;
-            z-index: 1000 !important;
+            cursor: pointer;
         }
 
         .university-marker::before {
@@ -143,7 +125,7 @@
             position: relative;
             z-index: 1;
             filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
-            font-weight: 700 !important;
+            font-weight: 700;
         }
 
         @keyframes pulse-university {
@@ -161,14 +143,14 @@
         /* Property location marker styles - Pin đỏ cho vị trí phòng */
         .property-location-marker {
             color: #dc2626;
-            font-size: 36px !important;
+            font-size: 36px;
             filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
-            position: relative;
-            width: 36px !important;
-            height: 48px !important;
+            width: 36px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
 
         .property-location-marker i {
@@ -203,19 +185,10 @@
             background-color: #1d4ed8 !important;
         }
 
-        /* Leaflet popup content */
-        .leaflet-popup-content {
-            margin: 12px !important;
-        }
-
-        .leaflet-popup-content-wrapper {
+        /* Goong popup content */
+        .mapboxgl-popup-content {
+            padding: 12px !important;
             border-radius: 8px !important;
-        }
-        
-        /* Custom div icon - Remove default styles */
-        .custom-div-icon {
-            background: transparent !important;
-            border: none !important;
         }
     </style>
 </head>
@@ -621,10 +594,8 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
+    <!-- Goong Map JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
     <script>
         const ITEMS_PER_PAGE = 12;
         let currentPage = 1;
@@ -1247,34 +1218,33 @@
                 nearbyRoomsMap.remove();
             }
             
-            // Tạo map mới
+            // Tạo map mới với Goong Map JS
             const [lng, lat] = university.location.coordinates;
-            nearbyRoomsMap = L.map('nearbyRoomsMap').setView([lat, lng], 14);
-            
-            // Thêm tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(nearbyRoomsMap);
-            
-            // Thêm marker cho trường
-            const universityIcon = L.divIcon({
-                html: '<div class="university-marker"><i class="fas fa-university"></i></div>',
-                className: 'custom-div-icon',
-                iconSize: [48, 48],
-                iconAnchor: [24, 24],
-                popupAnchor: [0, -24]
+            goongjs.accessToken = '3wUhxxPZujfl6OwVJ9N7YdDlGP6pJU62zw5PT4pg';
+            nearbyRoomsMap = new goongjs.Map({
+                container: 'nearbyRoomsMap',
+                style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                center: [lng, lat],
+                zoom: 14
             });
             
-            universityMarker = L.marker([lat, lng], { icon: universityIcon })
-                .bindPopup(`
+            // Thêm marker cho trường
+            const el = document.createElement('div');
+            el.className = 'university-marker';
+            el.innerHTML = '<i class="fas fa-university"></i>';
+            
+            const popup = new goongjs.Popup({ offset: 25 })
+                .setHTML(`
                     <div class="text-center p-2">
                         <div class="text-lg font-bold text-red-600 mb-1">🏫 ${university.name}</div>
                         <div class="text-sm text-gray-600">${university.address}</div>
                     </div>
-                `)
-                .addTo(nearbyRoomsMap)
-                .openPopup();
+                `);
+            
+            universityMarker = new goongjs.Marker(el)
+                .setLngLat([lng, lat])
+                .setPopup(popup)
+                .addTo(nearbyRoomsMap);
         }
         
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1311,33 +1281,26 @@
             // Cập nhật số lượng
             document.getElementById('nearbyRoomsCount').textContent = nearbyProperties.length;
             
-            // Xóa markers cũ (trừ marker trường và tile layer)
-            nearbyRoomsMap.eachLayer(layer => {
-                if (layer instanceof L.Marker && layer !== universityMarker) {
-                    nearbyRoomsMap.removeLayer(layer);
-                }
-            });
+            // Xóa markers cũ (chỉ giữ lại marker trường)
+            if (window.propertyMarkers) {
+                window.propertyMarkers.forEach(marker => marker.remove());
+            }
+            window.propertyMarkers = [];
             
             // Thêm markers cho properties
             nearbyProperties.forEach((prop, index) => {
                 const [propLng, propLat] = prop.location.coordinates;
                 
-                const propertyIcon = L.divIcon({
-                    html: `<div class="property-location-marker">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>`,
-                    className: 'custom-div-icon',
-                    iconSize: [36, 48],
-                    iconAnchor: [18, 48],
-                    popupAnchor: [0, -48]
-                });
+                const el = document.createElement('div');
+                el.className = 'property-location-marker';
+                el.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
                 
                 // Lấy địa chỉ đầy đủ
                 const fullAddress = prop.address?.full || prop.address?.street || 
                                    (typeof prop.address === 'string' ? prop.address : 'Chưa có địa chỉ');
                 
-                const marker = L.marker([propLat, propLng], { icon: propertyIcon })
-                    .bindPopup(`
+                const popup = new goongjs.Popup({ offset: 25 })
+                    .setHTML(`
                         <div class="property-popup">
                             <h4 class="font-bold mb-2 text-blue-600">${prop.title}</h4>
                             <div class="space-y-1">
@@ -1359,8 +1322,14 @@
                                 </a>
                             </div>
                         </div>
-                    `)
+                    `);
+                
+                const marker = new goongjs.Marker(el)
+                    .setLngLat([propLng, propLat])
+                    .setPopup(popup)
                     .addTo(nearbyRoomsMap);
+                
+                window.propertyMarkers.push(marker);
             });
             
             // Hiển thị danh sách
@@ -1478,6 +1447,16 @@
     
     <script src="/js/chat-badge.js"></script>
     <script src="/js/notification-badge.js"></script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
 </body>
 </html>
 

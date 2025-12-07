@@ -4,6 +4,51 @@
  * ===================================
  */
 
+// 🚀 Flask + ngrok API cho AI dự đoán giá
+const FLASK_API_BASE_URL = "https://mattie-nonencyclopaedic-qualifiedly.ngrok-free.dev"; // IMPORTANT: Thay bằng ngrok URL thật
+const FLASK_PREDICT_API_URL = `${FLASK_API_BASE_URL}/predict`;
+
+/**
+ * Helper: Map province value → city code cho AI model
+ */
+function mapProvinceToCityCode(provinceValue) {
+    if (!provinceValue) return null;
+    const provinceLower = provinceValue.toLowerCase();
+    
+    if (provinceLower.includes('ho-chi-minh') || provinceLower.includes('hcm')) {
+        return 'HCM';
+    } else if (provinceLower.includes('hanoi') || provinceLower.includes('ha-noi')) {
+        return 'HaNoi';
+    } else if (provinceLower.includes('da-nang') || provinceLower.includes('danang')) {
+        return 'DaNang';
+    }
+    
+    // AI hiện chỉ hỗ trợ 3 thành phố này
+    return null;
+}
+
+/**
+ * Helper: Map propertyType → room_type cho AI model
+ */
+function mapPropertyTypeToRoomType(propertyType) {
+    if (!propertyType) return 'Phòng trọ';
+    
+    switch (propertyType.toLowerCase()) {
+        case 'phong-tro':
+            return 'Phòng trọ';
+        case 'nha-nguyen-can':
+            return 'Nhà nguyên căn';
+        case 'can-ho':
+            return 'Căn hộ';
+        case 'chung-cu-mini':
+            return 'Chung cư mini';
+        case 'homestay':
+            return 'Homestay';
+        default:
+            return 'Phòng trọ';
+    }
+}
+
 class PricePrediction {
     constructor() {
         this.isPredicting = false;
@@ -30,9 +75,16 @@ class PricePrediction {
     showPredictionModal() {
         console.log('📊 Bắt đầu hiển thị modal dự đoán giá');
         
-        // Lấy dữ liệu từ form
-        const formData = this.getFormData();
-        console.log('📝 Dữ liệu form:', formData);
+        // Kiểm tra xem hàm collect data đã sẵn sàng chưa
+        if (typeof window.collectPropertyFormData !== 'function') {
+            console.error('❌ Hàm collectPropertyFormData chưa sẵn sàng');
+            this.showToast('⚠️ Vui lòng đợi trang tải xong', 'warning');
+            return;
+        }
+        
+        // Lấy dữ liệu từ hàm chung
+        const formData = window.collectPropertyFormData();
+        console.log('📝 Dữ liệu form từ hàm chung:', formData);
 
         if (!this.validateFormData(formData)) {
             return;
@@ -67,29 +119,28 @@ class PricePrediction {
     }
 
     /**
-     * Lấy dữ liệu từ form
+     * Lấy dữ liệu từ form - GỌI HÀM CHUNG
+     * DEPRECATED: Giữ lại để tương thích ngược, nhưng ưu tiên dùng window.collectPropertyFormData
      */
     getFormData() {
+        // Dùng hàm chung nếu có
+        if (typeof window.collectPropertyFormData === 'function') {
+            return window.collectPropertyFormData();
+        }
+        
+        // Fallback cho trường hợp hàm chung chưa load
+        console.warn('⚠️ Hàm collectPropertyFormData chưa có, dùng fallback');
         return {
-            area: document.getElementById('area')?.value || '',
-            propertyType: document.getElementById('propertyType')?.value || '',
+            acreage: parseFloat(document.getElementById('area')?.value) || 0,
+            room_type: document.getElementById('propertyType')?.value || '',
             location: {
+                city: '', // Sẽ xử lý sau
                 district: document.getElementById('district')?.value || '',
-                city: document.getElementById('province')?.value || '' // Sửa từ city thành province
+                ward: document.getElementById('ward')?.value || ''
             },
-            bedrooms: document.getElementById('bedrooms')?.value || '',
-            bathrooms: document.getElementById('bathrooms')?.value || '',
+            title: document.getElementById('title')?.value || '',
             description: document.getElementById('description')?.value || '',
-            amenities: {
-                wifi: document.getElementById('wifi')?.checked || false,
-                airConditioner: document.getElementById('ac')?.checked || false, // Sửa từ airConditioner thành ac
-                parking: document.getElementById('parking')?.checked || false,
-                kitchen: document.getElementById('kitchen')?.checked || false,
-                waterHeater: document.getElementById('water')?.checked || false, // Sửa từ waterHeater thành water
-                washing: document.getElementById('laundry')?.checked || false, // Sửa từ washing thành laundry
-                balcony: document.getElementById('balcony')?.checked || false,
-                security: document.getElementById('security')?.checked || false
-            }
+            amenities: {}
         };
     }
 
@@ -98,62 +149,198 @@ class PricePrediction {
      */
     validateFormData(data) {
         console.log('🔍 Kiểm tra validation với data:', data);
-        console.log('  - area:', data.area);
-        console.log('  - propertyType:', data.propertyType);
-        console.log('  - location.city:', data.location.city);
-        console.log('  - location.district:', data.location.district);
+        console.log('  - acreage:', data.acreage);
+        console.log('  - room_type:', data.room_type);
+        console.log('  - location:', data.location);
+        console.log('  - location.city:', data.location?.city);
+        console.log('  - location.provinceCode:', data.location?.provinceCode);
+        console.log('  - location.district:', data.location?.district);
         
-        // Chỉ kiểm tra 3 field BẮT BUỘC cho dự đoán giá
-        if (!data.area || data.area === '' || data.area === '0') {
+        // 1. Kiểm tra DIỆN TÍCH (BẮT BUỘC)
+        if (!data.acreage || data.acreage <= 0) {
             console.warn('⚠️ Thiếu hoặc không hợp lệ: diện tích');
-            this.showToast('⚠️ Vui lòng nhập diện tích hợp lệ (lớn hơn 0)', 'warning');
+            this.showToast('⚠️ Vui lòng nhập diện tích hợp lệ (lớn hơn 0 m²)', 'warning');
             
-            // Scroll đến field area
+            // Scroll đến field area ở Step 1
             const areaField = document.getElementById('area');
             if (areaField) {
-                areaField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                areaField.focus();
+                // Chuyển về Step 1 nếu đang ở step khác
+                if (typeof changeStep === 'function') {
+                    changeStep(1);
+                }
+                setTimeout(() => {
+                    areaField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    areaField.focus();
+                    areaField.style.border = '2px solid #ef4444';
+                    setTimeout(() => { areaField.style.border = ''; }, 2000);
+                }, 300);
             }
             return false;
         }
         
-        if (!data.propertyType || data.propertyType === '') {
+        // 2. Kiểm tra LOẠI HÌNH (BẮT BUỘC)
+        if (!data.room_type || data.room_type === '') {
             console.warn('⚠️ Thiếu: loại hình');
-            this.showToast('⚠️ Vui lòng chọn loại hình phòng', 'warning');
+            this.showToast('⚠️ Vui lòng chọn loại hình phòng/nhà', 'warning');
             
             const typeField = document.getElementById('propertyType');
             if (typeField) {
-                typeField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                typeField.focus();
+                if (typeof changeStep === 'function') {
+                    changeStep(1);
+                }
+                setTimeout(() => {
+                    typeField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    typeField.focus();
+                    typeField.style.border = '2px solid #ef4444';
+                    setTimeout(() => { typeField.style.border = ''; }, 2000);
+                }, 300);
             }
             return false;
         }
         
-        if (!data.location.city || data.location.city === '') {
-            console.warn('⚠️ Thiếu: tỉnh/thành phố');
-            this.showToast('⚠️ Vui lòng chọn Tỉnh/Thành phố. AI cần thông tin này để dự đoán giá chính xác.', 'warning');
+        // 3. Kiểm tra TỈNH/THÀNH PHỐ (BẮT BUỘC) và chỉ hỗ trợ 3 thành phố
+        // Chấp nhận cả city code ('HCM', 'HaNoi', 'DaNang') hoặc province text
+        const cityCode = data.location?.city || '';
+        const provinceText = data.location?.cityText || ''; // Tên tỉnh đầy đủ
+        
+        console.log('  🔎 Checking city code:', cityCode);
+        console.log('  🔎 Province text:', provinceText);
+        
+        const supportedCities = ['HCM', 'HaNoi', 'DaNang'];
+        
+        // Nếu city đã là code chuẩn → OK
+        if (supportedCities.includes(cityCode)) {
+            console.log('✅ City code hợp lệ:', cityCode);
+            return true; // Skip validation khác, đủ để dự đoán
+        }
+        
+        // Nếu chưa có city code, kiểm tra provinceText có thể map được không
+        if (!cityCode || cityCode === '') {
+            console.warn('⚠️ Thiếu city code, kiểm tra provinceText...');
             
-            const provinceField = document.getElementById('province');
-            if (provinceField) {
-                provinceField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                provinceField.focus();
-                setTimeout(() => {
-                    provinceField.style.border = '2px solid #ef4444';
+            // Kiểm tra xem provinceText có thuộc 3 thành phố không
+            const provinceTextLower = (provinceText || '').toLowerCase();
+            const isSupported = provinceTextLower.includes('hồ chí minh') || 
+                              provinceTextLower.includes('hcm') ||
+                              provinceTextLower.includes('tp.hcm') ||
+                              provinceTextLower.includes('hà nội') || 
+                              provinceTextLower.includes('hanoi') ||
+                              provinceTextLower.includes('đà nẵng') || 
+                              provinceTextLower.includes('da nang');
+            
+            if (!isSupported) {
+                console.warn('⚠️ Province không thuộc HCM/Hà Nội/Đà Nẵng:', provinceText);
+                this.showToast('⚠️ AI hiện chỉ hỗ trợ dự đoán cho TP.HCM, Hà Nội và Đà Nẵng. Vui lòng chọn một trong 3 thành phố này.', 'warning');
+                
+                const provinceField = document.getElementById('province');
+                if (provinceField) {
+                    if (typeof changeStep === 'function') {
+                        changeStep(2); // Chuyển đến Step 2 - Vị trí
+                    }
                     setTimeout(() => {
-                        provinceField.style.border = '';
-                    }, 2000);
-                }, 100);
+                        provinceField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        provinceField.focus();
+                        provinceField.style.border = '2px solid #ef4444';
+                        setTimeout(() => { provinceField.style.border = ''; }, 2000);
+                    }, 300);
+                }
+                return false;
             }
-            return false;
+        }
+        
+        // 4. GỢI Ý về district (không bắt buộc nhưng nên có)
+        if (!data.location.district || data.location.district === '') {
+            console.warn('⚠️ Thiếu quận/huyện - AI sẽ dự đoán kém chính xác hơn');
+            // Không block, chỉ warning trong console
         }
         
         console.log('✅ Validation passed - Đủ thông tin để dự đoán giá');
-        console.log('ℹ️ Lưu ý: District, ward, street là optional - AI sẽ dự đoán chính xác hơn nếu có đầy đủ');
+        console.log('ℹ️ Lưu ý: District, ward càng đầy đủ thì AI dự đoán càng chính xác');
         return true;
     }
 
     /**
-     * Gọi API dự đoán giá
+     * Build payload cho Flask API từ formData
+     */
+    buildApiPayload(formData) {
+        // Map city code từ province value
+        const cityCode = formData.location?.city || '';
+        
+        // Map room_type từ propertyType hoặc dùng giá trị đã được map sẵn
+        const roomType = formData.room_type || mapPropertyTypeToRoomType(formData.propertyType);
+        
+        return {
+            city: cityCode, // 'HCM', 'HaNoi', 'DaNang' (đã được map sẵn trong collectPropertyFormData)
+            acreage: parseFloat(formData.acreage || formData.area || 0),
+            district: formData.location?.district || '',
+            ward: formData.location?.ward || '',
+            address: formData.location?.address || formData.description || '',
+            room_type: roomType,
+            
+            // 8 tiện nghi quan trọng cho AI (0/1)
+            has_mezzanine: formData.amenities?.has_mezzanine ? 1 : 0,
+            has_wc: formData.amenities?.has_wc ? 1 : 0,
+            has_ac: formData.amenities?.has_ac ? 1 : 0,
+            has_furniture: formData.amenities?.has_furniture ? 1 : 0,
+            has_balcony: formData.amenities?.has_balcony ? 1 : 0,
+            has_kitchen: formData.amenities?.has_kitchen ? 1 : 0,
+            has_parking: formData.amenities?.has_parking ? 1 : 0,
+            has_window: formData.amenities?.has_window ? 1 : 0,
+            
+            is_studio: formData.is_studio ? 1 : 0,
+            title: formData.title || ''
+        };
+    }
+
+    /**
+     * Transform Flask API response → prediction object cho displayPrediction()
+     */
+    transformFlaskPrediction(flaskResult) {
+        const priceVnd = flaskResult.predicted_price_vnd || 0;
+        const priceMillion = flaskResult.predicted_price_million || (priceVnd / 1_000_000);
+        
+        // Tạo khoảng giá ±10%
+        const rangeFactor = 0.1;
+        const minVnd = Math.round(priceVnd * (1 - rangeFactor));
+        const maxVnd = Math.round(priceVnd * (1 + rangeFactor));
+        
+        // Map confidence level
+        let confidenceLevel = 'medium';
+        if (flaskResult.confidence === 'high') {
+            confidenceLevel = 'high';
+        } else if (flaskResult.confidence === 'low' || flaskResult.confidence === 'very_low') {
+            confidenceLevel = 'low';
+        }
+        
+        return {
+            suggestedPrice: priceVnd,
+            suggestedPriceMillion: priceMillion,
+            priceRange: {
+                min: minVnd,
+                max: maxVnd
+            },
+            confidence: confidenceLevel,
+            confidenceLevel: confidenceLevel,
+            reasoning: flaskResult.explanation || 'Giá dự đoán dựa trên phân tích AI',
+            explanation: flaskResult.explanation || '',
+            analysis: {
+                locationScore: 7,
+                amenitiesScore: 7,
+                sizeScore: 7,
+                marketMatchScore: 7,
+                marketComparison: 'average',
+                overallScore: 7,
+                scoreText: 'Đánh giá tham khảo từ AI',
+                reasonTitle: 'AI dựa trên vị trí, diện tích và tiện nghi',
+                reasons: flaskResult.flags || []
+            },
+            suggestions: flaskResult.suggestions || [],
+            rawResult: flaskResult // Giữ lại raw data để debug
+        };
+    }
+
+    /**
+     * Gọi Flask API dự đoán giá qua ngrok
      */
     async predictPrice(formData) {
         const resultContainer = document.getElementById('predictionResult');
@@ -166,28 +353,58 @@ class PricePrediction {
         resultContainer.style.display = 'none';
 
         try {
-            const response = await fetch('/api/ai/predict-price', {
+            // Build payload cho Flask API
+            const apiPayload = this.buildApiPayload(formData);
+            
+            // Kiểm tra city code
+            if (!apiPayload.city) {
+                this.showError('⚠️ Hiện tại AI chỉ hỗ trợ dự đoán giá cho TP.HCM, Hà Nội và Đà Nẵng.');
+                loadingContainer.style.display = 'none';
+                return;
+            }
+            
+            console.log('📤 Gửi payload đến Flask API:', apiPayload);
+            console.log('🌐 Flask API URL:', FLASK_PREDICT_API_URL);
+
+            const response = await fetch(FLASK_PREDICT_API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(apiPayload)
             });
 
-            const data = await response.json();
+            const result = await response.json();
+            console.log('📥 Response từ Flask API:', result);
 
             // Hide loading
             loadingContainer.style.display = 'none';
 
-            if (data.success && data.data.prediction) {
-                this.displayPrediction(data.data.prediction);
-            } else {
-                this.showError('Không thể dự đoán giá. Vui lòng thử lại!');
+            // Kiểm tra lỗi từ API
+            if (!response.ok || result.error) {
+                const errorMsg = result.error || result.message || 'Không thể dự đoán giá. Vui lòng thử lại!';
+                this.showError(errorMsg);
+                return;
             }
+
+            // Transform Flask response sang prediction object
+            const prediction = this.transformFlaskPrediction(result);
+            console.log('✅ Prediction object:', prediction);
+            
+            this.displayPrediction(prediction);
+            
         } catch (error) {
-            console.error('Price Prediction Error:', error);
+            console.error('❌ Price Prediction Error:', error);
             loadingContainer.style.display = 'none';
-            this.showError('Có lỗi xảy ra. Vui lòng thử lại sau!');
+            
+            let errorMessage = 'Có lỗi xảy ra khi kết nối với AI. ';
+            if (error.message.includes('fetch')) {
+                errorMessage += 'Vui lòng kiểm tra kết nối mạng hoặc ngrok URL.';
+            } else {
+                errorMessage += 'Vui lòng thử lại sau!';
+            }
+            
+            this.showError(errorMessage);
         }
     }
 
@@ -357,15 +574,16 @@ class PricePrediction {
         const priceUnit = document.getElementById('priceUnit');
         
         if (priceInput && priceUnit) {
-            // Chuyển đổi từ VNĐ sang triệu
+            // AI trả về giá theo VNĐ, chuyển đổi sang triệu/tháng
             const priceInMillion = (price / 1000000).toFixed(1);
             
             // Set giá trị
             priceInput.value = priceInMillion;
             priceUnit.value = 'trieu-thang'; // Đảm bảo unit là "Triệu/tháng"
             
-            // Trigger change event để clear errors nếu có
+            // Trigger change event để update UI và clear errors nếu có
             priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+            priceInput.dispatchEvent(new Event('change', { bubbles: true }));
             
             // Highlight field để user biết đã update
             priceInput.style.border = '2px solid #10b981';
@@ -377,6 +595,11 @@ class PricePrediction {
             
             this.showToast(`✅ Đã áp dụng giá ${priceInMillion} triệu/tháng`, 'success');
             this.closeModal();
+            
+            // Scroll đến field price để user thấy rõ
+            setTimeout(() => {
+                priceInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
             
             console.log(`💰 Giá đã được cập nhật: ${priceInMillion} triệu (${price} VNĐ)`);
         } else {

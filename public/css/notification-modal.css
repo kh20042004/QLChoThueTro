@@ -1,0 +1,383 @@
+/**
+ * ===================================
+ * NOTIFICATION MODAL STYLES
+ * Modal hiển thị chi tiết thông báo
+ * ===================================
+ */
+
+/* Modal Overlay */
+.notification-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.notification-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+/* Modal Container */
+.notification-modal {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9) translateY(-20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.notification-modal-overlay.show .notification-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header */
+.notification-modal-header {
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    color: #333;
+}
+
+.notification-modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.notification-modal-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: #f5f5f5;
+    color: #333;
+}
+
+.notification-modal-title-wrapper h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.notification-modal-time {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.notification-modal-close {
+    background: #f5f5f5;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #333;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.notification-modal-close:hover {
+    background: #e0e0e0;
+}
+
+/* Modal Body */
+.notification-modal-body {
+    padding: 24px;
+    max-height: calc(80vh - 180px);
+    overflow-y: auto;
+}
+
+/* Notification Type Badge */
+.notification-modal-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.notification-modal-type.booking_confirmed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.notification-modal-type.booking_cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.notification-modal-type.new_message {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.notification-modal-type.review_received {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.notification-modal-type.property_approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.notification-modal-type.property_rejected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.notification-modal-type.payment_success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.notification-modal-type.payment_failed {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.notification-modal-type.system_alert {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+/* Message Content */
+.notification-modal-message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Property/Booking Details */
+.notification-modal-details {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.notification-modal-detail-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.notification-modal-detail-item:last-child {
+    border-bottom: none;
+}
+
+.notification-modal-detail-label {
+    font-weight: 600;
+    color: #666;
+    min-width: 120px;
+    font-size: 14px;
+}
+
+.notification-modal-detail-value {
+    color: #333;
+    flex: 1;
+    font-size: 14px;
+}
+
+/* Trust Score */
+.notification-modal-trust-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.notification-modal-trust-score.high {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.notification-modal-trust-score.medium {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.notification-modal-trust-score.low {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Action Buttons */
+.notification-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.notification-modal-btn {
+    flex: 1;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.notification-modal-btn-primary {
+    background: #333;
+    color: white;
+}
+
+.notification-modal-btn-primary:hover {
+    background: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.notification-modal-btn-secondary {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.notification-modal-btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.notification-modal-btn-danger {
+    background: #666;
+    color: white;
+}
+
+.notification-modal-btn-danger:hover {
+    background: #444;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar */
+.notification-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notification-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.notification-modal-body::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.notification-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* Image Preview */
+.notification-modal-image {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    max-height: 300px;
+    object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .notification-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .notification-modal-header {
+        padding: 20px 16px;
+    }
+
+    .notification-modal-body {
+        padding: 16px;
+    }
+
+    .notification-modal-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .notification-modal-title-wrapper h2 {
+        font-size: 18px;
+    }
+
+    .notification-modal-actions {
+        flex-direction: column;
+    }
+
+    .notification-modal-btn {
+        width: 100%;
+    }
+
+    .notification-modal-detail-label {
+        min-width: 100px;
+        font-size: 13px;
+    }
+
+    .notification-modal-detail-value {
+        font-size: 13px;
+    }
+}
+
+/* Animation */
+@keyframes modalSlideIn {
+    from {
+        transform: scale(0.9) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes modalSlideOut {
+    from {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0.9) translateY(-20px);
+        opacity: 0;
+    }
+}

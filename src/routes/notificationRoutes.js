@@ -19,6 +19,9 @@ router.get('/', notificationController.getNotifications);
 // Get unread count
 router.get('/unread-count', notificationController.getUnreadCount);
 
+// Get notification by ID (chi tiết thông báo)
+router.get('/:id', notificationController.getNotificationById);
+
 // Mark as read
 router.put('/:id/read', notificationController.markAsRead);
 
@@ -30,6 +33,9 @@ router.put('/read-all', notificationController.markAllAsRead);
 
 // Delete notification
 router.delete('/:id', notificationController.deleteNotification);
+
+// Delete notification by reviewId (for admin cleanup)
+router.delete('/by-review/:reviewId', notificationController.deleteByReviewId);
 
 // Delete all notifications
 router.delete('/all', notificationController.deleteAllNotifications);

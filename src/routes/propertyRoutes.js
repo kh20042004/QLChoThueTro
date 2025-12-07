@@ -14,7 +14,8 @@ const {
   updateProperty,
   deleteProperty,
   getPropertiesInRadius,
-  getMyProperties
+  getMyProperties,
+  updatePropertyStatus
 } = require('../controllers/propertyController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -27,6 +28,8 @@ router.get('/radius/:zipcode/:distance', getPropertiesInRadius);
 router.get('/my-properties', protect, getMyProperties); // Route riêng cho my-properties (phải đặt trước /:id)
 router.post('/', protect, authorize('user', 'landlord', 'admin'), upload.array('images', 10), createProperty);
 router.put('/:id', protect, authorize('user', 'landlord', 'admin'), upload.array('images', 10), updateProperty);
+router.patch('/:id/status', protect, authorize('user', 'landlord', 'admin'), updatePropertyStatus); // Cập nhật trạng thái
+router.put('/:id/status', protect, authorize('user', 'landlord', 'admin'), updatePropertyStatus); // Cập nhật trạng thái (PUT method)
 router.delete('/:id', protect, authorize('user', 'landlord', 'admin'), deleteProperty);
 
 // Get single property (phải đặt cuối cùng để không conflict với các route khác)

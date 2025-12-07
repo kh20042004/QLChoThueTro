@@ -855,8 +855,8 @@ async function loadFeaturedProperties() {
     if (!container) return; // Không phải trang chủ
     
     try {
-        // Fetch dữ liệu từ API
-        const response = await fetch('/api/properties?limit=6&sort=-createdAt');
+        // Fetch dữ liệu từ API - CHỈ LẤY PHÒNG ĐÃ DUYỆT (status: available)
+        const response = await fetch('/api/properties?limit=6&sort=-createdAt&status=available');
         
         if (!response.ok) {
             throw new Error('Failed to fetch properties');
@@ -924,10 +924,14 @@ function createPropertyCard(property) {
     const rating = property.averageRating || 0;
     const reviewCount = property.reviewCount || 0;
     
-    // Badge trạng thái
-    const statusBadge = property.status === 'available' 
-        ? '<span class="absolute top-3 right-3 px-3 py-1 bg-green-500 text-white text-xs rounded-full">Còn trống</span>'
-        : '<span class="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">Đã thuê</span>';
+    // Badge trạng thái - CHỈ hiển thị nếu đã duyệt
+    let statusBadge = '';
+    if (property.status === 'available') {
+        statusBadge = '<span class="absolute top-3 right-3 px-3 py-1 bg-green-500 text-white text-xs rounded-full">Còn trống</span>';
+    } else if (property.status === 'rented') {
+        statusBadge = '<span class="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">Đã thuê</span>';
+    }
+    // Nếu status là 'pending' hoặc 'inactive' thì không hiển thị badge (vì API đã lọc)
     
     // Loại phòng
     const typeMap = {
@@ -1073,31 +1077,32 @@ function showPropertyLocation(data) {
             mapInstance.remove();
         }
 
-        // Tạo bản đồ mới
-        mapInstance = L.map('propertyMap').setView([lat, lng], 15);
-
-        // Thêm tile layer (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(mapInstance);
+        // Tạo bản đồ mới với Goong Map JS
+        goongjs.accessToken = '3wUhxxPZujfl6OwVJ9N7YdDlGP6pJU62zw5PT4pg';
+        mapInstance = new goongjs.Map({
+            container: 'propertyMap',
+            style: 'https://tiles.goong.io/assets/goong_map_web.json',
+            center: [lng, lat],
+            zoom: 15
+        });
 
         // Thêm marker
-        const marker = L.marker([lat, lng]).addTo(mapInstance);
-        marker.bindPopup(`
-            <div class="text-center">
-                <strong class="text-gray-900">${title}</strong><br>
-                <span class="text-sm text-gray-600">Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
-            </div>
-        `).openPopup();
-
-        // Vẽ circle để hiển thị khu vực xung quanh
-        L.circle([lat, lng], {
-            color: '#3b82f6',
-            fillColor: '#3b82f6',
-            fillOpacity: 0.1,
-            radius: 500 // 500m
-        }).addTo(mapInstance);
+        const el = document.createElement('div');
+        el.className = 'w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer';
+        el.innerHTML = '<i class="fas fa-home text-white"></i>';
+        
+        const popup = new goongjs.Popup({ offset: 25 })
+            .setHTML(`
+                <div class="text-center">
+                    <strong class="text-gray-900">${title}</strong><br>
+                    <span class="text-sm text-gray-600">Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+                </div>
+            `);
+        
+        new goongjs.Marker(el)
+            .setLngLat([lng, lat])
+            .setPopup(popup)
+            .addTo(mapInstance);
     }, 100);
 }
 

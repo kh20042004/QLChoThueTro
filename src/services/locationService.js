@@ -45,6 +45,102 @@ async function fetchWithFallback(endpoint) {
     }
 }
 
+// Tạo axios instance với SSL verification disabled (do API có SSL certificate hết hạn)
+const axiosInstance = axios.create({
+    httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+    }),
+    timeout: 10000 // 10 seconds timeout
+});
+
+// Cache để tránh gọi API quá nhiều lần
+let provincesCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Mapping tên tỉnh/thành (slug) sang mã code
+ * Các tên phổ biến để dễ sử dụng API
+ */
+const PROVINCE_SLUG_TO_CODE = {
+    'hanoi': '01',
+    'ha-noi': '01',
+    'hochiminh': '79',
+    'ho-chi-minh': '79',
+    'saigon': '79',
+    'sai-gon': '79',
+    'danang': '48',
+    'da-nang': '48',
+    'haiphong': '31',
+    'hai-phong': '31',
+    'cantho': '92',
+    'can-tho': '92',
+    'binhduong': '74',
+    'binh-duong': '74',
+    'dongnai': '75',
+    'dong-nai': '75',
+    'vungtau': '77',
+    'vung-tau': '77',
+    'nghean': '40',
+    'nghe-an': '40',
+    'hue': '46',
+    'nhatrang': '56',
+    'nha-trang': '56',
+    'dalat': '68',
+    'da-lat': '68'
+};
+
+/**
+ * Normalize string để so sánh (bỏ dấu, lowercase, bỏ khoảng trắng)
+ */
+function normalizeString(str) {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]/g, ''); // Chỉ giữ chữ và số
+}
+
+/**
+ * Tìm mã code từ tên tỉnh (slug hoặc full name)
+ * @param {string} input - Có thể là code (01, 79), slug (hanoi, ho-chi-minh), hoặc tên đầy đủ (Hà Nội)
+ * @returns {Promise<string|null>} - Province code hoặc null nếu không tìm thấy
+ */
+async function findProvinceCode(input) {
+    if (!input) return null;
+    
+    const normalized = normalizeString(input);
+    
+    // 1. Kiểm tra xem đã là code chưa (2 chữ số)
+    if (/^\d{1,2}$/.test(input)) {
+        return input.padStart(2, '0'); // Đảm bảo 2 chữ số (01, 02, ...)
+    }
+    
+    // 2. Kiểm tra trong mapping slug
+    if (PROVINCE_SLUG_TO_CODE[normalized]) {
+        return PROVINCE_SLUG_TO_CODE[normalized];
+    }
+    
+    // 3. Tìm trong danh sách tỉnh thành (search by name)
+    try {
+        const provinces = await getAllProvinces();
+        const found = provinces.find(p => 
+            normalizeString(p.name) === normalized ||
+            normalizeString(p.code_name) === normalized
+        );
+        
+        if (found) {
+            return String(found.code);
+        }
+    } catch (error) {
+        console.error('Error finding province code:', error.message);
+    }
+    
+    return null;
+}
+
 /**
  * Lấy tất cả tỉnh/thành phố
  */
@@ -53,21 +149,44 @@ async function getAllProvinces() {
         return await fetchWithFallback('/p/');
     } catch (error) {
         console.error('Error fetching provinces:', error.message);
+        
+        // Nếu có cache cũ, trả về cache
+        if (provincesCache) {
+            console.log('⚠️ Using cached provinces data');
+            return provincesCache;
+        }
+        
         throw new Error('Không thể lấy danh sách tỉnh thành');
     }
 }
 
 /**
  * Lấy chi tiết tỉnh/thành phố theo code (bao gồm danh sách quận/huyện)
- * @param {string} provinceCode - Mã tỉnh/thành phố
+ * @param {string} provinceCodeOrName - Mã tỉnh/thành phố, slug, hoặc tên đầy đủ
  * @param {number} depth - Độ sâu dữ liệu (1: có districts, 2: có districts + wards)
  */
-async function getProvinceByCode(provinceCode, depth = 2) {
+async function getProvinceByCode(provinceCodeOrName, depth = 2) {
     try {
+        // Tìm code thực sự từ input
+        const provinceCode = await findProvinceCode(provinceCodeOrName);
+        
+        if (!provinceCode) {
+            throw new Error(`Không tìm thấy tỉnh thành: ${provinceCodeOrName}`);
+        }
+        
+        console.log(`✓ Resolved "${provinceCodeOrName}" -> code: ${provinceCode}`);
+        
         return await fetchWithFallback(`/p/${provinceCode}?depth=${depth}`);
     } catch (error) {
-        console.error(`Error fetching province ${provinceCode}:`, error.message);
-        throw new Error('Không thể lấy thông tin tỉnh thành');
+        console.error(`Error fetching province ${provinceCodeOrName}:`, error.message);
+        
+        // Log chi tiết lỗi từ API
+        if (error.response) {
+            console.error(`API Status: ${error.response.status}`);
+            console.error(`API Data:`, error.response.data);
+        }
+        
+        throw new Error(error.message || 'Không thể lấy thông tin tỉnh thành');
     }
 }
 
@@ -99,16 +218,25 @@ async function getDistrictByCode(districtCode, depth = 2) {
 
 /**
  * Lấy danh sách quận/huyện theo mã tỉnh
- * @param {string} provinceCode - Mã tỉnh/thành phố
+ * @param {string} provinceCodeOrName - Mã tỉnh/thành phố, slug, hoặc tên đầy đủ
  */
-async function getDistrictsByProvince(provinceCode) {
+async function getDistrictsByProvince(provinceCodeOrName) {
     try {
+        console.log(`🔍 Getting districts for: ${provinceCodeOrName}`);
+        
         // Phải dùng depth=2 vì API external không trả về districts với depth=1
-        const province = await getProvinceByCode(provinceCode, 2);
-        return province.districts || [];
+        const province = await getProvinceByCode(provinceCodeOrName, 2);
+        
+        if (!province.districts || province.districts.length === 0) {
+            console.warn(`⚠️ No districts found for province: ${provinceCodeOrName}`);
+            return [];
+        }
+        
+        console.log(`✓ Found ${province.districts.length} districts`);
+        return province.districts;
     } catch (error) {
-        console.error(`Error fetching districts for province ${provinceCode}:`, error.message);
-        throw new Error('Không thể lấy danh sách quận huyện');
+        console.error(`Error fetching districts for province ${provinceCodeOrName}:`, error.message);
+        throw error; // Re-throw để giữ error message chi tiết
     }
 }
 
@@ -153,11 +281,11 @@ async function getWardsByDistrict(districtCode) {
 
 /**
  * Lấy danh sách phường/xã theo mã tỉnh (tất cả phường trong tỉnh)
- * @param {string} provinceCode - Mã tỉnh/thành phố
+ * @param {string} provinceCodeOrName - Mã tỉnh/thành phố, slug, hoặc tên đầy đủ
  */
-async function getWardsByProvince(provinceCode) {
+async function getWardsByProvince(provinceCodeOrName) {
     try {
-        const province = await getProvinceByCode(provinceCode, 2);
+        const province = await getProvinceByCode(provinceCodeOrName, 2);
         
         if (!province.districts) {
             return [];
@@ -240,5 +368,6 @@ module.exports = {
     getWardByCode,
     getWardsByDistrict,
     getWardsByProvince,
-    searchLocation
+    searchLocation,
+    findProvinceCode // Export helper function
 };

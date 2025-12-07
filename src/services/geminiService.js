@@ -1,18 +1,24 @@
 /**
  * ===================================
- * GEMINI AI SERVICE
- * Tích hợp Google Gemini 2.5 Flash
+ * AI SERVICE (Gemini + Groq Fallback)
+ * Tích hợp Google Gemini 2.5 Flash với Groq làm dự phòng
  * ===================================
  */
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
 // Khởi tạo Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Khởi tạo Groq AI (Fallback)
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
+
 // Lấy model Gemini 2.5 Flash
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.0-flash-exp',
+  model: 'gemini-2.5-flash-latest',
   generationConfig: {
     temperature: 0.7,
     topP: 0.95,
@@ -55,56 +61,159 @@ Lưu ý:
 - Khuyến khích người dùng liên hệ trực tiếp nếu cần tư vấn chi tiết`;
 
 /**
- * Chat với Gemini AI
+ * Sleep utility for retry delays
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Retry with exponential backoff
+ */
+const retryWithBackoff = async (fn, maxRetries = 3, baseDelay = 1000) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      // Check if it's a quota error
+      if (error.status === 429) {
+        if (i === maxRetries - 1) throw error; // Last retry, throw error
+        
+        // Extract retry delay from error if available
+        let retryDelay = baseDelay * Math.pow(2, i);
+        if (error.errorDetails) {
+          const retryInfo = error.errorDetails.find(d => d['@type']?.includes('RetryInfo'));
+          if (retryInfo?.retryDelay) {
+            const seconds = parseInt(retryInfo.retryDelay.replace('s', ''));
+            retryDelay = seconds * 1000;
+          }
+        }
+        
+        console.log(`Quota exceeded. Retrying in ${retryDelay}ms... (Attempt ${i + 1}/${maxRetries})`);
+        await sleep(retryDelay);
+      } else {
+        throw error; // Not a quota error, throw immediately
+      }
+    }
+  }
+};
+
+/**
+ * Chat với Groq AI (Fallback)
+ * @param {String} message - Tin nhắn từ user
+ * @param {Array} history - Lịch sử chat
+ * @returns {Object} - Response từ AI
+ */
+const chatWithGroq = async (message, history = []) => {
+  try {
+    // Convert history to Groq format
+    const messages = [
+      {
+        role: 'system',
+        content: SYSTEM_PROMPT
+      }
+    ];
+
+    // Limit to last 6 messages for faster response
+    const recentHistory = history.slice(-6);
+    recentHistory.forEach(item => {
+      if (item.role && item.parts && item.parts[0]?.text) {
+        messages.push({
+          role: item.role === 'model' ? 'assistant' : 'user',
+          content: item.parts[0].text
+        });
+      }
+    });
+
+    // Add current message
+    messages.push({
+      role: 'user',
+      content: message
+    });
+
+    const completion = await groq.chat.completions.create({
+      messages: messages,
+      model: 'llama-3.1-8b-instant', // Faster model
+      temperature: 0.7,
+      max_tokens: 1024, // Reduced for speed
+      top_p: 0.95,
+    });
+
+    return {
+      success: true,
+      message: completion.choices[0]?.message?.content || 'Xin lỗi, tôi không thể trả lời.',
+      usingGroq: true,
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Groq AI Error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Chat với AI (Groq Primary, Gemini Fallback)
  * @param {String} message - Tin nhắn từ user
  * @param {Array} history - Lịch sử chat (optional)
  * @returns {Object} - Response từ AI
  */
 exports.chat = async (message, history = []) => {
+  // Validate history
+  const validHistory = (history || []).filter(item => {
+    return item && item.role && item.parts && Array.isArray(item.parts) && 
+           item.parts.length > 0 && item.parts[0].text && item.parts[0].text.trim() !== '';
+  });
+
+  // Try Groq first (Primary)
   try {
-    // Lọc và validate history
-    const validHistory = (history || []).filter(item => {
-      return item && 
-             item.role && 
-             item.parts && 
-             Array.isArray(item.parts) && 
-             item.parts.length > 0 &&
-             item.parts[0].text &&
-             item.parts[0].text.trim() !== '';
-    });
-
-    // Tạo chat session với history
-    const chat = model.startChat({
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: SYSTEM_PROMPT }],
-        },
-        {
-          role: 'model',
-          parts: [{ text: 'Chào bạn! 👋 Tôi là trợ lý AI của hệ thống cho thuê phòng trọ. Tôi có thể giúp gì cho bạn hôm nay? 🏠' }],
-        },
-        ...validHistory
-      ],
-    });
-
-    // Gửi message và nhận response
-    const result = await chat.sendMessage(message);
-    const response = result.response;
-    const text = response.text();
-
+    console.log('🚀 Using Groq AI (Primary)...');
+    const groqResult = await chatWithGroq(message, validHistory);
     return {
-      success: true,
-      message: text,
-      timestamp: new Date()
+      ...groqResult,
+      usingGroq: true,
+      primary: true
     };
-  } catch (error) {
-    console.error('Gemini AI Error:', error);
-    return {
-      success: false,
-      error: error.message || 'Đã xảy ra lỗi khi xử lý yêu cầu',
-      message: 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau. 🙏'
-    };
+  } catch (groqError) {
+    console.error('Groq AI Error:', groqError);
+    console.log('🔄 Groq failed, switching to Gemini fallback...');
+    
+    // Fallback to Gemini
+    try {
+      const chat = model.startChat({
+        history: [
+          {
+            role: 'user',
+            parts: [{ text: SYSTEM_PROMPT }],
+          },
+          {
+            role: 'model',
+            parts: [{ text: 'Chào bạn! 👋 Tôi là trợ lý AI của hệ thống cho thuê phòng trọ. Tôi có thể giúp gì cho bạn hôm nay? 🏠' }],
+          },
+          ...validHistory
+        ],
+      });
+
+      const result = await retryWithBackoff(async () => {
+        return await chat.sendMessage(message);
+      });
+      
+      const response = result.response;
+      const text = response.text();
+
+      return {
+        success: true,
+        message: text,
+        usingGemini: true,
+        fallbackUsed: true,
+        timestamp: new Date()
+      };
+    } catch (geminiError) {
+      console.error('Gemini AI Error:', geminiError);
+      return {
+        success: false,
+        error: 'ALL_AI_FAILED',
+        message: 'Xin lỗi, cả Groq và Gemini đều đang gặp sự cố. Vui lòng thử lại sau. 😔',
+        timestamp: new Date()
+      };
+    }
   }
 };
 
@@ -147,6 +256,118 @@ Hãy đưa ra:
 };
 
 /**
+ * Search với Groq AI (Fallback)
+ * @param {String} message - Tin nhắn từ user
+ * @param {Array} history - Lịch sử chat
+ * @param {Array} properties - Danh sách properties
+ * @returns {Object} - Kết quả tìm kiếm
+ */
+const searchWithGroq = async (message, history = [], properties = []) => {
+  try {
+    const searchSystemPrompt = `Bạn là AI Assistant chuyên tìm kiếm và tư vấn phòng trọ/nhà cho thuê tại Việt Nam.
+
+NHIỆM VỤ:
+1. Hỏi đáp thân thiện để hiểu nhu cầu: vị trí, giá, loại phòng, tiện ích
+2. **QUAN TRỌNG**: Chỉ gợi ý phòng THỰC SỰ PHÙ HỢP với yêu cầu (vị trí, giá, loại phòng)
+3. Nếu không có phòng phù hợp trong danh sách, hãy THỪA NHẬN và gợi ý mở rộng tiêu chí
+
+DANH SÁCH PHÒNG HIỆN CÓ (${properties.length} phòng đã được lọc sơ bộ):
+${properties.slice(0, 25).map((p, i) => 
+  `${i+1}. ID:${p._id}
+   Tên: ${p.title}
+   Giá: ${p.price} triệu/tháng
+   Vị trí: ${p.address?.district || 'N/A'}, ${p.address?.city || 'N/A'}
+   Diện tích: ${p.area}m²
+   Loại: ${p.propertyType || 'N/A'}
+   Tiện ích: ${p.amenities?.join(', ') || 'N/A'}`
+).join('\n\n')}
+
+QUY TẮC GỢI Ý:
+✅ CHỈ gợi ý nếu phòng THỰC SỰ phù hợp với:
+   - Vị trí (quận/huyện khớp với yêu cầu)
+   - Giá tiền (trong khoảng ±20% ngân sách)
+   - Loại phòng (phòng trọ, chung cư, nhà nguyên căn...)
+   
+❌ KHÔNG gợi ý nếu:
+   - Vị trí không khớp (VD: hỏi Quận 4 nhưng gợi Quận 7)
+   - Giá quá cao (VD: ngân sách 5tr nhưng gợi phòng 8-10tr)
+   - Loại phòng sai (VD: hỏi phòng trọ nhưng gợi nhà nguyên căn)
+
+CÁCH TRẢ LỜI:
+- Thân thiện, nhiệt tình, emoji phù hợp (🏠, 💰, 📍, ✅)
+- Nếu KHÔNG CÓ phòng phù hợp: "Hiện tại chưa có phòng phù hợp với yêu cầu của bạn. Bạn có thể thử mở rộng..."
+- Nếu CÓ phòng phù hợp: Giải thích rõ TẠI SAO phù hợp
+
+FORMAT KẾT QUẢ (bắt buộc khi gợi ý phòng):
+[RESULTS:id1,id2,id3]
+
+VÍ DỤ phản hồi đúng:
+"Dạ, tôi tìm được 2 phòng phù hợp tại Quận 4 trong ngân sách của bạn:
+
+1. Phòng trọ 40m² tại Quận 1 - 8 triệu/tháng
+   Lý do: Gần trường học, giá phù hợp ngân sách
+
+2. Phòng trọ 45m² tại Quận 4 - 9.2 triệu/tháng  
+   Lý do: Diện tích rộng hơn, tiện ích đầy đủ
+
+[RESULTS:507f1f77bcf86cd799439011,507f191e810c19729de860ea]"
+
+LƯU Ý:
+- KHÔNG tạo thông tin phòng giả
+- KHÔNG bỏ qua format [RESULTS:...]
+- CHỈ gợi ý phòng có trong danh sách`;
+
+    const messages = [
+      { role: 'system', content: searchSystemPrompt }
+    ];
+
+    history.forEach(item => {
+      if (item.role && item.parts && item.parts[0]?.text) {
+        messages.push({
+          role: item.role === 'model' ? 'assistant' : 'user',
+          content: item.parts[0].text
+        });
+      }
+    });
+
+    messages.push({ role: 'user', content: message });
+
+    const completion = await groq.chat.completions.create({
+      messages: messages,
+      model: 'llama-3.1-8b-instant', // Faster model for search
+      temperature: 0.7,
+      max_tokens: 800, // Reduced for faster response
+      top_p: 0.95,
+    });
+
+    const text = completion.choices[0]?.message?.content || '';
+    let propertyIds = [];
+    let cleanText = text;
+    
+    // Try to match both [RESULTS:...] and RESULTS:... formats
+    const resultsMatch = text.match(/\[?RESULTS:([^\]]+)\]?/i);
+    if (resultsMatch) {
+      const idsString = resultsMatch[1];
+      propertyIds = idsString.split(',').map(id => id.trim()).filter(id => id);
+      // Remove the RESULTS pattern from text
+      cleanText = text.replace(/\[?RESULTS:[^\]]+\]?/gi, '').trim();
+    }
+
+    return {
+      success: true,
+      message: cleanText,
+      isComplete: propertyIds.length > 0,
+      propertyIds: propertyIds,
+      usingGroq: true,
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Groq Search Error:', error);
+    throw error;
+  }
+};
+
+/**
  * Analyze property description và suggest improvements
  * @param {String} description - Mô tả property
  * @returns {Object} - Phân tích và gợi ý
@@ -181,115 +402,130 @@ Hãy:
 };
 
 /**
- * AI Search Assistant - Tìm kiếm phòng bằng hội thoại
+ * AI Search Assistant - Tìm kiếm phòng bằng hội thoại (Groq Primary, Gemini Fallback)
  * @param {String} message - Tin nhắn từ user
  * @param {Array} history - Lịch sử chat
  * @param {Array} properties - Danh sách properties hiện có
  * @returns {Object} - Response từ AI với kết quả tìm kiếm
  */
 exports.searchWithAI = async (message, history = [], properties = []) => {
+  // Validate history
+  const validHistory = (history || []).filter(item => {
+    return item && item.role && item.parts && Array.isArray(item.parts) && 
+           item.parts.length > 0 && item.parts[0].text && item.parts[0].text.trim() !== '';
+  });
+
+  // Try Groq first (Primary)
   try {
-    // System prompt đặc biệt cho tìm kiếm
-    const searchSystemPrompt = `Bạn là AI Assistant chuyên giúp tìm kiếm phòng trọ/nhà cho thuê tại Việt Nam.
+    console.log('🚀 Using Groq AI for search (Primary)...');
+    const groqResult = await searchWithGroq(message, validHistory, properties);
+    return {
+      ...groqResult,
+      usingGroq: true,
+      primary: true
+    };
+  } catch (groqError) {
+    console.error('Groq Search Error:', groqError);
+    console.log('🔄 Groq failed, switching to Gemini fallback...');
+    
+    // Fallback to Gemini
+    try {
+      // System prompt đặc biệt cho tìm kiếm - GEMINI FALLBACK
+      const searchSystemPrompt = `Bạn là AI Assistant chuyên tìm kiếm và tư vấn phòng trọ/nhà cho thuê tại Việt Nam.
 
-Nhiệm vụ của bạn:
-1. Hỏi đáp với khách hàng để hiểu rõ nhu cầu: vị trí, giá, loại phòng, tiện ích
-2. Phân tích yêu cầu và đưa ra gợi ý phù hợp
-3. Khi đã hiểu rõ nhu cầu, trả về kết quả tìm kiếm
+NHIỆM VỤ:
+1. Hỏi đáp thân thiện để hiểu nhu cầu: vị trí, giá, loại phòng, tiện ích
+2. **QUAN TRỌNG**: Chỉ gợi ý phòng THỰC SỰ PHÙ HỢP với yêu cầu (vị trí, giá, loại phòng)
+3. Nếu không có phòng phù hợp trong danh sách, hãy THỪA NHẬN và gợi ý mở rộng tiêu chí
 
-Thông tin bạn cần thu thập:
-- 📍 Vị trí/Khu vực mong muốn
-- 💰 Ngân sách (khoảng giá)
-- 🏠 Loại hình: Phòng trọ, Nhà nguyên căn, Căn hộ, Chung cư mini
-- 📏 Diện tích mong muốn (tùy chọn)
-- 🛏️ Số phòng ngủ (tùy chọn)
-- ⭐ Tiện ích cần thiết: Wifi, Điều hòa, Bếp, Gửi xe, Nóng lạnh...
-
-Phong cách giao tiếp:
-- Thân thiện, nhiệt tình như một tư vấn viên thực sự
-- Hỏi từng thông tin một, không hỏi quá nhiều cùng lúc
-- Sử dụng emoji để sinh động
-- Gợi ý các lựa chọn phổ biến nếu user chưa rõ
-
-Danh sách properties hiện có:
-${JSON.stringify(properties.map(p => ({
+DANH SÁCH PHÒNG HIỆN CÓ (${properties.length} phòng đã được lọc sơ bộ):
+${JSON.stringify(properties.slice(0, 25).map(p => ({
   id: p._id,
   title: p.title,
   type: p.propertyType,
   price: p.price,
-  location: p.address,
+  location: `${p.address?.district || 'N/A'}, ${p.address?.city || 'N/A'}`,
   area: p.area,
-  bedrooms: p.bedrooms,
   amenities: p.amenities
 })), null, 2)}
 
-Khi đã có đủ thông tin, hãy:
-1. Tóm tắt lại yêu cầu của khách
-2. Gợi ý 2-3 phòng phù hợp nhất từ danh sách
-3. Giải thích tại sao gợi ý những phòng đó
-4. **QUAN TRỌNG**: Kết thúc bằng format đặc biệt:
-   [RESULTS:ID1,ID2,ID3]
-   Ví dụ: [RESULTS:507f1f77bcf86cd799439011,507f191e810c19729de860ea]
+QUY TẮC GỢI Ý:
+✅ CHỈ gợi ý nếu phòng THỰC SỰ phù hợp với:
+   - Vị trí (quận/huyện khớp với yêu cầu)
+   - Giá tiền (trong khoảng ±20% ngân sách)
+   - Loại phòng (phòng trọ, chung cư, nhà nguyên căn...)
+   
+❌ KHÔNG gợi ý nếu:
+   - Vị trí không khớp (VD: hỏi Quận 4 nhưng gợi Quận 7)
+   - Giá quá cao (VD: ngân sách 5tr nhưng gợi phòng 8-10tr)
+   - Loại phòng sai (VD: hỏi phòng trọ nhưng gợi nhà nguyên căn)
+
+CÁCH TRẢ LỜI:
+- Thân thiện, nhiệt tình, emoji phù hợp
+- Nếu KHÔNG CÓ phòng phù hợp: "Hiện tại chưa có phòng phù hợp. Bạn có thể thử mở rộng..."
+- Nếu CÓ phòng phù hợp: Giải thích rõ TẠI SAO phù hợp
+
+FORMAT KẾT QUẢ (khi gợi ý phòng):
+[RESULTS:ID1,ID2,ID3]
 
 Lưu ý:
-- Nếu không có phòng nào phù hợp, hãy gợi ý mở rộng tiêu chí
-- Không tự ý tạo ra thông tin phòng không có trong danh sách
-- LUÔN trả về [RESULTS:...] ở cuối cùng khi đã gợi ý phòng`;
+- LUÔN trả về [RESULTS:...] ở cuối khi đã gợi ý phòng cụ thể`;
 
-    // Validate history
-    const validHistory = (history || []).filter(item => {
-      return item && item.role && item.parts && Array.isArray(item.parts) && 
-             item.parts.length > 0 && item.parts[0].text && item.parts[0].text.trim() !== '';
-    });
+      // Tạo chat session
+      const chat = model.startChat({
+        history: [
+          {
+            role: 'user',
+            parts: [{ text: searchSystemPrompt }],
+          },
+          {
+            role: 'model',
+            parts: [{ text: 'Xin chào! 👋 Tôi là trợ lý tìm kiếm phòng trọ bằng AI. Hãy cho tôi biết bạn đang tìm kiếm loại phòng như thế nào nhé? 🏠' }],
+          },
+          ...validHistory
+        ],
+      });
 
-    // Tạo chat session
-    const chat = model.startChat({
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: searchSystemPrompt }],
-        },
-        {
-          role: 'model',
-          parts: [{ text: 'Xin chào! 👋 Tôi là trợ lý tìm kiếm phòng trọ bằng AI. Hãy cho tôi biết bạn đang tìm kiếm loại phòng như thế nào nhé? 🏠' }],
-        },
-        ...validHistory
-      ],
-    });
+      // Gửi message với retry logic
+      const result = await retryWithBackoff(async () => {
+        return await chat.sendMessage(message);
+      }, 2, 1000); // Retry up to 2 times for search
+      
+      const response = result.response;
+      const text = response.text();
 
-    // Gửi message
-    const result = await chat.sendMessage(message);
-    const response = result.response;
-    const text = response.text();
+      // Parse kết quả tìm kiếm
+      let propertyIds = [];
+      let cleanText = text;
+      
+      // Tìm [RESULTS:ID1,ID2,ID3]
+      const resultsMatch = text.match(/\[RESULTS:(.*?)\]/);
+      if (resultsMatch) {
+        const idsString = resultsMatch[1];
+        propertyIds = idsString.split(',').map(id => id.trim()).filter(id => id);
+        cleanText = text.replace(/\[RESULTS:.*?\]/, '').trim();
+      }
 
-    // Parse kết quả tìm kiếm
-    let propertyIds = [];
-    let cleanText = text;
-    
-    // Tìm [RESULTS:ID1,ID2,ID3]
-    const resultsMatch = text.match(/\[RESULTS:(.*?)\]/);
-    if (resultsMatch) {
-      const idsString = resultsMatch[1];
-      propertyIds = idsString.split(',').map(id => id.trim()).filter(id => id);
-      cleanText = text.replace(/\[RESULTS:.*?\]/, '').trim();
+      const isComplete = propertyIds.length > 0;
+
+      return {
+        success: true,
+        message: cleanText,
+        isComplete: isComplete,
+        propertyIds: propertyIds,
+        usingGemini: true,
+        fallbackUsed: true,
+        timestamp: new Date()
+      };
+    } catch (geminiError) {
+      console.error('Gemini Search Error:', geminiError);
+      return {
+        success: false,
+        error: 'ALL_AI_FAILED',
+        quotaExceeded: true,
+        message: 'AI search đang quá tải. Hệ thống sẽ tự động chuyển sang tìm kiếm thông thường. 🔍',
+      };
     }
-
-    const isComplete = propertyIds.length > 0;
-
-    return {
-      success: true,
-      message: cleanText,
-      isComplete: isComplete,
-      propertyIds: propertyIds,
-      timestamp: new Date()
-    };
-  } catch (error) {
-    console.error('AI Search Error:', error);
-    return {
-      success: false,
-      error: error.message,
-      message: 'Xin lỗi, tôi gặp sự cố kỹ thuật. Vui lòng thử lại! 😔'
-    };
   }
 };
 
@@ -504,7 +740,7 @@ LƯU Ý:
 exports.analyzePropertyImage = async (imageUrl) => {
   try {
     // Gemini Vision API để phân tích hình ảnh
-    const visionModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const visionModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-latest' });
 
     const prompt = `Phân tích hình ảnh phòng trọ/nhà cho thuê này và đánh giá:
 1. Chất lượng nội thất (1-10)

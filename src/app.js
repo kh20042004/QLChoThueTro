@@ -71,6 +71,13 @@ app.use('/api/universities', require('./routes/universityRoutes'));
 app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/moderation', require('./routes/moderationRoutes'));
+
+// Partials Routes - Phục vụ các file HTML partial
+app.get('/partials/:filename', (req, res) => {
+  const filename = req.params.filename;
+  res.sendFile(path.join(__dirname, `../views/partials/${filename}`));
+});
 
 // View Routes - Trang chủ
 app.get('/', (req, res) => {

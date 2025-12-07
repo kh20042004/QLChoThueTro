@@ -27,6 +27,9 @@ const notificationSchema = new mongoose.Schema({
       'property_expired',      // Bài đăng đã hết hạn
       'property_new_nearby',   // Có bài đăng mới gần khu vực yêu thích
       'review_new',           // Có đánh giá mới
+      'review_approved',      // Đánh giá được phê duyệt
+      'review_rejected',      // Đánh giá bị từ chối
+      'review_pending',       // Đánh giá chờ kiểm duyệt
       'message_new',          // Tin nhắn mới
       'payment_success',      // Thanh toán thành công
       'payment_failed',       // Thanh toán thất bại

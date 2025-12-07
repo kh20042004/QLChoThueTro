@@ -4,25 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chính Sách Bảo Mật - HomeRent</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+    <!-- Tailwind CSS via jsDelivr -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#6B7280',
-            secondary: '#9CA3AF',
-            accent: '#4B5563',
-          },
-          fontFamily: {
-            sans: ['Roboto', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
   <style>
     @keyframes fadeInUp {
       from {
@@ -405,5 +393,15 @@
   
   <script src="/js/chat-badge.js"></script>
   <script src="/js/notification-badge.js"></script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
 </body>
 </html>

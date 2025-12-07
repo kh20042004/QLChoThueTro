@@ -231,36 +231,32 @@ function renderPropertiesGrid(properties) {
                     <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
                     ${property.address?.district || 'N/A'}, ${property.address?.city || 'N/A'}
                 </p>
-                <p class="text-xs text-gray-500 mb-4">
+                <p class="text-xs text-gray-500 mb-3">
                     <i class="fas fa-calendar mr-1"></i>
                     ${formatDate(property.createdAt)}
                 </p>
+                
+                <!-- Dropdown chọn trạng thái -->
+                <div class="mb-3" onclick="event.stopPropagation()">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                        <i class="fas fa-toggle-on mr-1"></i>Trạng thái:
+                    </label>
+                    <select onchange="updatePropertyStatus('${property._id}', this.value)" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            style="cursor: pointer;">
+                        <option value="available" ${property.status === 'available' ? 'selected' : ''}>✅ Còn trống</option>
+                        <option value="rented" ${property.status === 'rented' ? 'selected' : ''}>🏠 Đã thuê</option>
+                        <option value="pending" ${property.status === 'pending' ? 'selected' : ''}>⏳ Chờ duyệt</option>
+                        <option value="inactive" ${property.status === 'inactive' ? 'selected' : ''}>🔘 Tạm ngưng</option>
+                    </select>
+                </div>
+                
                 <div class="flex gap-2" onclick="event.stopPropagation()">
-                    ${property.status === 'pending' ? `
-                    <button onclick="event.stopPropagation(); approveProperty('${property._id}')" 
-                            class="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                            title="Duyệt bất động sản">
-                        <i class="fas fa-check mr-1"></i>Duyệt
-                    </button>
-                    <button onclick="event.stopPropagation(); rejectProperty('${property._id}')" 
-                            class="flex-1 px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                            title="Từ chối bất động sản">
-                        <i class="fas fa-times mr-1"></i>Từ chối
-                    </button>
-                    ` : `
                     <button onclick="event.stopPropagation(); viewProperty('${property._id}')" 
                             class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                             title="Xem chi tiết">
                         <i class="fas fa-eye mr-1"></i>Xem
                     </button>
-                    ${property.status === 'available' ? `
-                    <button onclick="event.stopPropagation(); rejectProperty('${property._id}')" 
-                            class="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                            title="Khóa bất động sản">
-                        <i class="fas fa-ban"></i>
-                    </button>
-                    ` : ''}
-                    `}
                     <button onclick="event.stopPropagation(); deleteProperty('${property._id}')" 
                             class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                             title="Xóa vĩnh viễn">
@@ -455,4 +451,105 @@ function initSidebar() {
             sidebar.classList.toggle('left-0');
         });
     }
+}
+
+/**
+ * Cập nhật trạng thái property
+ */
+async function updatePropertyStatus(propertyId, newStatus) {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        alert('Vui lòng đăng nhập lại!');
+        window.location.href = '/auth/login';
+        return;
+    }
+
+    // Hiển thị loading trên dropdown
+    const select = event.target;
+    const originalValue = select.dataset.originalValue || select.value;
+    select.disabled = true;
+    select.style.opacity = '0.6';
+
+    try {
+        console.log(`🔄 Updating property ${propertyId} status to: ${newStatus}`);
+
+        const response = await fetch(`/api/properties/${propertyId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Không thể cập nhật trạng thái');
+        }
+
+        if (result.success) {
+            console.log('✅ Status updated successfully:', result.message);
+            
+            // Hiển thị thông báo thành công
+            showNotification('success', result.message || 'Đã cập nhật trạng thái thành công!');
+            
+            // Cập nhật originalValue
+            select.dataset.originalValue = newStatus;
+            
+            // Reload danh sách để cập nhật badge và stats
+            setTimeout(() => {
+                loadProperties();
+            }, 500);
+        } else {
+            throw new Error(result.error || 'Không thể cập nhật trạng thái');
+        }
+    } catch (error) {
+        console.error('❌ Error updating status:', error);
+        showNotification('error', error.message || 'Lỗi khi cập nhật trạng thái!');
+        
+        // Khôi phục giá trị cũ
+        select.value = originalValue;
+    } finally {
+        select.disabled = false;
+        select.style.opacity = '1';
+    }
+}
+
+/**
+ * Hiển thị thông báo toast
+ */
+function showNotification(type, message) {
+    // Tạo container nếu chưa có
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        document.body.appendChild(container);
+    }
+
+    // Tạo notification
+    const notification = document.createElement('div');
+    notification.className = `px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-0 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span class="font-medium">${message}</span>
+        </div>
+    `;
+
+    container.appendChild(notification);
+
+    // Tự động xóa sau 3 giây
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
 }

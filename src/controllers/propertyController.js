@@ -6,8 +6,10 @@
  */
 
 const Property = require('../models/Property');
+const Notification = require('../models/Notification');
 const geocodingService = require('../services/geocodingService');
 const { uploadMultipleToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+// const moderationService = require('../services/moderationService'); // ❌ ĐÃ TẮT ML MODERATION
 
 /**
  * @desc    Lấy danh sách tất cả property
@@ -33,6 +35,12 @@ exports.getProperties = async (req, res, next) => {
     // Log để debug
     console.log('🔍 Query parameters:', req.query);
     console.log('🔍 Parsed query object:', queryObj);
+
+    // Chỉ hiển thị bài đăng đã được duyệt (auto_approved) trên trang công khai
+    // Trừ khi có query parameter showAll=true (dành cho admin)
+    if (!req.query.showAll) {
+      queryObj.moderationDecision = 'auto_approved';
+    }
 
     // Finding resource
     let query = Property.find(queryObj).populate('landlord', 'name email phone avatar');
@@ -143,7 +151,7 @@ exports.createProperty = async (req, res, next) => {
     console.log('User:', req.user?.id);
     
     // Validate required fields
-    const { type, title, description, price, area, bedrooms, bathrooms, street, province, district, ward } = req.body;
+    const { type, title, description, price, area, bedrooms, bathrooms, street, province, district, ward, address } = req.body;
 
     if (!type || !title || !description || !price || !area || !bedrooms || !bathrooms) {
       console.log('❌ Thiếu thông tin cơ bản');
@@ -161,19 +169,28 @@ exports.createProperty = async (req, res, next) => {
       });
     }
 
-    // Tạo địa chỉ đầy đủ
-    const fullAddress = `${street}, ${ward}, ${district}, ${province}`;
+    // Tạo địa chỉ đầy đủ TEXT - ưu tiên dùng field 'address' từ frontend (đã có text đầy đủ)
+    // Nếu không có thì fallback sang format từ các field riêng lẻ
+    const fullAddress = address || `${street}, ${ward}, ${district}, ${province}`;
 
-    // Tự động lấy tọa độ từ địa chỉ sử dụng Geocoding API
+    // Tự động lấy tọa độ từ địa chỉ TEXT (không phải ID số)
     let coordinates = null;
     try {
       console.log(`🌍 Đang lấy tọa độ cho địa chỉ: ${fullAddress}`);
       
+      // Parse địa chỉ thành các phần (street, ward, district, city)
+      // Frontend gửi: "51/34 Phú Mỹ, Phường 22, Quận Bình Thạnh, Thành phố Hồ Chí Minh"
+      const addressParts = fullAddress.split(',').map(part => part.trim());
+      const streetText = addressParts[0] || street;
+      const wardText = addressParts[1] || '';
+      const districtText = addressParts[2] || '';
+      const cityText = addressParts[3] || '';
+      
       const geoData = await geocodingService.getCoordinatesFromAddress(
-        street,
-        ward,
-        district,
-        province
+        streetText,
+        wardText,
+        districtText,
+        cityText
       );
       
       coordinates = [geoData.lng, geoData.lat]; // GeoJSON format: [longitude, latitude]
@@ -186,12 +203,35 @@ exports.createProperty = async (req, res, next) => {
       coordinates = [defaultCoords.lng, defaultCoords.lat];
     }
 
+    // Lấy thông tin contact từ user hiện tại
+    const user = await require('../models/User').findById(req.user.id);
+    
+    // Xử lý giá theo đơn vị
+    const priceUnit = req.body.priceUnit || 'trieu-thang';
+    let finalPrice = parseFloat(price);
+    
+    if (priceUnit === 'trieu-thang') {
+      // Chuyển từ triệu sang VND (6.2 triệu => 6,200,000 VND)
+      finalPrice = finalPrice * 1000000;
+    } else if (priceUnit === 'vnd-thang') {
+      // Đã là VND, giữ nguyên
+      finalPrice = finalPrice;
+    } else if (priceUnit === 'trieu-nam') {
+      // Chuyển triệu/năm sang VND/tháng
+      finalPrice = (finalPrice * 1000000) / 12;
+    } else if (priceUnit === 'usd-thang') {
+      // Chuyển USD sang VND (giả sử tỷ giá 24,000)
+      finalPrice = finalPrice * 24000;
+    }
+    
+    console.log(`💰 Giá: ${price} ${priceUnit} => ${finalPrice} VND/tháng`);
+    
     // Prepare property data với Mongoose schema
     const propertyData = {
       propertyType: type,
       title: title,
       description: description,
-      price: parseFloat(price),
+      price: finalPrice, // Lưu giá đã chuyển đổi sang VND/tháng
       area: parseFloat(area),
       bedrooms: parseInt(bedrooms),
       bathrooms: parseInt(bathrooms),
@@ -210,8 +250,15 @@ exports.createProperty = async (req, res, next) => {
         district: district,
         province: province
       },
+      contact: {
+        name: user?.name || req.user.name || 'Chủ nhà',
+        phone: user?.phone || req.body.phone || '0000000000',
+        email: user?.email || req.user.email,
+        zalo: user?.phone || req.body.phone,
+        facebook: user?.facebook || ''
+      },
       landlord: req.user.id,
-      status: 'available' // Mặc định là available (sẵn sàng cho thuê)
+      status: 'pending' // Mặc định là pending (chờ admin duyệt)
     };
 
     // Handle amenities
@@ -254,15 +301,22 @@ exports.createProperty = async (req, res, next) => {
       });
     }
 
+    // === BỎ ML MODERATION - Tự động duyệt tất cả bài đăng ===
+    // TẤT CẢ bài đăng đều được tự động duyệt (available)
+    propertyData.status = 'available';
+    
+    console.log('✅ Tự động duyệt bài đăng (ML Moderation đã tắt)');
+
     // Create property
     const property = await Property.create(propertyData);
 
     // Log the action
     console.log(`✅ Người dùng ${req.user.id} vừa tạo tin đăng ${property._id} tại ${fullAddress} (${coordinates})`);
+    console.log(`   Status: ${property.status} (tự động duyệt)`);
 
     res.status(201).json({
       success: true,
-      message: 'Đăng tin thành công! Tin đăng của bạn đã được đăng.',
+      message: '✅ Đăng tin thành công! Tin đăng của bạn đã được phê duyệt và đang hiển thị công khai.',
       data: property
     });
   } catch (error) {
@@ -518,6 +572,114 @@ exports.getPropertiesInRadius = async (req, res, next) => {
       data: properties
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Cập nhật trạng thái property (available, rented, inactive)
+ * @route   PATCH /api/properties/:id/status
+ * @access  Private (Owner, Admin)
+ */
+exports.updatePropertyStatus = async (req, res, next) => {
+  try {
+    const { status, reason } = req.body;
+
+    // Validate status
+    const validStatuses = ['available', 'rented', 'pending', 'inactive', 'rejected'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trạng thái không hợp lệ. Vui lòng chọn: available, rented, pending, inactive, hoặc rejected'
+      });
+    }
+
+    let property = await Property.findById(req.params.id).populate('landlord', 'name email');
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        error: 'Không tìm thấy phòng'
+      });
+    }
+
+    // Kiểm tra ownership
+    if (property.landlord._id.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Bạn không có quyền cập nhật trạng thái phòng này'
+      });
+    }
+
+    const oldStatus = property.status;
+
+    // Cập nhật status - Dùng findByIdAndUpdate để tránh validate toàn bộ document
+    property = await Property.findByIdAndUpdate(
+      req.params.id,
+      { status: status },
+      { 
+        new: true,              // Trả về document mới sau khi update
+        runValidators: false    // Không validate các field khác (tránh lỗi enum cũ)
+      }
+    ).populate('landlord', 'name email');
+
+    console.log(`✅ User ${req.user.id} đã cập nhật status của property ${property._id}: ${oldStatus} → ${status}`);
+
+    // Tạo thông báo cho chủ nhà nếu admin duyệt/từ chối
+    if (req.user.role === 'admin' && property.landlord) {
+      try {
+        // Từ pending → available (Duyệt bài)
+        if (oldStatus === 'pending' && status === 'available') {
+          await Notification.create({
+            user: property.landlord._id,
+            type: 'property_approved',
+            title: 'Bài đăng đã được duyệt',
+            message: `Bài đăng "${property.title}" của bạn đã được admin phê duyệt và đang hiển thị công khai.`,
+            link: `/properties/${property._id}`,
+            relatedProperty: property._id
+          });
+          console.log(`📧 Sent approval notification to user ${property.landlord._id}`);
+        }
+        
+        // Từ pending → rejected hoặc inactive (Từ chối bài)
+        if (oldStatus === 'pending' && (status === 'rejected' || status === 'inactive')) {
+          const rejectReason = reason || 'Bài đăng không đạt tiêu chuẩn';
+          await Notification.create({
+            user: property.landlord._id,
+            type: 'property_rejected',
+            title: 'Bài đăng bị từ chối',
+            message: `Bài đăng "${property.title}" của bạn đã bị từ chối. Lý do: ${rejectReason}`,
+            link: `/my-properties`,
+            relatedProperty: property._id
+          });
+          console.log(`📧 Sent rejection notification to user ${property.landlord._id}`);
+        }
+
+        // Bất kỳ status → available (Kích hoạt lại)
+        if (oldStatus !== 'available' && status === 'available' && oldStatus !== 'pending') {
+          await Notification.create({
+            user: property.landlord._id,
+            type: 'property_approved',
+            title: 'Bài đăng đã được kích hoạt',
+            message: `Bài đăng "${property.title}" của bạn đã được kích hoạt lại và đang hiển thị công khai.`,
+            link: `/properties/${property._id}`,
+            relatedProperty: property._id
+          });
+          console.log(`📧 Sent reactivation notification to user ${property.landlord._id}`);
+        }
+      } catch (notifError) {
+        console.error('❌ Error creating notification:', notifError);
+        // Không throw error, chỉ log
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Đã cập nhật trạng thái thành "${status}"`,
+      data: property
+    });
+  } catch (error) {
+    console.error('❌ Error updating property status:', error);
     next(error);
   }
 };

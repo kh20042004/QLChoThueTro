@@ -10,42 +10,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tìm Phòng - HomeRent</title>
     
+    
+    <!-- Tailwind CSS via jsDelivr -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- ===== Thư viện CSS ===== -->
     <!-- Tailwind CSS - Framework CSS utility-first cho styling nhanh -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
     
     <!-- Font Awesome - Thư viện icon đầy đủ cho UI -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS - Thư viện bản đồ tương tác hiển thị vị trí phòng/nhà -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
+    <!-- Goong Map CSS - Thư viện bản đồ tương tác hiển thị vị trí phòng/nhà -->
+    <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet" />
     
     <!-- Google Fonts - Font chữ Inter cho toàn bộ trang -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- ===== Cấu hình Tailwind CSS ===== -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    // Bảng màu tùy chỉnh
-                    colors: {
-                        primary: '#6B7280',    // Xám chính - màu sắc chủ
-                        secondary: '#9CA3AF',  // Xám phụ - màu hỗ trợ
-                        accent: '#4B5563',     // Xám đậm - điểm nhấn
-                        light: '#F9FAFB',      // Xám sáng - nền nhạt
-                        dark: '#1F2937'        // Xám đen - nền tối
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif']  // Font chữ mặc định
-                    }
-                }
-            }
-        }
-    </script>
-    
     <!-- ===== Style tùy chỉnh và Animation ===== -->
     <style>
         /* ===== ANIMATION TÙY CHỈNH ===== */
@@ -177,10 +159,12 @@
                         <!-- User Menu (Logged in) -->
                         <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
                             <!-- Notifications -->
-                            <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
-                                <i class="fas fa-bell text-xl"></i>
-                                <span id="notificationBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">id="notificationBadge" style="display: none;">0</span>
-                            </a>
+                            <div class="notification-bell-container relative">
+                                <button class="notification-bell-icon p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300 bg-transparent border-0 cursor-pointer" type="button" title="Thông báo">
+                                    <i class="fas fa-bell text-xl"></i>
+                                    <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+                                </button>
+                            </div>
                             
                             <!-- Favorites -->
                             <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
@@ -264,22 +248,50 @@
                     <!-- Search Box -->
                     <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 animate-fadeInUp delay-200">
                         <form id="searchForm" class="space-y-4">
+                            <!-- AI NLP Search Bar -->
+                            <div class="relative mb-6">
+                                <div class="flex items-center gap-2 w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 focus-within:border-gray-500 transition-all duration-300 shadow-sm">
+                                    <i class="fas fa-robot text-gray-500 text-lg"></i>
+                                    <input 
+                                        type="text" 
+                                        id="propertiesNlpSearch"
+                                        placeholder="Tìm kiếm thông minh: 'Tìm phòng gần BK, 3-4tr, có ban công, cho nữ'..."
+                                        class="flex-1 outline-none text-gray-700 placeholder-gray-400"
+                                    />
+                                    <button type="button" id="propertiesVoiceBtn" class="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Tìm kiếm bằng giọng nói">
+                                        <i class="fas fa-microphone text-gray-500"></i>
+                                    </button>
+                                    <span class="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded" id="propertiesLangIndicator">VI</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2 text-center">
+                                    <i class="fas fa-lightbulb text-yellow-500"></i> 
+                                    Hỗ trợ tìm kiếm bằng ngôn ngữ tự nhiên và giọng nói
+                                </p>
+                            </div>
+
+                            <!-- Traditional Search Filters -->
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <select name="type" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="propertyType">
                                     <option value="">Loại hình</option>
-                                    <option value="phong-tro">Phòng trọ</option>
-                                    <option value="nha-nguyen-can">Nhà nguyên căn</option>
-                                    <option value="can-ho">Căn hộ</option>
-                                    <option value="chung-cu-mini">Chung cư mini</option>
+                                    <option value="Phòng trọ">Phòng trọ</option>
+                                    <option value="Nhà nguyên căn">Nhà nguyên căn</option>
+                                    <option value="Căn hộ">Căn hộ</option>
+                                    <option value="Chung cư mini">Chung cư mini</option>
+                                    <option value="Studio">Studio</option>
+                                    <option value="Homestay">Homestay</option>
                                 </select>
                                 
                                 <select name="location" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="location">
                                     <option value="">Khu vực</option>
                                     <option value="Hà Nội">Hà Nội</option>
-                                    <option value="TP.HCM">TP. Hồ Chí Minh</option>
+                                    <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
                                     <option value="Đà Nẵng">Đà Nẵng</option>
                                     <option value="Hải Phòng">Hải Phòng</option>
                                     <option value="Cần Thơ">Cần Thơ</option>
+                                    <option value="Đồng Nai">Đồng Nai</option>
+                                    <option value="Khánh Hòa">Khánh Hòa</option>
+                                    <option value="Lâm Đồng">Lâm Đồng</option>
+                                    <option value="Quảng Nam">Quảng Nam</option>
                                 </select>
                                 
                                 <select name="price" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="priceRange">
@@ -521,17 +533,27 @@
     <script src="/js/auth.js"></script>
     <script src="/js/favorites.js"></script>
     
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
+    <!-- Goong Map JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
+    
+    <!-- Header NLP Search - AI-powered search -->
+    <script src="/js/header-nlp-search.js"></script>
     
     <!-- Properties Page Script -->
+    <script src="/js/smart-search.js"></script>
     <script src="/js/properties.js"></script>
     <script src="/js/ai-search.js"></script>
     <script src="/js/nearby-search.js"></script>
     <script src="/js/chat-badge.js"></script>
     <script src="/js/notification-badge.js"></script>
+    
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
     
     <!-- AI Chatbot Widget -->
     <link rel="stylesheet" href="/css/chatbot.css">

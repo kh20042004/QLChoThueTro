@@ -16,10 +16,8 @@
     <!-- Font Awesome - Icon library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS - Thư viện bản đồ tương tác -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin=""/>
+    <!-- Goong Map CSS - Thư viện bản đồ tương tác -->
+    <link href="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css" rel="stylesheet" />
     
     <!-- Google Fonts - Font chữ Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -174,10 +172,13 @@
                         <!-- User Menu (Logged in) -->
                         <div class="hidden md:flex items-center space-x-4" id="navbarUser" style="display: none;">
                             <!-- Notifications -->
-                            <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
-                                <i class="fas fa-bell text-xl"></i>
-                                <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full" style="display: none;">0</span>
-                            </a>
+                            <div class="notification-bell-container relative">
+                                <button class="notification-bell-icon p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300 bg-transparent border-0 cursor-pointer" type="button" title="Thông báo">
+                                    <i class="fas fa-bell text-xl"></i>
+                                    <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+                                </button>
+                                <!-- Dropdown will be injected here by notification-dropdown.js -->
+                            </div>
                             
                             <!-- Favorites -->
                             <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
@@ -263,6 +264,28 @@
                         <!-- Search Box -->
                         <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 md:p-8 animate-fadeInUp delay-200">
                             <form id="searchForm" class="space-y-4">
+                                <!-- AI NLP Search Bar -->
+                                <div class="relative mb-6">
+                                    <div class="flex items-center gap-2 w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 focus-within:border-gray-500 transition-all duration-300 shadow-sm">
+                                        <i class="fas fa-robot text-gray-500 text-lg"></i>
+                                        <input 
+                                            type="text" 
+                                            id="heroNlpSearch"
+                                            placeholder="Tìm kiếm thông minh: 'Tìm phòng gần BK, 3-4tr, có ban công, cho nữ'..."
+                                            class="flex-1 outline-none text-gray-700 placeholder-gray-400"
+                                        />
+                                        <button type="button" id="heroVoiceBtn" class="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Tìm kiếm bằng giọng nói">
+                                            <i class="fas fa-microphone text-gray-500"></i>
+                                        </button>
+                                        <span class="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded" id="heroLangIndicator">VI</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">
+                                        <i class="fas fa-lightbulb text-yellow-500"></i> 
+                                        Hỗ trợ tìm kiếm bằng ngôn ngữ tự nhiên và giọng nói
+                                    </p>
+                                </div>
+
+                                <!-- Traditional Search Filters -->
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-300" id="propertyType">
                                         <option value="">Loại hình</option>
@@ -677,10 +700,8 @@
         </div>
 
     <!-- Scripts -->
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-            crossorigin=""></script>
+    <!-- Goong Map JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>
     
     <script src="/js/main.js"></script>
     <script src="/js/auth.js"></script>
@@ -688,6 +709,15 @@
     <script src="/js/nearby-search.js"></script>
     <script src="/js/chat-badge.js"></script>
     <script src="/js/notification-badge.js"></script>
+    <script src="/js/header-nlp-search.js"></script>
+    
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
     
     <!-- AI Chatbot Widget -->
     <link rel="stylesheet" href="/css/chatbot.css">

@@ -95,6 +95,51 @@ exports.getUnreadCount = async (req, res) => {
 };
 
 /**
+ * @desc    Lấy chi tiết một notification
+ * @route   GET /api/notifications/:id
+ * @access  Private
+ */
+exports.getNotificationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const notification = await Notification.findOne({
+      _id: id,
+      user: userId
+    }).lean();
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông báo'
+      });
+    }
+
+    // Add timeAgo
+    const now = new Date();
+    const diff = now - notification.createdAt;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) notification.timeAgo = 'Vừa xong';
+    else if (minutes < 60) notification.timeAgo = `${minutes} phút trước`;
+    else if (hours < 24) notification.timeAgo = `${hours} giờ trước`;
+    else if (days < 7) notification.timeAgo = `${days} ngày trước`;
+    else notification.timeAgo = notification.createdAt.toLocaleDateString('vi-VN');
+
+    res.json(notification);
+  } catch (error) {
+    console.error('Error getting notification by ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Không thể lấy chi tiết thông báo'
+    });
+  }
+};
+
+/**
  * @desc    Đánh dấu notification đã đọc
  * @route   PUT /api/notifications/:id/read
  * @access  Private
@@ -220,6 +265,36 @@ exports.deleteNotification = async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting notification:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Không thể xóa thông báo'
+    });
+  }
+};
+
+/**
+ * @desc    Xóa notification theo reviewId (cho admin cleanup)
+ * @route   DELETE /api/notifications/by-review/:reviewId
+ * @access  Private
+ */
+exports.deleteByReviewId = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    // Delete all notifications related to this review
+    const result = await Notification.deleteMany({
+      'data.reviewId': reviewId
+    });
+
+    console.log(`🗑️ Deleted ${result.deletedCount} notification(s) for review ${reviewId}`);
+
+    res.json({
+      success: true,
+      message: 'Đã xóa thông báo liên quan',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting notifications by reviewId:', error);
     res.status(500).json({
       success: false,
       message: 'Không thể xóa thông báo'

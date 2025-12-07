@@ -7,6 +7,9 @@
 
 // Biến lưu trữ dữ liệu
 let allUsers = [];
+let filteredUsers = [];
+let currentPage = 1;
+let itemsPerPage = 10;
 
 document.addEventListener('DOMContentLoaded', function() {
     initSidebar();
@@ -48,7 +51,7 @@ function filterUsers() {
     const roleValue = roleFilter ? roleFilter.value : '';
     const statusValue = statusFilter ? statusFilter.value : '';
 
-    const filteredUsers = allUsers.filter(user => {
+    filteredUsers = allUsers.filter(user => {
         const matchSearch = !searchTerm || 
             user.name.toLowerCase().includes(searchTerm) ||
             user.email.toLowerCase().includes(searchTerm) ||
@@ -63,7 +66,8 @@ function filterUsers() {
         return matchSearch && matchRole && matchStatus;
     });
 
-    renderUsersTable(filteredUsers);
+    currentPage = 1; // Reset về trang 1 khi filter
+    renderUsersTable();
 }
 
 /**
@@ -133,7 +137,8 @@ async function loadUsers() {
         
         if (result.success) {
             allUsers = result.data; // Lưu vào biến global
-            renderUsersTable(allUsers);
+            filteredUsers = result.data; // Khởi tạo filteredUsers
+            renderUsersTable();
             
             // Cập nhật số lượng users
             const totalUsersElement = document.querySelector('.text-2xl.font-bold');
@@ -160,10 +165,17 @@ async function loadUsers() {
 /**
  * Render bảng users
  */
-function renderUsersTable(users) {
+function renderUsersTable() {
     const tableBody = document.getElementById('usersTableBody');
     
-    if (users.length === 0) {
+    // Tính toán phân trang
+    const totalItems = filteredUsers.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentUsers = filteredUsers.slice(startIndex, endIndex);
+    
+    if (currentUsers.length === 0) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="px-6 py-8 text-center text-gray-500">
@@ -171,10 +183,11 @@ function renderUsersTable(users) {
                 </td>
             </tr>
         `;
+        renderPagination(0, 0, 0);
         return;
     }
 
-    tableBody.innerHTML = users.map(user => `
+    tableBody.innerHTML = currentUsers.map(user => `
         <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4">
                 <div class="flex items-center space-x-3">
@@ -222,6 +235,78 @@ function renderUsersTable(users) {
             </td>
         </tr>
     `).join('');
+    
+    // Render pagination
+    renderPagination(totalItems, totalPages, startIndex);
+}
+
+/**
+ * Render pagination
+ */
+function renderPagination(totalItems, totalPages, startIndex) {
+    const paginationContainer = document.querySelector('.px-6.py-4.border-t.border-gray-200');
+    
+    if (!paginationContainer) return;
+    
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    
+    paginationContainer.innerHTML = `
+        <div class="text-sm text-gray-600">
+            Hiển thị <span class="font-medium">${totalItems > 0 ? startIndex + 1 : 0}-${endIndex}</span> trong tổng số <span class="font-medium">${totalItems}</span> người dùng
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="goToPage(${currentPage - 1})" 
+                    class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                    ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            ${generatePageButtons(totalPages)}
+            <button onclick="goToPage(${currentPage + 1})" 
+                    class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                    ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Generate page buttons
+ */
+function generatePageButtons(totalPages) {
+    if (totalPages === 0) return '';
+    
+    let buttons = '';
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        buttons += `
+            <button onclick="goToPage(${i})" 
+                    class="px-3 py-2 ${i === currentPage ? 'bg-pink-500 text-white' : 'border border-gray-300 hover:bg-gray-50'} rounded-lg transition-colors">
+                ${i}
+            </button>
+        `;
+    }
+    
+    return buttons;
+}
+
+/**
+ * Go to specific page
+ */
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderUsersTable();
 }
 
 /**
@@ -273,12 +358,8 @@ function getColorByRole(role) {
 }
 
 function getAvatarPlaceholder(name) {
-    if (!name) return 'https://via.placeholder.com/40/6b7280/ffffff?text=?';
-    const firstLetter = name.charAt(0).toUpperCase();
-    const colors = ['3b82f6', '10b981', 'f59e0b', 'ec4899', '8b5cf6'];
-    const colorIndex = name.charCodeAt(0) % colors.length;
-    const color = colors[colorIndex];
-    return `https://via.placeholder.com/40/${color}/ffffff?text=${firstLetter}`;
+    // Sử dụng avatar mặc định từ aic.com.vn
+    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmAqt8XfW8TPYtvewGnP8EdNCHfzu5iHvcVA&s';
 }
 
 function formatDate(dateString) {

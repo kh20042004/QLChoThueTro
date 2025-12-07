@@ -162,15 +162,22 @@ function initTabSwitching() {
  * Chuyển đổi nội dung tab
  */
 function switchTab(tabName) {
+    console.log('🔄 Switching to tab:', tabName);
+    
     // Ẩn tất cả tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.add('d-none');
+        tab.classList.remove('active');
+        tab.classList.add('hidden');
     });
 
     // Hiển thị tab được chọn
     const selectedTab = document.getElementById(tabName + 'Tab');
     if (selectedTab) {
-        selectedTab.classList.remove('d-none');
+        selectedTab.classList.add('active');
+        selectedTab.classList.remove('hidden');
+        console.log('✅ Tab displayed:', tabName);
+    } else {
+        console.error('❌ Tab not found:', tabName + 'Tab');
     }
 }
 
@@ -182,18 +189,33 @@ function initFormHandlers() {
     const infoForm = document.getElementById('infoForm');
     if (infoForm) {
         infoForm.addEventListener('submit', handleInfoFormSubmit);
+        console.log('✅ Info form listener attached');
     }
 
     // Form đổi mật khẩu
     const passwordForm = document.getElementById('passwordForm');
     if (passwordForm) {
         passwordForm.addEventListener('submit', handlePasswordFormSubmit);
+        console.log('✅ Password form listener attached');
+        
+        // Debug: thêm click listener cho button
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', function(e) {
+                console.log('🔘 Change password button clicked!');
+                console.log('Button type:', e.target.type);
+                console.log('Form:', passwordForm);
+            });
+        }
+    } else {
+        console.warn('⚠️ Password form not found!');
     }
 
     // Form địa chỉ
     const addressForm = document.getElementById('addressForm');
     if (addressForm) {
         addressForm.addEventListener('submit', handleAddressFormSubmit);
+        console.log('✅ Address form listener attached');
     }
 
     // Form tùy chọn
@@ -609,19 +631,57 @@ async function handleInfoFormSubmit(e) {
  */
 async function handlePasswordFormSubmit(e) {
     e.preventDefault();
+    console.log('🔐 Password form submitted');
 
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
 
-    // Kiểm tra mật khẩu xác nhận
-    if (newPassword !== confirmPassword) {
-        document.getElementById('confirmPassword').classList.add('is-invalid');
+    // Reset validation states
+    document.getElementById('currentPassword').classList.remove('is-invalid');
+    document.getElementById('newPassword').classList.remove('is-invalid');
+    document.getElementById('confirmPassword').classList.remove('is-invalid');
+
+    // Validation
+    if (!currentPassword) {
+        showErrorAlert('Vui lòng nhập mật khẩu hiện tại', e.target);
+        document.getElementById('currentPassword').classList.add('is-invalid');
+        document.getElementById('currentPassword').focus();
         return;
     }
 
-    if (!e.target.checkValidity()) {
-        e.target.classList.add('was-validated');
+    if (!newPassword) {
+        showErrorAlert('Vui lòng nhập mật khẩu mới', e.target);
+        document.getElementById('newPassword').classList.add('is-invalid');
+        document.getElementById('newPassword').focus();
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showErrorAlert('Mật khẩu mới phải có ít nhất 8 ký tự', e.target);
+        document.getElementById('newPassword').classList.add('is-invalid');
+        document.getElementById('newPassword').focus();
+        return;
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+        showErrorAlert('Mật khẩu mới phải có chữ hoa, chữ thường và số', e.target);
+        document.getElementById('newPassword').classList.add('is-invalid');
+        document.getElementById('newPassword').focus();
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showErrorAlert('Mật khẩu xác nhận không khớp', e.target);
+        document.getElementById('confirmPassword').classList.add('is-invalid');
+        document.getElementById('confirmPassword').focus();
+        return;
+    }
+
+    if (currentPassword === newPassword) {
+        showErrorAlert('Mật khẩu mới phải khác mật khẩu hiện tại', e.target);
+        document.getElementById('newPassword').classList.add('is-invalid');
+        document.getElementById('newPassword').focus();
         return;
     }
 
@@ -631,8 +691,10 @@ async function handlePasswordFormSubmit(e) {
     };
 
     try {
-        showLoadingButton(e.target.querySelector('button[type="submit"]'));
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        showLoadingButton(submitBtn);
 
+        console.log('🚀 Sending password change request...');
         const response = await fetch('/api/auth/change-password', {
             method: 'POST',
             headers: {
@@ -642,19 +704,33 @@ async function handlePasswordFormSubmit(e) {
             body: JSON.stringify(data)
         });
 
-        hideLoadingButton(e.target.querySelector('button[type="submit"]'));
+        hideLoadingButton(submitBtn);
+
+        const result = await response.json();
+        console.log('📥 Response:', result);
 
         if (response.ok) {
-            showSuccessAlert('Mật khẩu đã được thay đổi thành công!', e.target);
+            showSuccessAlert('✅ Mật khẩu đã được thay đổi thành công!', e.target);
             e.target.reset();
+            
+            // Sau 2 giây, đăng xuất và yêu cầu đăng nhập lại
+            setTimeout(() => {
+                alert('Vui lòng đăng nhập lại với mật khẩu mới');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userData');
+                window.location.href = '/auth/login';
+            }, 2000);
         } else {
-            const error = await response.json();
-            showErrorAlert(error.error || 'Thay đổi mật khẩu thất bại', e.target);
+            showErrorAlert(result.error || 'Thay đổi mật khẩu thất bại', e.target);
+            if (result.error && result.error.includes('không đúng')) {
+                document.getElementById('currentPassword').classList.add('is-invalid');
+                document.getElementById('currentPassword').focus();
+            }
         }
     } catch (error) {
         hideLoadingButton(e.target.querySelector('button[type="submit"]'));
-        console.error('Error:', error);
-        showErrorAlert('Có lỗi xảy ra. Vui lòng thử lại.', e.target);
+        console.error('❌ Error:', error);
+        showErrorAlert('Có lỗi xảy ra. Vui lòng thử lại sau.', e.target);
     }
 }
 

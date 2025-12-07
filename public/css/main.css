@@ -903,5 +903,202 @@ img {
 }
 
 /* ===================================
+   AI SEARCH IN HEADER
+   =================================== */
+.ai-search-wrapper {
+    max-width: 600px;
+}
+
+.ai-search-input {
+    padding: 0.75rem 140px 0.75rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.ai-search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.ai-search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ai-search-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #21618c);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.voice-search-btn {
+    position: absolute;
+    right: 90px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.5rem 0.75rem;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-search-btn:hover {
+    background: #f8f9fa;
+    border-color: #3498db;
+}
+
+.voice-search-btn.listening {
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.1);
+    }
+}
+
+.lang-indicator {
+    position: absolute;
+    right: 150px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    pointer-events: none;
+}
+
+/* Mobile AI Search */
+.ai-search-wrapper-mobile .ai-search-input {
+    padding-right: 100px;
+}
+
+.ai-search-wrapper-mobile .ai-search-btn {
+    right: 5px;
+    padding: 0.4rem 0.8rem;
+}
+
+.ai-search-wrapper-mobile .voice-search-btn {
+    right: 75px;
+    padding: 0.4rem 0.6rem;
+}
+
+/* NLP Search Results Modal */
+.nlp-results-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 80px;
+    overflow-y: auto;
+}
+
+.nlp-results-modal.active {
+    display: flex;
+}
+
+.nlp-results-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 1200px;
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nlp-results-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+.nlp-results-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 0.5rem;
+    line-height: 1;
+}
+
+.nlp-results-close:hover {
+    color: #e74c3c;
+}
+
+.nlp-results-body {
+    padding: 1.5rem;
+}
+
+/* Loading spinner for NLP search */
+.nlp-loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .lang-indicator {
+        display: none;
+    }
+}
+
+/* ===================================
    END OF STYLESHEET
    =================================== */

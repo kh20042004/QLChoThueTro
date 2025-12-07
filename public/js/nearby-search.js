@@ -197,36 +197,26 @@ class NearbySearch {
     }
 
     initMap() {
-        // Create map centered on user location
-        this.map = L.map('nearbyMap').setView([this.userLocation.lat, this.userLocation.lng], 14);
-
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(this.map);
-
-        // Add user location marker
-        const userIcon = L.divIcon({
-            className: 'user-location-marker',
-            html: '<div style="background: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+        // Create map centered on user location with Goong Map JS
+        goongjs.accessToken = '3wUhxxPZujfl6OwVJ9N7YdDlGP6pJU62zw5PT4pg';
+        this.map = new goongjs.Map({
+            container: 'nearbyMap',
+            style: 'https://tiles.goong.io/assets/goong_map_web.json',
+            center: [this.userLocation.lng, this.userLocation.lat],
+            zoom: 14
         });
 
-        this.userMarker = L.marker([this.userLocation.lat, this.userLocation.lng], {
-            icon: userIcon
-        }).addTo(this.map);
-
-        this.userMarker.bindPopup('<div class="text-center"><strong>Vị trí của bạn</strong><br/><small>📍 Đang ở đây</small></div>');
-
-        // Add radius circle
-        this.radiusCircle = L.circle([this.userLocation.lat, this.userLocation.lng], {
-            color: '#6B7280',
-            fillColor: '#6B7280',
-            fillOpacity: 0.1,
-            radius: this.currentRadius * 1000 // Convert km to meters
-        }).addTo(this.map);
+        // Add user location marker
+        const el = document.createElement('div');
+        el.style.cssText = 'background: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;';
+        
+        const popup = new goongjs.Popup({ offset: 25 })
+            .setHTML('<div class="text-center"><strong>Vị trí của bạn</strong><br/><small>📍 Đang ở đây</small></div>');
+        
+        this.userMarker = new goongjs.Marker(el)
+            .setLngLat([this.userLocation.lng, this.userLocation.lat])
+            .setPopup(popup)
+            .addTo(this.map);
     }
 
     async loadNearbyProperties() {
@@ -251,11 +241,6 @@ class NearbySearch {
         // Clear existing markers
         this.propertyMarkers.forEach(marker => marker.remove());
         this.propertyMarkers = [];
-
-        // Update radius circle
-        if (this.radiusCircle) {
-            this.radiusCircle.setRadius(this.currentRadius * 1000);
-        }
 
         // Filter properties within radius
         const nearbyProperties = this.properties.filter(property => {
@@ -296,27 +281,18 @@ class NearbySearch {
 
             const [lng, lat] = property.location.coordinates;
 
-            // Create custom icon with price
-            const icon = L.divIcon({
-                className: 'property-marker',
-                html: `
-                    <div style="background: white; padding: 4px 8px; border-radius: 8px; border: 2px solid #374151; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 12px; font-weight: 600; white-space: nowrap;">
-                        ${(property.price / 1000000).toFixed(1)}tr
-                    </div>
-                `,
-                iconSize: [60, 30],
-                iconAnchor: [30, 15]
-            });
-
-            const marker = L.marker([lat, lng], { icon })
-                .addTo(this.map);
+            // Create custom marker element
+            const el = document.createElement('div');
+            el.style.cssText = 'background: white; padding: 4px 8px; border-radius: 8px; border: 2px solid #374151; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer;';
+            el.textContent = `${(property.price / 1000000).toFixed(1)}tr`;
 
             // Popup content
             const popupContent = `
                 <div class="p-2" style="min-width: 200px;">
                     <img src="${property.images && property.images[0] ? property.images[0] : '/images/placeholder.jpg'}" 
                          alt="${property.title}" 
-                         class="w-full h-32 object-cover rounded-lg mb-2">
+                         class="w-full h-32 object-cover rounded-lg mb-2"
+                         onerror="this.src='/images/placeholder.jpg'">
                     <h4 class="font-semibold text-gray-800 mb-1">${property.title}</h4>
                     <p class="text-sm text-gray-600 mb-1">
                         <i class="fas fa-map-marker-alt text-gray-400"></i> 
@@ -341,10 +317,13 @@ class NearbySearch {
                 </div>
             `;
 
-            marker.bindPopup(popupContent, {
-                maxWidth: 250,
-                className: 'custom-popup'
-            });
+            const popup = new goongjs.Popup({ offset: 25, maxWidth: '250px' })
+                .setHTML(popupContent);
+
+            const marker = new goongjs.Marker(el)
+                .setLngLat([lng, lat])
+                .setPopup(popup)
+                .addTo(this.map);
 
             this.propertyMarkers.push(marker);
         });

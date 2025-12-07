@@ -497,8 +497,15 @@ class AISearch {
             this.hideTyping();
 
             if (data.success) {
-                // Thêm response của AI
-                this.addMessage('ai', data.data.message);
+                // Check if using Groq
+                if (data.usingGroq) {
+                    this.addMessage('ai', '🔄 Đang sử dụng Groq AI...\n\n' + data.data.message);
+                } else if (data.fallbackUsed) {
+                    this.addMessage('ai', '⚠️ AI đang quá tải, hệ thống đã chuyển sang tìm kiếm thông thường.\n\n' + data.data.message);
+                } else {
+                    // Thêm response của AI
+                    this.addMessage('ai', data.data.message);
+                }
 
                 // Nếu AI đã hoàn thành tìm kiếm và có properties
                 if (data.data.isComplete && data.data.properties && data.data.properties.length > 0) {

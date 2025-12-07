@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Tin Cho Thuê - HomeRent</title>
     
-    <!-- Tailwind CSS -->
+    
+    <!-- Tailwind CSS via jsDelivr -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <!-- Main CSS - Local fallback -->
+    <link rel="stylesheet" href="/css/main.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,25 +21,6 @@
     <!-- Choices.js - Searchable Select -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
     <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6B7280',
-                        secondary: '#9CA3AF',
-                        accent: '#4B5563',
-                        light: '#F9FAFB',
-                        dark: '#1F2937'
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     
     <style>
         /* Custom animations */
@@ -338,7 +323,22 @@
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                                 Diện tích (m²) <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="area" placeholder="0" min="0" step="0.1" required>
+                                            <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="area" placeholder="0" min="8" step="0.1" required>
+                                            <p class="text-xs text-gray-500 mt-1">Diện tích sử dụng, tối thiểu 8m²</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Thông tin bổ sung cho AI -->
+                                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                                        <p class="text-sm text-gray-700 mb-3">
+                                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                            <strong>Lưu ý:</strong> Thông tin này giúp AI phân biệt phòng studio với phòng thường để gợi ý giá sát hơn.
+                                        </p>
+                                        <div class="flex items-center space-x-3 p-3 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="is_studio" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="is_studio" class="text-gray-700 cursor-pointer flex-1 font-medium">
+                                                <i class="fas fa-door-open mr-2 text-blue-600"></i>Phòng studio (không ngăn phòng ngủ riêng biệt)
+                                            </label>
                                         </div>
                                     </div>
 
@@ -363,54 +363,132 @@
                                 </h5>
                                 
                                 <div class="space-y-6">
+                                    <!-- 🔍 GOONG ADDRESS SEARCH (MỚI) -->
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                            Địa chỉ chi tiết <span class="text-red-500">*</span>
+                                            Tìm kiếm địa chỉ <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="street" placeholder="Số nhà, tên đường" required>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <i class="fas fa-search text-gray-400"></i>
+                                            </div>
+                                            <input 
+                                                type="text" 
+                                                id="addressSearch"
+                                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                                placeholder="Nhập địa chỉ (vd: 51/34 Phú Mỹ, Phú Nhuận, TP.HCM)"
+                                                autocomplete="off"
+                                                required
+                                            >
+                                            
+                                            <!-- Danh sách gợi ý từ Goong Autocomplete -->
+                                            <div id="addressSuggestions" class="relative z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto hidden">
+                                                <!-- Gợi ý sẽ được render bởi JS -->
+                                            </div>
+                                            
+                                            <!-- Loading indicator -->
+                                            <div id="addressLoading" class="absolute right-4 top-1/2 transform -translate-y-1/2 hidden">
+                                                <i class="fas fa-spinner fa-spin text-blue-500"></i>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Hiển thị địa chỉ đã chọn -->
+                                        <div id="selectedAddressDisplay" class="mt-3 hidden">
+                                            <div class="flex items-start gap-3 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                                                <i class="fas fa-map-marker-alt text-blue-600 mt-1"></i>
+                                                <div class="flex-1">
+                                                    <div class="text-sm font-semibold text-gray-800" id="selectedAddressText"></div>
+                                                    <div class="text-xs text-gray-600 mt-1">
+                                                        <span id="selectedCoordinates"></span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" id="clearAddressBtn" class="text-red-500 hover:text-red-700 transition-colors">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                Tỉnh/Thành phố <span class="text-red-500">*</span>
-                                            </label>
-                                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="province" required>
-                                                <option value="">-- Chọn tỉnh/thành phố --</option>
-                                                <optgroup label="Thành phố trực thuộc Trung ương">
-                                                    <option value="ho-chi-minh">TP. Hồ Chí Minh</option>
-                                                    <option value="hanoi">Hà Nội</option>
-                                                    <option value="da-nang">Đà Nẵng</option>
-                                                    <option value="can-tho">Cần Thơ</option>
-                                                    <option value="hai-phong">Hải Phòng</option>
-                                                </optgroup>
-                                                <optgroup label="Tỉnh/Thành phố khác">
-                                                    <option value="bien-hoa">Biên Hòa (Đồng Nai)</option>
-                                                    <option value="vung-tau">Vũng Tàu (Bà Rịa - Vũng Tàu)</option>
-                                                    <option value="nha-trang">Nha Trang (Khánh Hòa)</option>
-                                                    <option value="da-lat">Đà Lạt (Lâm Đồng)</option>
-                                                    <option value="hue">Huế (Thừa Thiên Huế)</option>
-                                                    <option value="quy-nhon">Quy Nhơn (Bình Định)</option>
-                                                </optgroup>
-                                            </select>
+                                    <!-- Hidden fields để lưu dữ liệu cho backend -->
+                                    <input type="hidden" id="street" name="street">
+                                    <input type="hidden" id="province" name="province">
+                                    <input type="hidden" id="district" name="district">
+                                    <input type="hidden" id="ward" name="ward">
+                                    <input type="hidden" id="address" name="address">
+                                    <input type="hidden" id="latitude" name="latitude">
+                                    <input type="hidden" id="longitude" name="longitude">
+                                    <input type="hidden" id="placeId" name="placeId">
+                                </div>
+
+                                <!-- ========================================
+                                     KHU VỰC GỢI Ý XUNG QUANH (NEARBY POI)
+                                     ======================================== -->
+                                <div id="nearbyPoiContainer" class="mt-6 hidden">
+                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-5">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-3">
+                                                <i class="fas fa-map-marked-alt text-white text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-base font-bold text-gray-800">Gợi ý xung quanh chỗ ở</h6>
+                                                <p class="text-xs text-gray-600">Các tiện ích quan trọng gần địa chỉ bạn chọn</p>
+                                            </div>
                                         </div>
 
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                Quận/Huyện <span class="text-red-500">*</span>
-                                            </label>
-                                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="district" required>
-                                                <option value="">-- Chọn quận/huyện --</option>
-                                            </select>
+                                        <!-- Loading state -->
+                                        <div id="poiLoading" class="hidden text-center py-4">
+                                            <i class="fas fa-spinner fa-spin text-2xl text-green-600 mb-2"></i>
+                                            <p class="text-sm text-gray-600">Đang tìm các tiện ích xung quanh...</p>
                                         </div>
 
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                Phường/Xã <span class="text-red-500">*</span>
-                                            </label>
-                                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all" id="ward" required>
-                                                <option value="">-- Chọn phường/xã --</option>
-                                            </select>
+                                        <!-- Error state -->
+                                        <div id="poiError" class="hidden text-center py-4">
+                                            <i class="fas fa-exclamation-circle text-2xl text-orange-600 mb-2"></i>
+                                            <p class="text-sm text-gray-600">Không tìm thấy tiện ích nào phù hợp gần địa chỉ này.</p>
+                                        </div>
+
+                                        <!-- POI Results -->
+                                        <div id="poiResults" class="hidden space-y-4">
+                                            <!-- Universities -->
+                                            <div id="poiUniversities" class="hidden">
+                                                <h6 class="text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-university text-blue-600 mr-2"></i>Trường học gần đây
+                                                </h6>
+                                                <div id="universitiesList" class="flex flex-wrap gap-2"></div>
+                                            </div>
+
+                                            <!-- Hospitals -->
+                                            <div id="poiHospitals" class="hidden">
+                                                <h6 class="text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-hospital text-red-600 mr-2"></i>Bệnh viện gần đây
+                                                </h6>
+                                                <div id="hospitalsList" class="flex flex-wrap gap-2"></div>
+                                            </div>
+
+                                            <!-- Malls -->
+                                            <div id="poiMalls" class="hidden">
+                                                <h6 class="text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-shopping-cart text-purple-600 mr-2"></i>Trung tâm thương mại
+                                                </h6>
+                                                <div id="mallsList" class="flex flex-wrap gap-2"></div>
+                                            </div>
+
+                                            <!-- Metro/Bus -->
+                                            <div id="poiTransport" class="hidden">
+                                                <h6 class="text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-subway text-orange-600 mr-2"></i>Phương tiện công cộng
+                                                </h6>
+                                                <div id="transportList" class="flex flex-wrap gap-2"></div>
+                                            </div>
+
+                                            <!-- Action button -->
+                                            <div class="pt-3 border-t border-green-200">
+                                                <button type="button" id="applyPoiToDescription" 
+                                                        class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-magic"></i>
+                                                    <span>Áp dụng gợi ý vào mô tả</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -422,33 +500,94 @@
                                     <i class="fas fa-th mr-2 text-gray-600"></i>Tiện Nghi
                                 </h5>
                                 
+                                <!-- NHÓM 1: TIỆN NGHI QUAN TRỌNG CHO AI -->
+                                <div class="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-300">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-robot text-white text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-base font-bold text-gray-800">Tiện nghi quan trọng cho AI</h6>
+                                            <p class="text-xs text-gray-600">Các tiện nghi dưới đây được AI sử dụng trực tiếp để dự đoán giá</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                        <!-- 8 tiện nghi AI -->
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_mezzanine" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_mezzanine" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-layer-group mr-1 text-blue-600"></i>Gác lửng
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_wc" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_wc" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-toilet mr-1 text-blue-600"></i>WC riêng
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_ac" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_ac" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-snowflake mr-1 text-blue-600"></i>Điều hòa
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_furniture" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_furniture" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-couch mr-1 text-blue-600"></i>Nội thất
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_balcony" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_balcony" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-tree mr-1 text-blue-600"></i>Ban công
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_kitchen" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_kitchen" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-utensils mr-1 text-blue-600"></i>Bếp
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_parking" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_parking" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-car mr-1 text-blue-600"></i>Chỗ xe
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2 p-3 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" id="has_window" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-400">
+                                            <label for="has_window" class="text-gray-800 cursor-pointer flex-1 font-semibold text-sm">
+                                                <i class="fas fa-window-maximize mr-1 text-blue-600"></i>Cửa sổ
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- NHÓM 2: TIỆN NGHI BỔ SUNG -->
+                                <div class="mb-4">
+                                    <h6 class="text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-plus-circle mr-2 text-gray-500"></i>Tiện nghi bổ sung
+                                    </h6>
+                                    <p class="text-xs text-gray-500 mb-3">
+                                        Những tiện nghi này không ảnh hưởng đến gợi ý giá AI nhưng giúp tin đăng hấp dẫn hơn
+                                    </p>
+                                </div>
+                                
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <!-- Tiện nghi cơ bản -->
+                                    <!-- Tiện nghi bổ sung -->
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="wifi" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="wifi" class="text-gray-700 cursor-pointer flex-1">
                                             <i class="fas fa-wifi mr-2 text-blue-500"></i>WiFi
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="ac" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="ac" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-snowflake mr-2 text-blue-500"></i>Điều hòa
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="parking" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="parking" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-car mr-2 text-blue-500"></i>Chỗ đỗ xe
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="kitchen" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="kitchen" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-utensils mr-2 text-blue-500"></i>Bếp
                                         </label>
                                     </div>
 
@@ -463,13 +602,6 @@
                                         <input type="checkbox" id="laundry" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="laundry" class="text-gray-700 cursor-pointer flex-1">
                                             <i class="fas fa-shirt mr-2 text-blue-500"></i>Máy giặt
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="balcony" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="balcony" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-tree mr-2 text-blue-500"></i>Ban công
                                         </label>
                                     </div>
 
@@ -502,27 +634,6 @@
                                         </label>
                                     </div>
 
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="sofa" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="sofa" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-chair mr-2 text-green-500"></i>Sofa
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="desk" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="desk" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-desk mr-2 text-green-500"></i>Bàn làm việc
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="microwave" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="microwave" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-fire mr-2 text-green-500"></i>Lò vi sóng
-                                        </label>
-                                    </div>
-
                                     <!-- Tiện nghi nâng cao -->
                                     <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                         <input type="checkbox" id="elevator" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
@@ -549,63 +660,6 @@
                                         <input type="checkbox" id="garden" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
                                         <label for="garden" class="text-gray-700 cursor-pointer flex-1">
                                             <i class="fas fa-leaf mr-2 text-purple-500"></i>Sân vườn
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="bbq" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="bbq" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-fire mr-2 text-purple-500"></i>Khu nướng BBQ
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="lounge" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="lounge" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-couch mr-2 text-purple-500"></i>Sảnh chờ
-                                        </label>
-                                    </div>
-
-                                    <!-- Tiện nghi an toàn & khác -->
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="cctv" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="cctv" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-video mr-2 text-red-500"></i>Camera CCTV
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="alarm" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="alarm" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-bell mr-2 text-red-500"></i>Chuông cảnh báo
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="petFriendly" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="petFriendly" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-paw mr-2 text-red-500"></i>Cho phép nuôi pet
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="soundproof" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="soundproof" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-volume-mute mr-2 text-red-500"></i>Cách âm
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="heating" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="heating" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-fire mr-2 text-red-500"></i>Sưởi ấm
-                                        </label>
-                                    </div>
-
-                                    <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <input type="checkbox" id="storage" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-400">
-                                        <label for="storage" class="text-gray-700 cursor-pointer flex-1">
-                                            <i class="fas fa-box mr-2 text-red-500"></i>Kho lưu trữ
                                         </label>
                                     </div>
                                 </div>
@@ -824,6 +878,19 @@
         //     document.getElementById('propertyImages').click();
         // });
     </script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
+    <!-- Goong Address Autocomplete -->
+    <script src="/js/address-autocomplete.js"></script>
+
 </body>
 </html>
 

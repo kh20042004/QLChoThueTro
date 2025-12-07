@@ -3,6 +3,7 @@ let currentPage = 1;
 let currentFilter = 'all'; // all, unread, read
 let isLoading = false;
 let hasMorePages = true;
+let currentNotificationData = null; // For modal details
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
@@ -194,6 +195,9 @@ function createNotificationElement(notification) {
     div.className = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
     div.dataset.notificationId = notification._id;
     
+    // Store full notification data
+    div.dataset.notificationData = JSON.stringify(notification);
+    
     const typeIcon = getTypeIcon(notification.type);
     // Use timeAgo from server if available, otherwise calculate it
     const timeAgo = notification.timeAgo || formatTimeAgo(notification.createdAt);
@@ -212,31 +216,25 @@ function createNotificationElement(notification) {
                     <span class="notification-time">${timeAgo}</span>
                 </div>
                 <p class="notification-message">${notification.message}</p>
-                ${notification.link ? `<a href="${notification.link}" class="notification-link">Xem chi tiết <i class="fas fa-arrow-right"></i></a>` : ''}
+                ${notification.link ? `<a href="${notification.link}" class="notification-link" onclick="event.stopPropagation()">Xem chi tiết <i class="fas fa-arrow-right"></i></a>` : ''}
             </div>
             <div class="notification-actions">
-                ${!notification.isRead ? `<button class="btn-icon" onclick="markNotificationAsRead('${notification._id}')" title="Đánh dấu đã đọc">
+                ${!notification.isRead ? `<button class="btn-icon" onclick="event.stopPropagation(); markNotificationAsRead('${notification._id}')" title="Đánh dấu đã đọc">
                     <i class="fas fa-check"></i>
                 </button>` : ''}
-                <button class="btn-icon" onclick="deleteNotification('${notification._id}')" title="Xóa">
+                <button class="btn-icon" onclick="event.stopPropagation(); deleteNotification('${notification._id}')" title="Xóa">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
     `;
 
-    // Click to mark as read and navigate
+    // Click to show detail modal
     div.addEventListener('click', function(e) {
-        // Don't trigger if clicking action buttons
-        if (e.target.closest('.notification-actions')) return;
+        // Don't trigger if clicking action buttons or links
+        if (e.target.closest('.notification-actions') || e.target.closest('.notification-link')) return;
         
-        if (!notification.isRead) {
-            markNotificationAsRead(notification._id);
-        }
-        
-        if (notification.link) {
-            window.location.href = notification.link;
-        }
+        showNotificationDetail(notification);
     });
 
     return div;
@@ -264,6 +262,9 @@ function getTypeIcon(type) {
         'message_received': 'fas fa-envelope',
         'property_expired': 'fas fa-clock',
         'property_approved': 'fas fa-thumbs-up',
+        'review_approved': 'fas fa-star',
+        'review_rejected': 'fas fa-ban',
+        'review_pending': 'fas fa-hourglass-half',
         'system': 'fas fa-bell'
     };
     return icons[type] || 'fas fa-bell';
@@ -319,7 +320,7 @@ async function markNotificationAsRead(notificationId) {
 async function markAllAsRead() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/notifications/mark-all-read', {
+        const response = await fetch('/api/notifications/read-all', {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -513,3 +514,173 @@ function showError(message) {
 // Export functions for global use
 window.markNotificationAsRead = markNotificationAsRead;
 window.deleteNotification = deleteNotification;
+
+// ===================================
+// NOTIFICATION DETAIL MODAL FUNCTIONS
+// ===================================
+
+function showNotificationDetail(notification) {
+    currentNotificationData = notification;
+    const modal = document.getElementById('notificationDetailModal');
+    
+    // Set icon
+    const iconEl = document.getElementById('modalNotificationIcon');
+    iconEl.className = `notification-icon ${notification.type} w-16 h-16 text-2xl`;
+    iconEl.innerHTML = `<i class="${getTypeIcon(notification.type)}"></i>`;
+    
+    // Set title and time
+    document.getElementById('modalNotificationTitle').textContent = notification.title;
+    const timeAgo = notification.timeAgo || formatTimeAgo(notification.createdAt);
+    document.getElementById('modalNotificationTime').textContent = timeAgo;
+    
+    // Set badge
+    const badgeEl = document.getElementById('modalNotificationBadge');
+    if (notification.isRead) {
+        badgeEl.textContent = 'Đã đọc';
+        badgeEl.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-700';
+    } else {
+        badgeEl.textContent = 'Chưa đọc';
+        badgeEl.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700';
+    }
+    
+    // Set message
+    document.getElementById('modalNotificationMessage').textContent = notification.message;
+    
+    // Handle notification data
+    const dataContainer = document.getElementById('modalNotificationData');
+    const dataContent = document.getElementById('modalNotificationDataContent');
+    if (notification.data && Object.keys(notification.data).length > 0) {
+        dataContainer.classList.remove('hidden');
+        let dataHTML = '';
+        
+        // Display relevant data fields
+        for (const [key, value] of Object.entries(notification.data)) {
+            if (key === 'trustScore' || key === 'rejectionReason' || key === 'color') continue; // Skip these, handled separately
+            
+            const label = formatDataLabel(key);
+            const displayValue = formatDataValue(key, value);
+            dataHTML += `
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-gray-600">${label}:</span>
+                    <span class="text-sm text-gray-800">${displayValue}</span>
+                </div>
+            `;
+        }
+        dataContent.innerHTML = dataHTML;
+    } else {
+        dataContainer.classList.add('hidden');
+    }
+    
+    // Handle trust score (for review notifications)
+    const trustScoreContainer = document.getElementById('modalTrustScore');
+    if (notification.data && notification.data.trustScore !== undefined) {
+        trustScoreContainer.classList.remove('hidden');
+        const score = notification.data.trustScore;
+        const scoreBar = document.getElementById('modalTrustScoreBar');
+        const scoreText = document.getElementById('modalTrustScoreText');
+        
+        scoreText.textContent = `${score}/100`;
+        scoreBar.style.width = `${score}%`;
+        
+        // Color based on score
+        if (score < 40) {
+            scoreBar.className = 'h-full transition-all duration-500 bg-red-500';
+            scoreText.className = 'text-lg font-bold text-red-600';
+        } else if (score < 70) {
+            scoreBar.className = 'h-full transition-all duration-500 bg-yellow-500';
+            scoreText.className = 'text-lg font-bold text-yellow-600';
+        } else {
+            scoreBar.className = 'h-full transition-all duration-500 bg-green-500';
+            scoreText.className = 'text-lg font-bold text-green-600';
+        }
+    } else {
+        trustScoreContainer.classList.add('hidden');
+    }
+    
+    // Handle rejection reason
+    const rejectionContainer = document.getElementById('modalRejectionReason');
+    if (notification.data && notification.data.rejectionReason) {
+        rejectionContainer.classList.remove('hidden');
+        document.getElementById('modalRejectionReasonText').textContent = notification.data.rejectionReason;
+    } else {
+        rejectionContainer.classList.add('hidden');
+    }
+    
+    // Handle action buttons
+    const markReadBtn = document.getElementById('modalMarkReadBtn');
+    if (notification.isRead) {
+        markReadBtn.classList.add('hidden');
+    } else {
+        markReadBtn.classList.remove('hidden');
+    }
+    
+    const goToLinkBtn = document.getElementById('modalGoToLinkBtn');
+    if (notification.link) {
+        goToLinkBtn.classList.remove('hidden');
+    } else {
+        goToLinkBtn.classList.add('hidden');
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeNotificationDetail() {
+    const modal = document.getElementById('notificationDetailModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentNotificationData = null;
+}
+
+async function markNotificationAsReadFromModal() {
+    if (!currentNotificationData) return;
+    
+    await markNotificationAsRead(currentNotificationData._id);
+    closeNotificationDetail();
+}
+
+async function deleteNotificationFromModal() {
+    if (!currentNotificationData) return;
+    
+    if (confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
+        await deleteNotification(currentNotificationData._id);
+        closeNotificationDetail();
+    }
+}
+
+function goToNotificationLink() {
+    if (currentNotificationData && currentNotificationData.link) {
+        window.location.href = currentNotificationData.link;
+    }
+}
+
+function formatDataLabel(key) {
+    const labels = {
+        reviewId: 'Mã đánh giá',
+        propertyId: 'Mã bất động sản',
+        bookingId: 'Mã đặt phòng',
+        messageId: 'Mã tin nhắn',
+        amount: 'Số tiền',
+        propertyTitle: 'Tiêu đề',
+        userName: 'Người dùng',
+        reason: 'Lý do'
+    };
+    return labels[key] || key;
+}
+
+function formatDataValue(key, value) {
+    if (key === 'amount' && typeof value === 'number') {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    }
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+    return value;
+}
+
+// Export modal functions
+window.closeNotificationDetail = closeNotificationDetail;
+window.markNotificationAsReadFromModal = markNotificationAsReadFromModal;
+window.deleteNotificationFromModal = deleteNotificationFromModal;
+window.goToNotificationLink = goToNotificationLink;

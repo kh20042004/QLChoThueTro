@@ -1,16 +1,23 @@
 /**
  * ===================================
  * ADMIN REVIEWS JS
- * JavaScript cho trang Quản lý Đánh giá
+ * JavaScript cho trang Quản lý Đánh giá với Auto Moderation
  * ===================================
  */
+
+let reviews = [];
+let currentPage = 1;
+let totalPages = 1;
+let filters = {
+    status: '',
+    search: ''
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     initSidebar();
     checkAdminAuth();
     loadReviews();
     initFilters();
-    initCounterAnimation();
 });
 
 /**
