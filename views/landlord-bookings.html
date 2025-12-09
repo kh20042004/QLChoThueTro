@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Hẹn Xem Phòng - HomeRent</title>
+    
+    <!-- Tailwind CSS via jsDelivr -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/main.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        html { 
+            scroll-behavior: smooth; 
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+
+        /* Custom booking card styles */
+        .booking-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f3f4f6;
+        }
+
+        .booking-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .property-info {
+            display: flex;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .property-img {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .status-badge {
+            padding: 0.375rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-confirmed {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6B7280;
+            font-size: 0.875rem;
+        }
+
+        .detail-item i {
+            width: 20px;
+            color: #8B5CF6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .property-info {
+                flex-direction: column;
+            }
+            
+            .property-img {
+                width: 100%;
+                height: 150px;
+            }
+            
+            .booking-header {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                width: 100%;
+            }
+            
+            .action-buttons button,
+            .action-buttons a {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2 group">
+                    <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                    <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Trang chủ</a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Tìm phòng</a>
+                    <a href="/universities" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Trường ĐH</a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Giới thiệu</a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors duration-300">Liên hệ</a>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="hidden md:flex items-center space-x-4" id="navbarUser">
+                    <!-- Notifications -->
+                    <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Thông báo">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </a>
+                    
+                    <!-- Favorites -->
+                    <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Yêu thích">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </a>
+                    
+                    <!-- Chat/Messages -->
+                    <button onclick="window.location.href='/chat'" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Tin nhắn">
+                        <i class="fas fa-comments text-xl"></i>
+                        <span id="chatBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    
+                    <!-- Post Property -->
+                    <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300" title="Đăng tin">
+                        <i class="fas fa-plus mr-1"></i>Đăng tin
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 bg-transparent border-0">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                            <span class="text-gray-700" id="userName">Người dùng</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown z-50">
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-500"></i>Hồ sơ cá nhân
+                            </a>
+                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-calendar-alt mr-2 text-gray-500"></i>Đơn đặt phòng
+                            </a>
+                            <a href="/landlord/bookings" class="block px-4 py-2 text-gray-700 bg-gray-50 border-l-4 border-purple-600 transition-colors duration-200">
+                                <i class="fas fa-calendar-check mr-2 text-gray-500"></i>Lịch hẹn xem phòng
+                            </a>
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-home mr-2 text-gray-500"></i>Nhà/phòng của tôi
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-cog mr-2 text-gray-500"></i>Cài đặt
+                            </a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="md:hidden text-gray-600" id="mobileMenuBtn">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-4xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">Lịch Hẹn Xem Phòng</h1>
+                        <p class="text-purple-100 text-lg">Quản lý các lịch hẹn xem phòng của bạn một cách hiệu quả</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                    <i class="fas fa-calendar text-white"></i>
+                    <span class="text-white font-medium" id="currentDate"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 -mt-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Pending -->
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-yellow-500 animate-fadeIn">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center shadow-md">
+                        <i class="fas fa-clock text-2xl text-white"></i>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-4xl font-bold text-gray-800" id="pendingCount">0</span>
+                        <p class="text-xs text-gray-500 mt-1">lịch hẹn</p>
+                    </div>
+                </div>
+                <h3 class="text-gray-700 font-semibold text-sm">Chờ xác nhận</h3>
+                <div class="mt-2 flex items-center text-xs text-yellow-600">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    <span>Cần xử lý</span>
+                </div>
+            </div>
+
+            <!-- Confirmed -->
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-blue-500 animate-fadeIn" style="animation-delay: 0.1s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                        <i class="fas fa-check-circle text-2xl text-white"></i>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-4xl font-bold text-gray-800" id="confirmedCount">0</span>
+                        <p class="text-xs text-gray-500 mt-1">lịch hẹn</p>
+                    </div>
+                </div>
+                <h3 class="text-gray-700 font-semibold text-sm">Đã xác nhận</h3>
+                <div class="mt-2 flex items-center text-xs text-blue-600">
+                    <i class="fas fa-calendar-check mr-1"></i>
+                    <span>Đã lên lịch</span>
+                </div>
+            </div>
+
+            <!-- Completed -->
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-green-500 animate-fadeIn" style="animation-delay: 0.2s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                        <i class="fas fa-check-double text-2xl text-white"></i>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-4xl font-bold text-gray-800" id="completedCount">0</span>
+                        <p class="text-xs text-gray-500 mt-1">lịch hẹn</p>
+                    </div>
+                </div>
+                <h3 class="text-gray-700 font-semibold text-sm">Hoàn thành</h3>
+                <div class="mt-2 flex items-center text-xs text-green-600">
+                    <i class="fas fa-trophy mr-1"></i>
+                    <span>Thành công</span>
+                </div>
+            </div>
+
+            <!-- Cancelled -->
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-red-500 animate-fadeIn" style="animation-delay: 0.3s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+                        <i class="fas fa-times-circle text-2xl text-white"></i>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-4xl font-bold text-gray-800" id="cancelledCount">0</span>
+                        <p class="text-xs text-gray-500 mt-1">lịch hẹn</p>
+                    </div>
+                </div>
+                <h3 class="text-gray-700 font-semibold text-sm">Đã hủy</h3>
+                <div class="mt-2 flex items-center text-xs text-red-600">
+                    <i class="fas fa-ban mr-1"></i>
+                    <span>Đã hủy bỏ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="bg-white rounded-xl p-6 shadow-md mb-8 border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-filter mr-2 text-purple-600"></i>
+                    Bộ lọc tìm kiếm
+                </h3>
+                <button onclick="resetFilters()" class="text-sm text-gray-500 hover:text-purple-600 transition-colors duration-300">
+                    <i class="fas fa-redo mr-1"></i>Đặt lại
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Status Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-list-ul mr-1 text-gray-400"></i>Trạng thái
+                    </label>
+                    <select id="statusFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 bg-white hover:border-purple-300">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="pending">⏱️ Chờ xác nhận</option>
+                        <option value="confirmed">✅ Đã xác nhận</option>
+                        <option value="completed">🏆 Hoàn thành</option>
+                        <option value="cancelled">❌ Đã hủy</option>
+                    </select>
+                </div>
+
+                <!-- Sort -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sort mr-1 text-gray-400"></i>Sắp xếp
+                    </label>
+                    <select id="sortFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 bg-white hover:border-purple-300">
+                        <option value="newest">📅 Mới nhất</option>
+                        <option value="oldest">📆 Cũ nhất</option>
+                        <option value="date-asc">⬆️ Ngày hẹn tăng dần</option>
+                        <option value="date-desc">⬇️ Ngày hẹn giảm dần</option>
+                    </select>
+                </div>
+
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search mr-1 text-gray-400"></i>Tìm kiếm
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Tìm theo tên, số điện thoại, địa chỉ..." class="w-full px-4 py-2.5 pl-11 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-300">
+                        <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                        <button onclick="clearSearch()" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 transition-colors duration-300" id="clearSearchBtn" style="display: none;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings List -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-list mr-2 text-purple-600"></i>
+                    Danh sách lịch hẹn
+                    <span class="ml-2 text-sm font-normal text-gray-500" id="bookingsCount">(0 lịch hẹn)</span>
+                </h3>
+                <button onclick="loadBookings()" class="text-sm text-purple-600 hover:text-purple-700 transition-colors duration-300">
+                    <i class="fas fa-sync-alt mr-1"></i>Làm mới
+                </button>
+            </div>
+        </div>
+
+        <div id="bookingsList" class="space-y-4">
+            <!-- Bookings will be loaded here dynamically -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="bg-white rounded-xl p-16 shadow-md text-center" style="display: none;">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-calendar-times text-5xl text-gray-300"></i>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Chưa có lịch hẹn nào</h3>
+                <p class="text-gray-500 mb-6">Các lịch hẹn xem phòng của bạn sẽ hiển thị ở đây. Hãy chờ khách hàng đặt lịch hoặc kiểm tra bộ lọc của bạn.</p>
+                <button onclick="resetFilters()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-300 inline-flex items-center">
+                    <i class="fas fa-redo mr-2"></i>Đặt lại bộ lọc
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h6 class="font-semibold text-white mb-4">HomeRent</h6>
+                    <p class="text-gray-400 mb-4">Nền tảng cho thuê phòng trọ, nhà trọ hàng đầu Việt Nam</p>
+                    <div class="flex space-x-3">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Kết</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">Trang chủ</a></li>
+                        <li><a href="/properties" class="text-gray-400 hover:text-white transition-colors duration-300">Tìm phòng</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-white transition-colors duration-300">Giới thiệu</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors duration-300">Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Hỗ Trợ</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/faq" class="text-gray-400 hover:text-white transition-colors duration-300">Câu hỏi thường gặp</a></li>
+                        <li><a href="/terms" class="text-gray-400 hover:text-white transition-colors duration-300">Điều khoản</a></li>
+                        <li><a href="/privacy" class="text-gray-400 hover:text-white transition-colors duration-300">Bảo mật</a></li>
+                        <li><a href="/guide" class="text-gray-400 hover:text-white transition-colors duration-300">Hướng dẫn</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Hệ</h6>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            123 Đường ABC, Quận 1, TP.HCM
+                        </li>
+                        <li>
+                            <i class="fas fa-phone mr-2"></i>
+                            <a href="tel:0123456789" class="hover:text-white transition-colors duration-300">0123 456 789</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:info@homerent.vn" class="hover:text-white transition-colors duration-300">info@homerent.vn</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6 text-center text-gray-400">
+                <p class="mb-1">
+                    &copy; 2024 HomeRent. All rights reserved. Developed with 
+                    <i class="fas fa-heart text-red-500"></i> by Your Team
+                </p>
+                <small>Phiên bản 1.0.0</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/landlord-bookings.js"></script>
+    <script src="/js/favorites.js"></script>
+    <script src="/js/chat-badge.js"></script>
+    <script src="/js/notification-badge.js"></script>
+    
+    <!-- Additional helper scripts -->
+    <script>
+        // Display current date
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = new Date().toLocaleDateString('vi-VN', options);
+            }
+
+            // Setup search clear button
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            if (searchInput && clearBtn) {
+                searchInput.addEventListener('input', function() {
+                    clearBtn.style.display = this.value ? 'block' : 'none';
+                });
+            }
+        });
+
+        // Clear search function
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (searchInput) {
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                if (typeof applyFilters === 'function') {
+                    applyFilters();
+                }
+            }
+        }
+
+        // Reset filters function
+        function resetFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sortFilter').value = 'newest';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').style.display = 'none';
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        }
+
+        // Update bookings count
+        function updateBookingsCount(count) {
+            const countEl = document.getElementById('bookingsCount');
+            if (countEl) {
+                countEl.textContent = `(${count} lịch hẹn)`;
+            }
+        }
+    </script>
+    
+    <!-- AI Chatbot Widget -->
+    <link rel="stylesheet" href="/css/chatbot.css">
+    <script src="/js/chatbot.js"></script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
+</body>
+</html>

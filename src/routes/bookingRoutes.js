@@ -15,8 +15,16 @@ const {
     updateBookingStatus,
     updateBooking,
     deleteBooking,
-    getAllBookings
+    getAllBookings,
+    getLandlordBookings
 } = require('../controllers/bookingController');
+
+/**
+ * @desc    Lấy tất cả bookings của chủ nhà (landlord)
+ * @route   GET /api/bookings/landlord
+ * @access  Private
+ */
+router.get('/landlord', protect, getLandlordBookings);
 
 /**
  * @desc    Lấy tất cả bookings
@@ -47,7 +55,14 @@ router.post('/', protect, createBooking);
 router.get('/:id', protect, getBooking);
 
 /**
- * @desc    Cập nhật status booking (Admin)
+ * @desc    Cập nhật status booking
+ * @route   PATCH /api/bookings/:id/status
+ * @access  Private
+ */
+router.patch('/:id/status', protect, updateBookingStatus);
+
+/**
+ * @desc    Cập nhật status booking (PUT method)
  * @route   PUT /api/bookings/:id/status
  * @access  Private/Admin
  */
@@ -61,11 +76,11 @@ router.put('/:id/status', protect, authorize('admin'), updateBookingStatus);
 router.put('/:id', protect, updateBooking);
 
 /**
- * @desc    Xóa booking (Admin)
+ * @desc    Xóa booking
  * @route   DELETE /api/bookings/:id
- * @access  Private/Admin
+ * @access  Private
  */
-router.delete('/:id', protect, authorize('admin'), deleteBooking);
+router.delete('/:id', protect, deleteBooking);
 
 /**
  * @desc    Xóa booking (Admin)

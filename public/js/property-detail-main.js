@@ -1250,10 +1250,23 @@ if (mobileMenuBtn && mobileMenu) {
 /**
  * Initialize on page load
  */
-window.addEventListener('load', function() {
-    initializePropertyId();
+// Run authentication check immediately
+checkLoginStatus();
+initializePropertyId();
+
+// Load content as soon as DOM is ready (faster than 'load' event)
+document.addEventListener('DOMContentLoaded', function() {
+    // Re-check login status in case it was missed
     checkLoginStatus();
-    loadPropertyDetail();
-    checkIfFavorited();
-    loadReviews();
+    
+    // Load property data and reviews in parallel
+    Promise.all([
+        loadPropertyDetail(),
+        loadReviews()
+    ]).then(() => {
+        // Check if favorited after property loads
+        checkIfFavorited();
+    }).catch(error => {
+        console.error('Error during page initialization:', error);
+    });
 });

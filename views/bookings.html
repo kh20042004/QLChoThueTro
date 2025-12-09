@@ -85,6 +85,35 @@
             background-color: #FEE2E2;
             color: #7C2D12;
         }
+
+        /* Modal Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #cancelBookingModal {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #cancelBookingModal > div {
+            animation: slideUp 0.3s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -149,24 +178,24 @@
                             <span class="text-gray-700" id="userName">Người dùng</span>
                             <i class="fas fa-chevron-down text-xs text-gray-500"></i>
                         </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                <i class="fas fa-user-circle mr-2"></i>Hồ sơ cá nhân
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown z-50">
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-600"></i>Hồ sơ cá nhân
                             </a>
-                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                <i class="fas fa-home mr-2"></i>Tin của tôi
+                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200 bg-gray-50 font-medium">
+                                <i class="fas fa-calendar-alt mr-2 text-gray-600"></i>Đơn đặt phòng
                             </a>
-                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors font-medium text-blue-600">
-                                <i class="fas fa-calendar mr-2"></i>Đặt phòng của tôi
+                            <a href="/landlord/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-calendar-check mr-2 text-gray-600"></i>Lịch hẹn xem phòng
                             </a>
-                            <a href="/transaction-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                <i class="fas fa-history mr-2"></i>Lịch sử giao dịch
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-home mr-2 text-gray-600"></i>Nhà/phòng của tôi
                             </a>
-                            <a href="/recharge-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                <i class="fas fa-wallet mr-2"></i>Lịch sử nạp tiền
+                            <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-cog mr-2 text-gray-600"></i>Cài đặt
                             </a>
-                            <hr class="my-2">
-                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
+                            <div class="border-t border-gray-100"></div>
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200">
                                 <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
                             </a>
                         </div>
@@ -513,16 +542,42 @@
             loadBookings();
         }
 
-        // Cancel booking
-        async function cancelBooking(bookingId) {
-            const reason = prompt('Vui lòng nhập lý do hủy lịch hẹn (tùy chọn):');
-            if (reason === null) return; // User clicked cancel
+        // Cancel booking - Store bookingId globally
+        let currentBookingIdToCancel = null;
 
-            if (!confirm('Bạn chắc chắn muốn hủy lịch hẹn này?')) return;
+        function cancelBooking(bookingId) {
+            currentBookingIdToCancel = bookingId;
+            const reasonField = document.getElementById('cancelReason');
+            if (reasonField) reasonField.value = '';
+            
+            const modal = document.getElementById('cancelBookingModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
 
+        function closeCancelModal() {
+            const modal = document.getElementById('cancelBookingModal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+            currentBookingIdToCancel = null;
+        }
+
+        async function confirmCancelBooking() {
+            if (!currentBookingIdToCancel) return;
+
+            const reason = document.getElementById('cancelReason').value.trim();
             const token = localStorage.getItem('token');
+
             try {
-                const response = await fetch(`/api/bookings/${bookingId}`, {
+                const response = await fetch(`/api/bookings/${currentBookingIdToCancel}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -537,6 +592,7 @@
                 const result = await response.json();
                 
                 if (response.ok) {
+                    closeCancelModal();
                     showSuccess('Đã hủy lịch hẹn thành công');
                     loadBookings();
                 } else {
@@ -547,6 +603,18 @@
                 showError('Có lỗi xảy ra');
             }
         }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('cancelBookingModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeCancelModal();
+                    }
+                });
+            }
+        });
 
         // Show success notification
         function showSuccess(message) {
@@ -583,6 +651,65 @@
     <!-- Notification Modal -->
     <link rel="stylesheet" href="/css/notification-modal.css">
     <script src="/js/notification-modal.js"></script>
+
+    <!-- Cancel Booking Modal -->
+    <div id="cancelBookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-times-circle text-red-500 mr-2"></i>Hủy Lịch Hẹn
+                </h3>
+                <button onclick="closeCancelModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <div class="mb-4">
+                    <div class="flex items-center space-x-2 text-amber-600 bg-amber-50 p-4 rounded-lg mb-4">
+                        <i class="fas fa-exclamation-triangle text-lg"></i>
+                        <p class="text-sm">Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Lý do hủy <span class="text-gray-400">(Không bắt buộc)</span>
+                    </label>
+                    <textarea 
+                        id="cancelReason" 
+                        rows="4" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                        placeholder="Vui lòng cho chúng tôi biết lý do bạn hủy lịch hẹn..."
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Thông tin này sẽ được gửi đến chủ nhà</p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                        Lưu ý: Sau khi hủy, bạn có thể đặt lịch mới bất cứ lúc nào.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <button 
+                    onclick="closeCancelModal()" 
+                    class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>Quay lại
+                </button>
+                <button 
+                    onclick="confirmCancelBooking()" 
+                    class="px-6 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all font-medium shadow-lg hover:shadow-xl">
+                    <i class="fas fa-times-circle mr-2"></i>Xác nhận hủy
+                </button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài Đặt - HomeRent</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        html { scroll-behavior: smooth; }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+
+        .setting-card {
+            transition: all 0.3s ease;
+        }
+
+        .setting-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-2 group">
+                    <i class="fas fa-home text-2xl text-gray-600 group-hover:text-gray-800 transition-colors duration-300"></i>
+                    <span class="text-xl font-bold text-gray-800">HomeRent</span>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <a href="/" class="text-gray-700 hover:text-gray-900 transition-colors">Trang chủ</a>
+                    <a href="/properties" class="text-gray-700 hover:text-gray-900 transition-colors">Tìm phòng</a>
+                    <a href="/universities" class="text-gray-700 hover:text-gray-900 transition-colors">Trường ĐH</a>
+                    <a href="/about" class="text-gray-700 hover:text-gray-900 transition-colors">Giới thiệu</a>
+                    <a href="/contact" class="text-gray-700 hover:text-gray-900 transition-colors">Liên hệ</a>
+                </div>
+
+                <!-- Right Side Menu -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <a href="/notifications" class="relative p-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </a>
+                    
+                    <!-- Favorites -->
+                    <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                    </a>
+                    
+                    <!-- Chat -->
+                    <button onclick="window.location.href='/chat'" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors" title="Tin nhắn">
+                        <i class="fas fa-comments text-xl"></i>
+                        <span id="chatBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    
+                    <!-- Post Button -->
+                    <a href="/property/create" class="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">
+                        <i class="fas fa-plus mr-1"></i>Đăng tin
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
+                            <span class="text-gray-700" id="userName">Người dùng</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown z-50">
+                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-600"></i>Hồ sơ cá nhân
+                            </a>
+                            <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-calendar-alt mr-2 text-gray-600"></i>Đơn đặt phòng
+                            </a>
+                            <a href="/landlord/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-calendar-check mr-2 text-gray-600"></i>Lịch hẹn xem phòng
+                            </a>
+                            <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-home mr-2 text-gray-600"></i>Nhà/phòng của tôi
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200 bg-gray-50 font-medium">
+                                <i class="fas fa-cog mr-2 text-gray-600"></i>Cài đặt
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <ol class="flex items-center space-x-2 text-sm text-gray-600">
+                <li><a href="/" class="hover:text-gray-900">Trang chủ</a></li>
+                <li><i class="fas fa-chevron-right text-xs"></i></li>
+                <li class="text-gray-900 font-medium">Cài đặt</li>
+            </ol>
+        </nav>
+
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Cài Đặt</h1>
+            <p class="text-gray-600">Quản lý tùy chọn và cài đặt tài khoản của bạn</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sidebar Menu -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-24">
+                    <nav class="space-y-1">
+                        <a href="#account" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gray-50 text-gray-900 font-medium">
+                            <i class="fas fa-user-cog text-gray-600"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                        <a href="#notifications" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-bell text-gray-600"></i>
+                            <span>Thông báo</span>
+                        </a>
+                        <a href="#privacy" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-shield-alt text-gray-600"></i>
+                            <span>Quyền riêng tư</span>
+                        </a>
+                        <a href="#security" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-lock text-gray-600"></i>
+                            <span>Bảo mật</span>
+                        </a>
+                        <a href="#preferences" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-sliders-h text-gray-600"></i>
+                            <span>Tùy chỉnh</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Account Settings -->
+                <div id="account" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 setting-card">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-cog text-blue-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Tài Khoản</h2>
+                            <p class="text-sm text-gray-600">Quản lý thông tin tài khoản</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Email</p>
+                                <p class="text-sm text-gray-600" id="userEmail">user@example.com</p>
+                            </div>
+                            <button onclick="window.location.href='/profile'" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Chỉnh sửa
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Số điện thoại</p>
+                                <p class="text-sm text-gray-600" id="userPhone">Chưa cập nhật</p>
+                            </div>
+                            <button onclick="window.location.href='/profile'" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Thêm
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-gray-900">Ngôn ngữ</p>
+                                <p class="text-sm text-gray-600">Tiếng Việt</p>
+                            </div>
+                            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="vi">Tiếng Việt</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div id="notifications" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 setting-card">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bell text-green-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Thông Báo</h2>
+                            <p class="text-sm text-gray-600">Quản lý thông báo và cảnh báo</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Thông báo đặt phòng</p>
+                                <p class="text-sm text-gray-600">Nhận thông báo khi có người đặt phòng</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Tin nhắn mới</p>
+                                <p class="text-sm text-gray-600">Nhận thông báo tin nhắn từ người dùng khác</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Cập nhật hệ thống</p>
+                                <p class="text-sm text-gray-600">Nhận thông báo về tính năng mới</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-gray-900">Email marketing</p>
+                                <p class="text-sm text-gray-600">Nhận email khuyến mãi và ưu đãi</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Settings -->
+                <div id="privacy" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 setting-card">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-purple-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Quyền Riêng Tư</h2>
+                            <p class="text-sm text-gray-600">Kiểm soát thông tin cá nhân</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Hiển thị số điện thoại</p>
+                                <p class="text-sm text-gray-600">Cho phép người khác xem số điện thoại</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Hồ sơ công khai</p>
+                                <p class="text-sm text-gray-600">Cho phép mọi người xem hồ sơ của bạn</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-gray-900">Lịch sử hoạt động</p>
+                                <p class="text-sm text-gray-600">Lưu lịch sử tìm kiếm và xem phòng</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div id="security" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 setting-card">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-lock text-red-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Bảo Mật</h2>
+                            <p class="text-sm text-gray-600">Bảo vệ tài khoản của bạn</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Mật khẩu</p>
+                                <p class="text-sm text-gray-600">Đổi mật khẩu định kỳ để bảo mật</p>
+                            </div>
+                            <button class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">
+                                Đổi mật khẩu
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Xác thực hai yếu tố</p>
+                                <p class="text-sm text-gray-600">Thêm lớp bảo mật cho tài khoản</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-gray-900">Phiên đăng nhập</p>
+                                <p class="text-sm text-gray-600">Xem và quản lý các thiết bị đăng nhập</p>
+                            </div>
+                            <button class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Quản lý
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Settings -->
+                <div id="preferences" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 setting-card">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-sliders-h text-amber-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Tùy Chỉnh</h2>
+                            <p class="text-sm text-gray-600">Cá nhân hóa trải nghiệm</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Chế độ tối</p>
+                                <p class="text-sm text-gray-600">Chuyển sang giao diện tối</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">Hiển thị compact</p>
+                                <p class="text-sm text-gray-600">Hiển thị nhiều thông tin hơn trên màn hình</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-gray-900">Tự động phát video</p>
+                                <p class="text-sm text-gray-600">Video tự động phát khi cuộn</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="bg-red-50 rounded-xl border-2 border-red-200 p-6">
+                    <div class="flex items-start space-x-3 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-1"></i>
+                        <div>
+                            <h3 class="text-lg font-bold text-red-900">Vùng Nguy Hiểm</h3>
+                            <p class="text-sm text-red-700 mt-1">Hành động không thể hoàn tác</p>
+                        </div>
+                    </div>
+                    <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                        <i class="fas fa-trash-alt mr-2"></i>Xóa tài khoản
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h5 class="font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-home mr-2 text-gray-400"></i>HomeRent
+                    </h5>
+                    <p class="text-gray-400 mb-4">
+                        Hệ thống cho thuê nhà/phòng trọ thông minh với công nghệ AI.
+                    </p>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Kết</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-gray-300 transition-colors">Trang chủ</a></li>
+                        <li><a href="/properties" class="text-gray-400 hover:text-gray-300 transition-colors">Tìm phòng</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-gray-300 transition-colors">Giới thiệu</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-gray-300 transition-colors">Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Hỗ Trợ</h6>
+                    <ul class="space-y-2">
+                        <li><a href="/faq" class="text-gray-400 hover:text-gray-300 transition-colors">Câu hỏi</a></li>
+                        <li><a href="/terms" class="text-gray-400 hover:text-gray-300 transition-colors">Điều khoản</a></li>
+                        <li><a href="/privacy" class="text-gray-400 hover:text-gray-300 transition-colors">Bảo mật</a></li>
+                        <li><a href="/guide" class="text-gray-400 hover:text-gray-300 transition-colors">Hướng dẫn</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-white mb-4">Liên Hệ</h6>
+                    <ul class="space-y-2">
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                            <span class="text-gray-400">TP.HCM, Việt Nam</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-gray-400"></i>
+                            <span class="text-gray-400">0123 456 789</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <span class="text-gray-400">info@homerent.vn</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-6 text-center text-gray-400 text-sm">
+                <p>&copy; 2024 HomeRent. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main JS - Load first to initialize navbar -->
+    <script src="/js/main.js"></script>
+    
+    <script src="/js/auth.js"></script>
+    <script src="/js/notification-badge.js"></script>
+    <script src="/js/chat-badge.js"></script>
+    <script src="/js/favorites.js"></script>
+
+    <!-- Notification Dropdown -->
+    <link rel="stylesheet" href="/css/notification-dropdown.css">
+    <script src="/js/notification-auto-inject.js"></script>
+    <script src="/js/notification-dropdown.js"></script>
+    
+    <!-- Notification Modal -->
+    <link rel="stylesheet" href="/css/notification-modal.css">
+    <script src="/js/notification-modal.js"></script>
+
+    <script>
+        // Load user data for settings page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log('User data loaded:', user); // Debug log
+                    
+                    // Update email in settings page
+                    const emailElement = document.getElementById('userEmail');
+                    if (emailElement) {
+                        emailElement.textContent = user.email || 'Chưa cập nhật';
+                    }
+                    
+                    // Update phone in settings page
+                    const phoneElement = document.getElementById('userPhone');
+                    if (phoneElement) {
+                        phoneElement.textContent = user.phone || 'Chưa cập nhật';
+                    }
+                    
+                    // Note: userName and userAvatar are handled by main.js initUserNavbar()
+                } else {
+                    console.error('Failed to load user profile');
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+            
+            // Load saved settings
+            loadSettings();
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Update active sidebar link
+                    document.querySelectorAll('nav a').forEach(link => {
+                        link.classList.remove('bg-gray-50', 'text-gray-900', 'font-medium');
+                        link.classList.add('text-gray-700');
+                    });
+                    this.classList.add('bg-gray-50', 'text-gray-900', 'font-medium');
+                    this.classList.remove('text-gray-700');
+                }
+            });
+        });
+
+        // Handle all toggle switches
+        document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const settingName = this.closest('.toggle-switch').parentElement.querySelector('.font-medium').textContent;
+                const isEnabled = this.checked;
+                
+                // Save setting to localStorage
+                const settingKey = `setting_${settingName.replace(/\s+/g, '_')}`;
+                localStorage.setItem(settingKey, isEnabled);
+                
+                showToast('Đã lưu', `${settingName}: ${isEnabled ? 'Bật' : 'Tắt'}`, 'success');
+            });
+        });
+
+        // Load saved settings
+        function loadSettings() {
+            document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(toggle => {
+                const settingName = toggle.closest('.toggle-switch').parentElement.querySelector('.font-medium').textContent;
+                const settingKey = `setting_${settingName.replace(/\s+/g, '_')}`;
+                const savedValue = localStorage.getItem(settingKey);
+                
+                if (savedValue !== null) {
+                    toggle.checked = savedValue === 'true';
+                }
+            });
+        }
+
+        // Handle language change
+        document.querySelector('select').addEventListener('change', function() {
+            localStorage.setItem('language', this.value);
+            showToast('Đã lưu', `Ngôn ngữ: ${this.options[this.selectedIndex].text}`, 'success');
+        });
+
+        // Handle change password
+        document.querySelector('button:has(.fa-lock)').addEventListener('click', function(e) {
+            if (e.target.closest('button') === this) {
+                showChangePasswordModal();
+            }
+        });
+
+        // Handle delete account
+        document.querySelector('button:has(.fa-trash-alt)').addEventListener('click', function() {
+            showDeleteAccountModal();
+        });
+
+        // Toast notification function
+        function showToast(title, message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 animate-slideIn';
+            toast.style.minWidth = '320px';
+            
+            const iconColors = {
+                success: 'text-green-600 bg-green-100',
+                error: 'text-red-600 bg-red-100',
+                info: 'text-blue-600 bg-blue-100'
+            };
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-full ${iconColors[type]} flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${icons[type]} text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">${title}</h4>
+                        <p class="text-sm text-gray-600 mt-1">${message}</p>
+                    </div>
+                    <button onclick="this.closest('div').remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Change Password Modal
+        function showChangePasswordModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-lock text-blue-600 mr-2"></i>Đổi Mật Khẩu
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <form id="changePasswordForm" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu hiện tại</label>
+                            <div class="relative">
+                                <input type="password" id="currentPassword" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button type="button" onclick="togglePassword('currentPassword')" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</label>
+                            <div class="relative">
+                                <input type="password" id="newPassword" required minlength="6"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button type="button" onclick="togglePassword('newPassword')" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Tối thiểu 6 ký tự</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
+                            <div class="relative">
+                                <input type="password" id="confirmPassword" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button type="button" onclick="togglePassword('confirmPassword')" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end space-x-3 pt-4">
+                            <button type="button" onclick="this.closest('.fixed').remove()" 
+                                class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                                Hủy
+                            </button>
+                            <button type="submit" 
+                                class="px-6 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-lg">
+                                <i class="fas fa-check mr-2"></i>Đổi mật khẩu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+        }
+
+        // Toggle password visibility
+        window.togglePassword = function(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target.closest('button').querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
+
+        // Handle change password
+        async function handleChangePassword(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showToast('Lỗi', 'Mật khẩu xác nhận không khớp', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.querySelector('.fixed').remove();
+                    showToast('Thành công', 'Đã đổi mật khẩu thành công', 'success');
+                } else {
+                    showToast('Lỗi', result.message || 'Không thể đổi mật khẩu', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Lỗi', 'Có lỗi xảy ra', 'error');
+            }
+        }
+
+        // Delete Account Modal
+        function showDeleteAccountModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-bold text-red-900">
+                            <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Xóa Tài Khoản
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
+                            <p class="text-red-800 font-medium mb-2">
+                                <i class="fas fa-exclamation-circle mr-2"></i>Cảnh báo nghiêm trọng!
+                            </p>
+                            <ul class="text-sm text-red-700 space-y-1 ml-6">
+                                <li>• Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn</li>
+                                <li>• Các tin đăng và giao dịch sẽ bị hủy</li>
+                                <li>• Hành động này không thể hoàn tác</li>
+                            </ul>
+                        </div>
+                        
+                        <form id="deleteAccountForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Nhập mật khẩu để xác nhận
+                                </label>
+                                <input type="password" id="deletePassword" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="confirmDelete" required class="mr-2">
+                                    <span class="text-sm text-gray-700">Tôi hiểu và đồng ý xóa tài khoản</span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-end space-x-3">
+                                <button type="button" onclick="this.closest('.fixed').remove()" 
+                                    class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                                    Hủy
+                                </button>
+                                <button type="submit" 
+                                    class="px-6 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all font-medium shadow-lg">
+                                    <i class="fas fa-trash-alt mr-2"></i>Xóa tài khoản
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('deleteAccountForm').addEventListener('submit', handleDeleteAccount);
+        }
+
+        // Handle delete account
+        async function handleDeleteAccount(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('deletePassword').value;
+            const confirmed = document.getElementById('confirmDelete').checked;
+            
+            if (!confirmed) {
+                showToast('Lỗi', 'Vui lòng xác nhận xóa tài khoản', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/auth/delete-account', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    localStorage.clear();
+                    showToast('Thành công', 'Tài khoản đã được xóa', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showToast('Lỗi', result.message || 'Không thể xóa tài khoản', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Lỗi', 'Có lỗi xảy ra', 'error');
+            }
+        }
+
+        // Add slide-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+            .animate-slideIn {
+                animation: slideIn 0.3s ease-out;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

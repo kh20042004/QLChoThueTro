@@ -12,6 +12,39 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    // Fill thông tin user vào header dropdown
+    try {
+        const user = JSON.parse(userData);
+        
+        // Avatar và tên trong button
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        
+        if (userAvatar && user.avatar) {
+            userAvatar.src = user.avatar;
+        }
+        if (userName && user.name) {
+            userName.textContent = user.name;
+        }
+        
+        // Avatar, tên và email trong dropdown
+        const userAvatarDropdown = document.getElementById('userAvatarDropdown');
+        const userNameDropdown = document.getElementById('userNameDropdown');
+        const userEmailDropdown = document.getElementById('userEmailDropdown');
+        
+        if (userAvatarDropdown && user.avatar) {
+            userAvatarDropdown.src = user.avatar;
+        }
+        if (userNameDropdown && user.name) {
+            userNameDropdown.textContent = user.name;
+        }
+        if (userEmailDropdown && user.email) {
+            userEmailDropdown.textContent = user.email;
+        }
+    } catch (error) {
+        console.error('Error filling user data:', error);
+    }
+
     // Khởi tạo
     initFilterListeners();
     loadProperties();

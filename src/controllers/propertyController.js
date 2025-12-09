@@ -111,9 +111,11 @@ exports.getProperties = async (req, res, next) => {
  */
 exports.getProperty = async (req, res, next) => {
   try {
+    // Tối ưu: Không populate reviews vì có endpoint riêng để load reviews
+    // Chỉ populate landlord info (ít data hơn)
     const property = await Property.findById(req.params.id)
       .populate('landlord', 'name email phone avatar')
-      .populate('reviews');
+      .lean(); // Sử dụng lean() để trả về plain object (nhanh hơn)
 
     if (!property) {
       return res.status(404).json({
@@ -122,12 +124,13 @@ exports.getProperty = async (req, res, next) => {
       });
     }
 
-    // Tăng view count (sử dụng $inc để tránh conflict với schema)
-    await Property.updateOne(
+    // Tăng view count bất đồng bộ (không chờ kết quả)
+    Property.updateOne(
       { _id: req.params.id },
       { $inc: { views: 1 } }
-    );
-    property.views += 1; // Update local object for response
+    ).exec(); // Fire and forget
+    
+    property.views = (property.views || 0) + 1; // Update local object for response
 
     res.status(200).json({
       success: true,

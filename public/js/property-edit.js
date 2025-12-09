@@ -64,6 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===================================
 async function loadPropertyData() {
     try {
+        console.log('Đang load property data cho ID:', propertyId);
+        
         // Load provinces trước
         await loadLocationData();
         
@@ -75,11 +77,15 @@ async function loadPropertyData() {
         });
 
         if (response.ok) {
-            currentProperty = await response.json();
+            const data = await response.json();
+            currentProperty = data.property || data; // Support cả 2 format response
+            console.log('Đã load property từ API:', currentProperty);
         } else {
+            console.warn('Không load được từ API, thử từ localStorage');
             // Nếu không có từ API, thử từ localStorage
             const myProperties = JSON.parse(localStorage.getItem('myProperties')) || [];
             currentProperty = myProperties.find(p => p._id === propertyId);
+            console.log('Đã load property từ localStorage:', currentProperty);
         }
 
         if (!currentProperty) {
@@ -89,9 +95,11 @@ async function loadPropertyData() {
         // Populate form với dữ liệu hiện tại
         await populateForm(currentProperty);
         
+        console.log('✅ Load và populate dữ liệu thành công');
+        
     } catch (error) {
-        console.error('Lỗi khi load dữ liệu:', error);
-        showAlert('Không thể tải dữ liệu bài đăng', 'danger');
+        console.error('❌ Lỗi khi load dữ liệu:', error);
+        showAlert('Không thể tải dữ liệu bài đăng: ' + error.message, 'danger');
         setTimeout(() => {
             window.location.href = '/my-properties';
         }, 2000);
@@ -102,6 +110,8 @@ async function loadPropertyData() {
 // 3. POPULATE FORM
 // ===================================
 async function populateForm(property) {
+    console.log('Bắt đầu populate form với data:', property);
+    
     // Step 1: Thông tin cơ bản
     const titleEl = document.getElementById('title');
     const descriptionEl = document.getElementById('description');
@@ -113,11 +123,13 @@ async function populateForm(property) {
     
     // Step 2: Giá và diện tích
     const priceEl = document.getElementById('price');
+    const priceUnitEl = document.getElementById('priceUnit');
     const areaEl = document.getElementById('area');
     const bedroomsEl = document.getElementById('bedrooms');
     const bathroomsEl = document.getElementById('bathrooms');
     
     if (priceEl) priceEl.value = property.price || '';
+    if (priceUnitEl) priceUnitEl.value = property.priceUnit || 'trieu-thang';
     if (areaEl) areaEl.value = property.area || '';
     if (bedroomsEl) bedroomsEl.value = property.bedrooms || 1;
     if (bathroomsEl) bathroomsEl.value = property.bathrooms || 1;

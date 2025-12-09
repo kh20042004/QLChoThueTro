@@ -199,21 +199,21 @@
                             
                             <!-- User Dropdown -->
                             <div class="relative group">
-                                <button class="flex items-center space-x-2">
-                                    <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300" id="userAvatar">
-                                    <span class="text-gray-700" id="userName">Người dùng</span>
+                                <button class="flex items-center space-x-2 bg-transparent border-0">
+                                    <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-gray-300" id="userAvatar">
+                                    <span class="text-gray-700 font-semibold" id="userName">Người dùng</span>
                                     <i class="fas fa-chevron-down text-xs text-gray-500"></i>
                                 </button>
                                 
-                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown">
-                                    <div class="p-3 border-b border-gray-100">
-                                        <p class="text-sm text-gray-500" id="userEmail">user@example.com</p>
-                                    </div>
+                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 animate-slideDown z-50">
                                     <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
                                         <i class="fas fa-user mr-2 text-gray-500"></i>Hồ sơ cá nhân
                                     </a>
                                     <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                                        <i class="fas fa-calendar mr-2 text-gray-500"></i>Đơn đặt phòng
+                                        <i class="fas fa-calendar-alt mr-2 text-gray-500"></i>Đơn đặt phòng
+                                    </a>
+                                    <a href="/landlord/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                        <i class="fas fa-calendar-check mr-2 text-gray-500"></i>Lịch hẹn xem phòng
                                     </a>
                                     <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
                                         <i class="fas fa-home mr-2 text-gray-500"></i>Nhà/phòng của tôi
@@ -535,9 +535,10 @@
                     </div>
                 </div>
             </section>
+        </div>
 
-            <!-- Footer -->
-            <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300">
+        <!-- Footer -->
+        <footer class="bg-gray-900/95 backdrop-blur-sm pt-12 pb-6 text-gray-300 relative z-10">
                 <div class="container mx-auto px-4">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                         <div>
@@ -697,8 +698,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+    </div>
 
+
+    
     <!-- Scripts -->
     <!-- Goong Map JS -->
     <script src="https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.js"></script>

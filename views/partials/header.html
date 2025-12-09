@@ -143,19 +143,30 @@
 
                     <!-- Avatar & Dropdown Menu -->
                     <li class="nav-item dropdown ms-lg-3">
-                        <button class="nav-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                            <img src="https://via.placeholder.com/40/0d6efd/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="32" height="32" id="userAvatar">
-                            <span class="text-dark" id="userName">Người dùng</span>
+                        <button class="nav-link dropdown-toggle d-flex align-items-center user-dropdown-btn" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <img src="https://via.placeholder.com/40/6B7280/ffffff?text=U" alt="Avatar" class="rounded-circle me-2" width="40" height="40" id="userAvatar">
+                            <span class="text-dark fw-semibold" id="userName">Người dùng</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><h6 class="dropdown-header" id="userEmail">user@example.com</h6></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Hồ sơ cá nhân</a></li>
-                            <li><a class="dropdown-item" href="/bookings"><i class="fas fa-calendar me-2"></i>Đơn đặt phòng</a></li>
-                            <li><a class="dropdown-item" href="/my-properties"><i class="fas fa-home me-2"></i>Nhà/phòng của tôi</a></li>
-                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end user-dropdown-menu shadow-lg" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item py-2" href="/profile">
+                                <i class="fas fa-user me-2 text-muted"></i>Hồ sơ cá nhân
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="/bookings">
+                                <i class="fas fa-calendar-alt me-2 text-muted"></i>Đơn đặt phòng
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="/landlord/bookings">
+                                <i class="fas fa-calendar-check me-2 text-muted"></i>Lịch hẹn xem phòng
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="/my-properties">
+                                <i class="fas fa-home me-2 text-muted"></i>Nhà/phòng của tôi
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="/settings">
+                                <i class="fas fa-cog me-2 text-muted"></i>Cài đặt
+                            </a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="/logout" onclick="handleLogout(event)">
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                            </a></li>
                         </ul>
                     </li>
                 </ul>

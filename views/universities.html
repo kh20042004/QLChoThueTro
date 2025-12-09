@@ -98,17 +98,17 @@
         /* University marker styles - Kích thước vừa phải như Google Maps */
         .university-marker {
             background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            width: 48px;
-            height: 48px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.95);
             animation: pulse-university 2s infinite;
-            border: 3px solid white;
+            border: 2px solid white;
             cursor: pointer;
         }
 
@@ -124,29 +124,29 @@
         .university-marker i {
             position: relative;
             z-index: 1;
-            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
-            font-weight: 700;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+            font-weight: 600;
         }
 
         @keyframes pulse-university {
             0% {
-                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.95);
             }
             50% {
-                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 8px rgba(220, 38, 38, 0.2);
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 5px rgba(220, 38, 38, 0.15);
             }
             100% {
-                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 0 5px rgba(220, 38, 38, 0.3);
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.95);
             }
         }
 
         /* Property location marker styles - Pin đỏ cho vị trí phòng */
         .property-location-marker {
             color: #dc2626;
-            font-size: 36px;
-            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
-            width: 36px;
-            height: 48px;
+            font-size: 28px;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+            width: 28px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -253,13 +253,13 @@
                         <!-- Favorites -->
                         <a href="/favorites" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Yêu thích">
                             <i class="fas fa-heart text-xl"></i>
-                            <span id="favoriteBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                            <span id="favoritesBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-md">0</span>
                         </a>
                         
                         <!-- Chat/Messages -->
                         <button onclick="window.location.href='/chat'" class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300" title="Tin nhắn">
                             <i class="fas fa-comments text-xl"></i>
-                            <span id="chatBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                            <span id="chatBadge" style="display: none;" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-md">0</span>
                         </button>
                         
                         <!-- Post Property -->
@@ -274,18 +274,21 @@
                                 <span class="text-gray-700" id="userName">Người dùng</span>
                                 <i class="fas fa-chevron-down text-xs text-gray-500"></i>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                                 <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-user-circle mr-2"></i>Hồ sơ cá nhân
+                                    <i class="fas fa-user mr-2"></i>Hồ sơ cá nhân
+                                </a>
+                                <a href="/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-calendar-alt mr-2"></i>Đơn đặt phòng
+                                </a>
+                                <a href="/landlord/bookings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-calendar-check mr-2"></i>Lịch hẹn xem phòng
                                 </a>
                                 <a href="/my-properties" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-home mr-2"></i>Tin của tôi
+                                    <i class="fas fa-home mr-2"></i>Nhà/phòng của tôi
                                 </a>
-                                <a href="/transaction-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-history mr-2"></i>Lịch sử giao dịch
-                                </a>
-                                <a href="/recharge-history" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-wallet mr-2"></i>Lịch sử nạp tiền
+                                <a href="/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-cog mr-2"></i>Cài đặt
                                 </a>
                                 <hr class="my-2">
                                 <a href="/logout" onclick="handleLogout(event)" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
@@ -519,21 +522,21 @@
         <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" id="nearbyRoomsBackdrop"></div>
         
         <!-- Modal Content -->
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden animate-fadeInUp">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-6 py-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-university text-xl"></i>
-                        <h3 class="text-xl font-bold" id="nearbyModalTitle">Phòng trọ gần trường</h3>
+        <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-fadeInUp">
+                <!-- Header - Fixed -->
+                <div class="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                        <i class="fas fa-university text-lg sm:text-xl flex-shrink-0"></i>
+                        <h3 class="text-base sm:text-xl font-bold truncate" id="nearbyModalTitle">Phòng trọ gần trường</h3>
                     </div>
-                    <button id="closeNearbyRoomsModal" class="text-white hover:text-gray-200 transition-colors duration-200">
-                        <i class="fas fa-times text-2xl"></i>
+                    <button id="closeNearbyRoomsModal" class="text-white hover:text-gray-200 transition-colors duration-200 ml-2 flex-shrink-0">
+                        <i class="fas fa-times text-xl sm:text-2xl"></i>
                     </button>
                 </div>
                 
-                <!-- Body -->
-                <div class="p-6">
+                <!-- Body - Scrollable -->
+                <div class="flex-1 overflow-y-auto p-4 sm:p-6">
                     <!-- Loading State -->
                     <div id="nearbyRoomsLoading" class="text-center py-12">
                         <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-gray-800"></div>
@@ -553,21 +556,21 @@
                     <!-- Map Container -->
                     <div id="nearbyRoomsMapContainer" class="hidden">
                         <!-- Info Bar -->
-                        <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-between flex-wrap gap-2">
-                            <div class="flex items-center space-x-4">
+                        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap gap-2">
                                 <div class="flex items-center space-x-2">
-                                    <i class="fas fa-university text-gray-600"></i>
-                                    <span class="text-sm text-gray-700">Trường: <span id="universityNameText" class="font-semibold">...</span></span>
+                                    <i class="fas fa-university text-gray-600 text-sm"></i>
+                                    <span class="text-xs sm:text-sm text-gray-700">Trường: <span id="universityNameText" class="font-semibold">...</span></span>
                                 </div>
-                                <div class="h-4 w-px bg-gray-300"></div>
+                                <div class="hidden sm:block h-4 w-px bg-gray-300"></div>
                                 <div class="flex items-center space-x-2">
-                                    <i class="fas fa-home text-gray-600"></i>
-                                    <span class="text-sm text-gray-700">Tìm thấy: <span id="nearbyRoomsCount" class="font-semibold text-gray-800">0</span> phòng</span>
+                                    <i class="fas fa-home text-gray-600 text-sm"></i>
+                                    <span class="text-xs sm:text-sm text-gray-700">Tìm thấy: <span id="nearbyRoomsCount" class="font-semibold text-gray-800">0</span> phòng</span>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <label class="text-sm text-gray-700">Bán kính:</label>
-                                <select id="nearbyRoomsRadius" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                <label class="text-xs sm:text-sm text-gray-700">Bán kính:</label>
+                                <select id="nearbyRoomsRadius" class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
                                     <option value="1">1 km</option>
                                     <option value="2" selected>2 km</option>
                                     <option value="3">3 km</option>
@@ -578,12 +581,12 @@
                         </div>
                         
                         <!-- Map -->
-                        <div id="nearbyRoomsMap" class="w-full h-[500px] rounded-lg shadow-inner"></div>
+                        <div id="nearbyRoomsMap" class="w-full h-[300px] sm:h-[400px] rounded-lg shadow-inner mb-4"></div>
                         
                         <!-- Properties List -->
-                        <div class="mt-4">
-                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Danh sách phòng trọ gần trường</h4>
-                            <div id="nearbyRoomsPropertyList" class="max-h-64 overflow-y-auto space-y-2">
+                        <div>
+                            <h4 class="text-base sm:text-lg font-semibold text-gray-800 mb-3">Danh sách phòng trọ gần trường</h4>
+                            <div id="nearbyRoomsPropertyList" class="space-y-2">
                                 <!-- Properties will be loaded here -->
                             </div>
                         </div>

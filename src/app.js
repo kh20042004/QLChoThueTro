@@ -159,9 +159,19 @@ app.get('/favorites', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/favorites.html'));
 });
 
+// View Routes - Trang cài đặt
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/settings.html'));
+});
+
 // View Routes - Trang đặt phòng của tôi
 app.get('/bookings', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/bookings.html'));
+});
+
+// View Routes - Trang lịch hẹn xem phòng (cho chủ nhà)
+app.get('/landlord/bookings', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/landlord-bookings.html'));
 });
 
 // View Routes - Trang chat/tin nhắn

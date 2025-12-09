@@ -386,3 +386,50 @@ exports.deleteBooking = async (req, res) => {
         });
     }
 };
+
+/**
+ * @desc    Get landlord bookings (bookings for properties owned by current user)
+ * @route   GET /api/bookings/landlord
+ * @access  Private
+ */
+exports.getLandlordBookings = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        
+        // Get all properties owned by this user
+        const properties = await Property.find({ owner: userId }).select('_id');
+        const propertyIds = properties.map(p => p._id);
+        
+        // Get all bookings for these properties
+        const bookings = await Booking.find({ property: { $in: propertyIds } })
+            .populate('property', 'title address price images priceUnit')
+            .populate('tenant', 'name email phone avatar')
+            .sort({ createdAt: -1 });
+        
+        // Format the response to match frontend expectations
+        const formattedBookings = bookings.map(booking => ({
+            _id: booking._id,
+            property: booking.property,
+            visitorName: booking.name || (booking.tenant ? booking.tenant.name : ''),
+            visitorPhone: booking.phone || (booking.tenant ? booking.tenant.phone : ''),
+            visitorEmail: booking.tenant ? booking.tenant.email : '',
+            visitDate: booking.viewingDate || booking.createdAt,
+            visitTime: booking.viewingTime || 'Chưa xác định',
+            message: booking.note || '',
+            status: booking.status,
+            createdAt: booking.createdAt,
+            updatedAt: booking.updatedAt
+        }));
+        
+        res.json({
+            success: true,
+            data: formattedBookings
+        });
+    } catch (error) {
+        console.error('Error getting landlord bookings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi lấy danh sách lịch hẹn'
+        });
+    }
+};

@@ -156,6 +156,9 @@ class FavoritesPageLoader {
       if (response.ok) {
         this.showEmpty();
         this.showNotification('Đã xóa tất cả yêu thích', 'success');
+        
+        // Cập nhật badge về 0
+        updateFavoritesBadge();
       }
     } catch (error) {
       console.error('Lỗi:', error);
@@ -205,6 +208,9 @@ async function removeFavoriteItem(propertyId) {
         item.remove();
       }
       
+      // Cập nhật badge số lượng yêu thích
+      updateFavoritesBadge();
+      
       // Kiểm tra nếu không còn item nào
       const items = document.querySelectorAll('.favorite-item');
       if (items.length === 0) {
@@ -214,6 +220,26 @@ async function removeFavoriteItem(propertyId) {
     }
   } catch (error) {
     console.error('Lỗi:', error);
+  }
+}
+
+/**
+ * Cập nhật badge số lượng yêu thích trên header
+ */
+function updateFavoritesBadge() {
+  const badge = document.getElementById('favoriteBadge');
+  if (badge) {
+    const items = document.querySelectorAll('.favorite-item');
+    const count = items.length;
+    
+    badge.textContent = count;
+    
+    // Ẩn badge nếu không có yêu thích
+    if (count === 0) {
+      badge.classList.add('hidden');
+    } else {
+      badge.classList.remove('hidden');
+    }
   }
 }
 
