@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Property = require('../models/Property');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 /**
  * @desc    Get all bookings (Admin)
@@ -148,6 +149,29 @@ exports.createBooking = async (req, res) => {
         await booking.populate('tenant', 'name email phone');
         await booking.populate('property', 'title address price images');
 
+        // Tạo thông báo cho chủ nhà
+        try {
+            await Notification.create({
+                user: propertyExists.landlord,
+                type: 'booking_new',
+                title: 'Có lịch xem phòng mới',
+                message: `${name} đã đặt lịch xem phòng "${propertyExists.title}" vào ${new Date(viewingDate).toLocaleDateString('vi-VN')} lúc ${viewingTime}`,
+                link: `/landlord-bookings`,
+                icon: 'fa-calendar-check',
+                color: 'blue',
+                data: {
+                    bookingId: booking._id,
+                    propertyId: property,
+                    propertyTitle: propertyExists.title,
+                    tenantName: name,
+                    viewingDate: viewingDate,
+                    viewingTime: viewingTime
+                }
+            });
+        } catch (notifError) {
+            console.error('❌ Error creating booking notification:', notifError);
+        }
+
         res.status(201).json({
             success: true,
             message: 'Đặt lịch xem phòng thành công',
@@ -275,11 +299,63 @@ exports.updateBookingStatus = async (req, res) => {
             });
         }
 
+        const oldStatus = booking.status;
         booking.status = status;
         await booking.save();
 
         await booking.populate('tenant', 'name email phone');
         await booking.populate('property', 'title address price');
+
+        // Tạo thông báo cho người thuê khi trạng thái thay đổi
+        if (oldStatus !== status && booking.tenant) {
+            try {
+                let notifTitle = '';
+                let notifMessage = '';
+                let notifType = '';
+                let notifColor = 'blue';
+                let notifIcon = 'fa-calendar';
+
+                if (status === 'confirmed') {
+                    notifType = 'booking_confirmed';
+                    notifTitle = 'Lịch xem phòng được chấp nhận';
+                    notifMessage = `Chủ nhà đã chấp nhận lịch xem phòng "${booking.property.title}" của bạn vào ${new Date(booking.viewingDate).toLocaleDateString('vi-VN')} lúc ${booking.viewingTime}`;
+                    notifColor = 'green';
+                    notifIcon = 'fa-check-circle';
+                } else if (status === 'cancelled') {
+                    notifType = 'booking_cancelled';
+                    notifTitle = 'Lịch xem phòng bị hủy';
+                    notifMessage = `Chủ nhà đã hủy lịch xem phòng "${booking.property.title}" của bạn`;
+                    notifColor = 'red';
+                    notifIcon = 'fa-times-circle';
+                } else if (status === 'completed') {
+                    notifType = 'booking_completed';
+                    notifTitle = 'Lịch xem phòng đã hoàn thành';
+                    notifMessage = `Lịch xem phòng "${booking.property.title}" đã hoàn thành. Hãy để lại đánh giá!`;
+                    notifColor = 'green';
+                    notifIcon = 'fa-star';
+                }
+
+                if (notifType) {
+                    await Notification.create({
+                        user: booking.tenant._id,
+                        type: notifType,
+                        title: notifTitle,
+                        message: notifMessage,
+                        link: `/bookings`,
+                        icon: notifIcon,
+                        color: notifColor,
+                        data: {
+                            bookingId: booking._id,
+                            propertyId: booking.property._id,
+                            propertyTitle: booking.property.title,
+                            status: status
+                        }
+                    });
+                }
+            } catch (notifError) {
+                console.error('❌ Error creating status change notification:', notifError);
+            }
+        }
 
         res.json({
             success: true,
@@ -333,14 +409,41 @@ exports.updateBooking = async (req, res) => {
             if (cancelReason) {
                 booking.cancelReason = cancelReason;
             }
+
+            // Thông báo cho chủ nhà khi người thuê hủy
+            try {
+                await booking.populate('property', 'title');
+                await Notification.create({
+                    user: booking.landlord,
+                    type: 'booking_cancelled_by_tenant',
+                    title: 'Người thuê đã hủy lịch xem',
+                    message: `${booking.name} đã hủy lịch xem phòng "${booking.property.title}".${cancelReason ? ` Lý do: ${cancelReason}` : ''}`,
+                    link: `/landlord-bookings`,
+                    icon: 'fa-calendar-times',
+                    color: 'orange',
+                    data: {
+                        bookingId: booking._id,
+                        propertyId: booking.property._id,
+                        propertyTitle: booking.property.title,
+                        cancelReason: cancelReason
+                    }
+                });
+            } catch (notifError) {
+                console.error('❌ Error creating cancellation notification:', notifError);
+            }
         } else if (status) {
             booking.status = status;
         }
 
         await booking.save();
 
-        await booking.populate('property', 'title address price images');
-        await booking.populate('landlord', 'name phone email');
+        // Populate đầy đủ thông tin trước khi trả về
+        if (!booking.property || typeof booking.property === 'string') {
+            await booking.populate('property', 'title address price images');
+        }
+        if (!booking.landlord || typeof booking.landlord === 'string') {
+            await booking.populate('landlord', 'name phone email');
+        }
 
         res.json({
             success: true,

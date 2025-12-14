@@ -73,6 +73,18 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/moderation', require('./routes/moderationRoutes'));
 
+// Config API - Expose public API keys
+app.get('/api/config', (req, res) => {
+  console.log('📡 Config API called - Sending Goong API keys');
+  console.log('GOONG_API_KEY:', process.env.GOONG_API_KEY ? '✓ exists' : '✗ missing');
+  console.log('GOONG_MAPTILES_KEY:', process.env.GOONG_MAPTILES_KEY ? '✓ exists' : '✗ missing');
+  
+  res.json({
+    goongApiKey: process.env.GOONG_API_KEY,
+    goongMaptilesKey: process.env.GOONG_MAPTILES_KEY
+  });
+});
+
 // Partials Routes - Phục vụ các file HTML partial
 app.get('/partials/:filename', (req, res) => {
   const filename = req.params.filename;

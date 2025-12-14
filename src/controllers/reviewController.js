@@ -368,6 +368,30 @@ exports.createReview = async (req, res, next) => {
           trustScore: moderationResult.trustScore
         }
       });
+
+      // Thông báo cho chủ nhà về review mới
+      try {
+        if (propertyDoc.landlord) {
+          await Notification.create({
+            user: propertyDoc.landlord,
+            type: 'review_new',
+            title: 'Có đánh giá mới',
+            message: `Bài đăng "${propertyDoc.title}" của bạn vừa nhận được đánh giá ${review.rating}⭐ từ ${req.user.name}`,
+            link: `/properties/${property}#reviews`,
+            icon: 'fa-star',
+            color: review.rating >= 4 ? 'green' : (review.rating >= 3 ? 'yellow' : 'orange'),
+            data: {
+              reviewId: review._id,
+              propertyId: property,
+              propertyTitle: propertyDoc.title,
+              rating: review.rating,
+              reviewerName: req.user.name
+            }
+          });
+        }
+      } catch (notifError) {
+        console.error('❌ Error creating landlord review notification:', notifError);
+      }
     }
 
     // Thông báo kết quả moderation
@@ -626,6 +650,31 @@ exports.moderateReviewStatus = async (req, res) => {
           propertyTitle: review.property.title
         }
       });
+
+      // Thông báo cho chủ nhà về review được duyệt
+      try {
+        const property = await require('../models/Property').findById(review.property._id).select('landlord title');
+        if (property && property.landlord) {
+          await Notification.create({
+            user: property.landlord,
+            type: 'review_new',
+            title: 'Có đánh giá mới',
+            message: `Bài đăng "${property.title}" của bạn vừa nhận được đánh giá ${review.rating}⭐ từ ${review.user.name}`,
+            link: `/properties/${property._id}#reviews`,
+            icon: 'fa-star',
+            color: review.rating >= 4 ? 'green' : (review.rating >= 3 ? 'yellow' : 'orange'),
+            data: {
+              reviewId: review._id,
+              propertyId: property._id,
+              propertyTitle: property.title,
+              rating: review.rating,
+              reviewerName: review.user.name
+            }
+          });
+        }
+      } catch (notifError) {
+        console.error('❌ Error creating landlord review notification:', notifError);
+      }
     } else if (status === 'rejected') {
       await Notification.create({
         user: review.user._id,

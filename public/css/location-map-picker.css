@@ -1,0 +1,333 @@
+/* ===================================
+   LOCATION MAP PICKER MODAL
+   CSS đơn giản cho modal chọn vị trí trên bản đồ
+   =================================== */
+
+/* Location Action Buttons trong Search Input */
+.location-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.location-action-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.location-action-btn:active {
+    transform: scale(0.95);
+}
+
+.location-action-btn:disabled {
+    background: #e5e7eb;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.location-action-btn i {
+    pointer-events: none;
+}
+
+/* Loading state for location button */
+.location-action-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Modal Overlay */
+.map-picker-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.map-picker-modal.active {
+    display: block;
+}
+
+.map-picker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Container */
+.map-picker-container {
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    height: 85vh;
+    max-height: 700px;
+    margin: 3vh auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Modal Header */
+.map-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #2c3e50;
+    color: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.map-picker-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.map-picker-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    font-size: 16px;
+}
+
+.map-picker-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modal Body */
+.map-picker-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Search trong Modal */
+.map-picker-search {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.map-search-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+.map-search-input:focus {
+    border-color: #6b7280;
+}
+
+.map-search-btn {
+    padding: 10px 20px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.map-search-btn:hover {
+    background: #34495e;
+}
+
+.map-search-btn:active {
+    transform: scale(0.98);
+}
+
+/* Map Container */
+.map-container {
+    flex: 1;
+    position: relative;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+
+/* Marker chính giữa */
+.map-container::after {
+    content: '\f3c5';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    font-size: 36px;
+    color: #dc2626;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Map Info Display */
+.map-picker-info {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+}
+
+.selected-location-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: #f3f4f6;
+    border-left: 3px solid #6b7280;
+    border-radius: 4px;
+}
+
+.selected-location-info i {
+    color: #6b7280;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.selected-location-info span {
+    flex: 1;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+/* Modal Footer */
+.map-picker-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+}
+
+.map-picker-footer button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.map-btn-cancel {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+.map-btn-cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.map-btn-confirm {
+    background: #2c3e50;
+    color: white;
+}
+
+.map-btn-confirm:hover {
+    background: #34495e;
+}
+
+.map-btn-confirm:active {
+    transform: scale(0.98);
+}
+
+.map-btn-confirm:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .map-picker-container {
+        width: 95%;
+        height: 90vh;
+        margin: 2vh auto;
+    }
+    
+    .map-picker-header {
+        padding: 12px 16px;
+    }
+    
+    .map-picker-header h3 {
+        font-size: 16px;
+    }
+    
+    .map-picker-footer {
+        flex-direction: column;
+    }
+    
+    .location-action-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+}
+
+/* Loading State */
+.map-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1001;
+}
+
+.map-loading i {
+    font-size: 36px;
+    color: #6b7280;
+    animation: spin 1s linear infinite;
+}
+
+.map-loading p {
+    margin-top: 12px;
+    color: #6b7280;
+    font-size: 14px;
+}

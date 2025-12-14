@@ -544,12 +544,12 @@ async function showPricePrediction(propertyId) {
     const modalContent = document.getElementById('mlModalContent');
     
     modalContent.innerHTML = `
-        <div class="p-8 text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-            <p class="text-gray-600">Đang dự đoán giá...</p>
+        <div class="admin-modal-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Đang dự đoán giá...</p>
         </div>
     `;
-    modal.classList.remove('hidden');
+    modal.classList.add('active');
 
     try {
         // Gọi Flask API
@@ -558,11 +558,11 @@ async function showPricePrediction(propertyId) {
     } catch (error) {
         console.error('❌ Lỗi dự đoán giá:', error);
         modalContent.innerHTML = `
-            <div class="p-8 text-center">
-                <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-4"></i>
-                <p class="text-gray-800 font-semibold mb-2">Không thể dự đoán giá</p>
-                <p class="text-gray-600 text-sm">${error.message}</p>
-                <button onclick="closeMLModal()" class="mt-4 px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+            <div class="admin-modal-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p class="title">Không thể dự đoán giá</p>
+                <p class="message">${error.message}</p>
+                <button onclick="closeMLModal()" class="admin-modal-btn secondary" style="margin-top: 1rem;">
                     Đóng
                 </button>
             </div>
@@ -668,6 +668,44 @@ function checkContentQuality(property) {
         });
     }
     
+    // === KIỂM TRA TIÊU ĐỀ SPAM/VÔ NGHĨA ===
+    // 1. Ký tự lặp lại nhiều (dasdsad, asdasd, ababab...)
+    const hasRepeatingPattern = /(.{3,})\1{1,}/.test(title);
+    if (hasRepeatingPattern) {
+        warnings.push({
+            level: 'high',
+            type: 'repeating_pattern',
+            message: 'Tiêu đề có chuỗi ký tự lặp lại (spam pattern: "dasdsad", "asdasd"...)'
+        });
+    }
+    
+    // 2. Quá nhiều phụ âm liên tiếp (không có nguyên âm) - ví dụ: "dsdsds", "fghjkl"
+    const consonantClusters = title.match(/[bcdfghjklmnpqrstvwxyz]{6,}/gi);
+    if (consonantClusters && consonantClusters.length > 0) {
+        warnings.push({
+            level: 'high',
+            type: 'consonant_spam',
+            message: `Tiêu đề chứa chuỗi phụ âm dài không có nghĩa: "${consonantClusters.join(', ')}"`
+        });
+    }
+    
+    // 3. Kiểm tra tỷ lệ ký tự giống nhau trong tiêu đề (> 50% là spam)
+    const charCount = {};
+    for (let char of title.replace(/\s/g, '')) {
+        charCount[char] = (charCount[char] || 0) + 1;
+    }
+    const maxCharCount = Math.max(...Object.values(charCount));
+    const titleLength = title.replace(/\s/g, '').length;
+    const charRepeatRatio = maxCharCount / titleLength;
+    
+    if (titleLength > 10 && charRepeatRatio > 0.5) {
+        warnings.push({
+            level: 'high',
+            type: 'char_repetition',
+            message: `Một ký tự xuất hiện quá nhiều (${(charRepeatRatio * 100).toFixed(0)}% tiêu đề)`
+        });
+    }
+    
     // Kiểm tra tiêu đề quá ngắn hoặc quá dài
     if (title.length < 10) {
         warnings.push({
@@ -731,7 +769,34 @@ function checkContentQuality(property) {
         });
     }
     
-    return warnings;
+    // Calculate score based on warnings
+    const highWarnings = warnings.filter(w => w.level === 'high').length;
+    const mediumWarnings = warnings.filter(w => w.level === 'medium').length;
+    const lowWarnings = warnings.filter(w => w.level === 'low').length;
+    
+    // Scoring (nghiêm khắc hơn):
+    // - Start with 100 points
+    // - High warning: -40 points (tăng từ -30)
+    // - Medium warning: -20 points (tăng từ -15)
+    // - Low warning: -10 points (tăng từ -5)
+    let score = 100 - (highWarnings * 40) - (mediumWarnings * 20) - (lowWarnings * 10);
+    score = Math.max(0, score); // Không cho điểm âm
+    
+    const hasIssues = score < 70; // Fail if score < 70
+    
+    let reason;
+    if (hasIssues) {
+        reason = `Phát hiện ${warnings.length} vấn đề về chất lượng nội dung`;
+    } else {
+        reason = 'Nội dung đạt tiêu chuẩn chất lượng';
+    }
+    
+    return {
+        hasIssues,
+        score,
+        reason,
+        details: warnings.map(w => w.message)
+    };
 }
 
 /**
@@ -740,196 +805,226 @@ function checkContentQuality(property) {
 function displayPredictionResult(property, prediction) {
     const modalContent = document.getElementById('mlModalContent');
     
-    // Check content quality
-    const contentWarnings = checkContentQuality(property);
+    // Check content quality - returns { hasIssues, score, reason, details }
+    const contentCheck = checkContentQuality(property);
+    const contentWarnings = contentCheck.details || []; // Array of warning messages
     
     // Flask API trả về predicted_price_vnd
     const predictedPrice = prediction.predicted_price_vnd || prediction.predicted_price || 0;
     const currentPrice = property.price || 0;
-    const difference = predictedPrice - currentPrice;
-    const differencePercent = currentPrice > 0 ? (difference / currentPrice * 100) : 0;
+    const difference = currentPrice - predictedPrice; // Giá hiện tại - Giá dự đoán
+    const differencePercent = predictedPrice > 0 ? (difference / predictedPrice * 100) : 0;
     
     console.log('💰 Predicted price:', predictedPrice);
     console.log('💵 Current price:', currentPrice);
     console.log('📊 Difference:', difference, `(${differencePercent.toFixed(1)}%)`);
     
-    const comparisonClass = difference > 0 ? 'text-green-600' : difference < 0 ? 'text-red-600' : 'text-gray-600';
-    const comparisonIcon = difference > 0 ? 'fa-arrow-up' : difference < 0 ? 'fa-arrow-down' : 'fa-equals';
+    const comparisonType = difference > 0 ? 'positive' : difference < 0 ? 'negative' : 'neutral';
 
     modalContent.innerHTML = `
-        <div class="p-6">
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
-                    <i class="fas fa-dollar-sign mr-3 text-blue-600"></i>
-                    Dự đoán giá AI
-                </h2>
-                <button onclick="closeMLModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="admin-modal-title">
+                <i class="fas fa-dollar-sign"></i>
+                Kết quả dự đoán giá AI
+            </h2>
+            <button onclick="closeMLModal()" class="admin-modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-            <!-- Property Info -->
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 class="font-semibold text-gray-800 mb-2">${property.title}</h3>
-                <p class="text-sm text-gray-600">${typeof property.address === 'object' ? 
-                    `${property.address.street || ''}, ${property.address.ward || ''}, ${property.address.district || ''}, ${property.address.city || ''}` : 
-                    property.address || 'N/A'}</p>
-                <p class="text-sm text-gray-600 mt-1">Diện tích: ${property.area}m² | Loại: ${property.propertyType}</p>
-            </div>
+        <!-- Property Info -->
+        <div class="admin-property-info">
+            <h3>${property.title}</h3>
+            <p>${typeof property.address === 'object' ? 
+                `${property.address.street || ''}, ${property.address.ward || ''}, ${property.address.district || ''}, ${property.address.city || ''}` : 
+                property.address || 'N/A'}</p>
+            <p>Diện tích: ${property.area}m² | Loại: ${property.propertyType} | ${property.bedrooms} PN | ${property.bathrooms} WC</p>
+        </div>
 
-            <!-- Price Prediction -->
-            <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
-                <div class="text-center mb-4">
-                    <p class="text-sm text-gray-600 mb-2">Giá dự đoán AI</p>
-                    <p class="text-4xl font-bold text-blue-600">${predictedPrice.toLocaleString('vi-VN')} đ</p>
-                    <p class="text-sm text-gray-500 mt-1">/tháng</p>
-                </div>
-            </div>
-
-            <!-- Price Comparison -->
-            <div class="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">So sánh giá</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center p-3 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500 mb-1">Giá hiện tại</p>
-                        <p class="text-xl font-bold text-gray-800">${currentPrice.toLocaleString('vi-VN')} đ</p>
-                    </div>
-                    <div class="text-center p-3 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500 mb-1">Chênh lệch</p>
-                        <p class="text-xl font-bold ${comparisonClass}">
-                            <i class="fas ${comparisonIcon} text-sm mr-1"></i>
-                            ${Math.abs(difference).toLocaleString('vi-VN')} đ
-                        </p>
-                        <p class="text-xs ${comparisonClass} mt-1">(${differencePercent > 0 ? '+' : ''}${differencePercent.toFixed(1)}%)</p>
-                    </div>
-                </div>
-                ${difference > 0 ? `
-                    <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-                        <p class="text-sm text-green-800"><i class="fas fa-info-circle mr-1"></i> Giá có thể tăng thêm ${Math.abs(differencePercent).toFixed(1)}%</p>
-                    </div>
-                ` : difference < 0 ? `
-                    <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-                        <p class="text-sm text-red-800"><i class="fas fa-info-circle mr-1"></i> Giá đang cao hơn dự đoán ${Math.abs(differencePercent).toFixed(1)}%</p>
-                    </div>
-                ` : `
-                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                        <p class="text-sm text-blue-800"><i class="fas fa-check-circle mr-1"></i> Giá phù hợp với thị trường</p>
-                    </div>
-                `}
-            </div>
-
-            <!-- Content Quality Check -->
-            ${contentWarnings.length > 0 ? `
-                <div class="mb-6 p-4 ${contentWarnings.some(w => w.level === 'high') ? 'bg-red-50 border-2 border-red-300' : 'bg-yellow-50 border-2 border-yellow-300'} rounded-lg">
-                    <h3 class="text-lg font-semibold mb-3 flex items-center">
-                        <i class="fas fa-exclamation-triangle mr-2 ${contentWarnings.some(w => w.level === 'high') ? 'text-red-600' : 'text-yellow-600'}"></i>
-                        <span class="${contentWarnings.some(w => w.level === 'high') ? 'text-red-900' : 'text-yellow-900'}">
-                            Cảnh báo nội dung
-                        </span>
-                    </h3>
-                    <div class="space-y-2">
-                        ${contentWarnings.map(warning => `
-                            <div class="flex items-start space-x-2 p-2 bg-white rounded">
-                                <i class="fas ${
-                                    warning.level === 'high' ? 'fa-times-circle text-red-600' : 
-                                    warning.level === 'medium' ? 'fa-exclamation-circle text-yellow-600' : 
-                                    'fa-info-circle text-blue-600'
-                                } mt-0.5"></i>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium ${
-                                        warning.level === 'high' ? 'text-red-800' : 
-                                        warning.level === 'medium' ? 'text-yellow-800' : 
-                                        'text-blue-800'
-                                    }">${warning.message}</p>
-                                </div>
+        <!-- Amenities -->
+        <div class="admin-property-amenities" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-list-check" style="color: #667eea;"></i>
+                Tiện nghi (theo AI Model)
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
+                ${(() => {
+                    // ✅ Map từ MongoDB schema sang Flask schema
+                    const dbAmenities = property.amenities || {};
+                    console.log('🏠 Property amenities từ MongoDB:', dbAmenities);
+                    console.log('🤖 Prediction response:', prediction);
+                    
+                    // Tạo object Flask-compatible từ MongoDB data
+                    const flaskAmenities = {
+                        has_mezzanine: dbAmenities.has_mezzanine || dbAmenities.mezzanine || false,
+                        has_wc: (property.bathrooms || 0) > 0 || dbAmenities.has_wc || dbAmenities.wc || false,
+                        has_ac: dbAmenities.has_ac || dbAmenities.ac || false,
+                        has_furniture: dbAmenities.has_furniture || dbAmenities.furniture || false,
+                        has_balcony: dbAmenities.has_balcony || dbAmenities.balcony || false,
+                        has_kitchen: dbAmenities.has_kitchen || dbAmenities.kitchen || false,
+                        has_parking: dbAmenities.has_parking || dbAmenities.parking || false,
+                        has_window: dbAmenities.has_window || dbAmenities.window || false
+                    };
+                    
+                    console.log('✅ Flask-mapped amenities:', flaskAmenities);
+                    
+                    // Danh sách tiện nghi theo Flask AI Model
+                    const amenityList = [
+                        { key: 'has_mezzanine', name: 'Gác lửng', icon: 'fa-layer-group' },
+                        { key: 'has_wc', name: 'WC riêng', icon: 'fa-toilet' },
+                        { key: 'has_ac', name: 'Điều hòa', icon: 'fa-wind' },
+                        { key: 'has_furniture', name: 'Nội thất', icon: 'fa-couch' },
+                        { key: 'has_balcony', name: 'Ban công', icon: 'fa-building' },
+                        { key: 'has_kitchen', name: 'Bếp', icon: 'fa-utensils' },
+                        { key: 'has_parking', name: 'Chỗ đậu xe', icon: 'fa-car' },
+                        { key: 'has_window', name: 'Cửa sổ', icon: 'fa-window-maximize' }
+                    ];
+                    
+                    return amenityList.map(({ key, name, icon }) => {
+                        const has = flaskAmenities[key] === true || flaskAmenities[key] === 1;
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: ${has ? '#dcfce7' : '#f3f4f6'}; border: 1px solid ${has ? '#86efac' : '#e5e7eb'}; border-radius: 0.375rem;">
+                                <i class="fas ${icon}" style="color: ${has ? '#16a34a' : '#9ca3af'}; font-size: 0.875rem;"></i>
+                                <span style="font-size: 0.75rem; color: ${has ? '#166534' : '#6b7280'}; font-weight: ${has ? '600' : '400'};">${name}</span>
                             </div>
-                        `).join('')}
-                    </div>
-                    <div class="mt-3 p-3 bg-white rounded border-l-4 ${contentWarnings.some(w => w.level === 'high') ? 'border-red-500' : 'border-yellow-500'}">
-                        <p class="text-sm font-semibold ${contentWarnings.some(w => w.level === 'high') ? 'text-red-900' : 'text-yellow-900'} mb-1">
-                            <i class="fas fa-user-shield mr-1"></i>
-                            Khuyến nghị cho Admin:
-                        </p>
-                        <ul class="text-xs ${contentWarnings.some(w => w.level === 'high') ? 'text-red-800' : 'text-yellow-800'} space-y-1 ml-5 list-disc">
-                            ${contentWarnings.some(w => w.level === 'high') ? 
-                                '<li>Xem xét <strong>TỪ CHỐI</strong> bài đăng này</li>' : 
-                                '<li>Liên hệ người đăng để chỉnh sửa</li>'
-                            }
-                            <li>Kiểm tra kỹ tiêu đề và mô tả trước khi duyệt</li>
-                            <li>Xác minh thông tin liên hệ của người đăng</li>
-                        </ul>
-                    </div>
+                        `;
+                    }).join('');
+                })()}
+            </div>
+        </div>
+
+        <!-- Price Prediction -->
+        <div class="admin-price-prediction">
+            <p class="label">Giá dự đoán AI</p>
+            <p class="price">${predictedPrice.toLocaleString('vi-VN')} đ</p>
+            <p class="unit">/tháng</p>
+        </div>
+
+        <!-- Price Comparison -->
+        <div class="admin-price-comparison">
+            <h3>So sánh giá</h3>
+            <div class="admin-comparison-grid">
+                <div class="admin-comparison-item">
+                    <p class="label">Giá hiện tại</p>
+                    <p class="value">${currentPrice.toLocaleString('vi-VN')} đ</p>
+                </div>
+                <div class="admin-comparison-item ${comparisonType}">
+                    <p class="label">Chênh lệch</p>
+                    <p class="value">
+                        <i class="fas ${difference > 0 ? 'fa-arrow-up' : difference < 0 ? 'fa-arrow-down' : 'fa-equals'}"></i>
+                        ${Math.abs(difference).toLocaleString('vi-VN')} đ
+                    </p>
+                    <p class="percent">(${differencePercent > 0 ? '+' : ''}${differencePercent.toFixed(1)}%)</p>
+                </div>
+            </div>
+            ${difference > 0 ? `
+                <div class="admin-alert success">
+                    <i class="fas fa-info-circle"></i> Giá có thể tăng thêm ${Math.abs(differencePercent).toFixed(1)}%
+                </div>
+            ` : difference < 0 ? `
+                <div class="admin-alert error">
+                    <i class="fas fa-info-circle"></i> Giá đang cao hơn dự đoán ${Math.abs(differencePercent).toFixed(1)}%
                 </div>
             ` : `
-                <div class="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg">
-                    <p class="text-sm text-green-800 flex items-center">
-                        <i class="fas fa-check-circle mr-2 text-green-600"></i>
-                        Nội dung bài đăng hợp lệ, không phát hiện vấn đề
-                    </p>
+                <div class="admin-alert info">
+                    <i class="fas fa-check-circle"></i> Giá phù hợp với thị trường
                 </div>
             `}
+        </div>
 
-            
-
-            <!-- AI Features Analysis -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Tiện nghi được phân tích</h3>
-                <p class="text-xs text-gray-500 mb-2">✅ = Có tiện nghi này | ❌ = Không có</p>
-                <div class="grid grid-cols-2 gap-3">
-                    ${renderAmenityBadge('Gác', property.amenities?.has_mezzanine || property.amenities?.mezzanine)}
-                    ${renderAmenityBadge('WC riêng', property.amenities?.has_wc)}
-                    ${renderAmenityBadge('Điều hòa', property.amenities?.has_ac || property.amenities?.ac)}
-                    ${renderAmenityBadge('Nội thất', property.amenities?.has_furniture)}
-                    ${renderAmenityBadge('Ban công', property.amenities?.has_balcony || property.amenities?.balcony)}
-                    ${renderAmenityBadge('Bếp', property.amenities?.has_kitchen || property.amenities?.kitchen)}
-                    ${renderAmenityBadge('Chỗ đậu xe', property.amenities?.has_parking || property.amenities?.parking)}
-                    ${renderAmenityBadge('Cửa sổ', property.amenities?.has_window)}
-                </div>
-                <p class="text-xs text-orange-600 mt-3">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    Lưu ý: Property cũ có thể thiếu thông tin tiện nghi. Vui lòng cập nhật khi đăng tin mới!
-                </p>
-                </div>
-            </div>
-
-            <!-- AI Explanation -->
-            ${prediction.explanation ? `
-                <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2 flex items-center">
-                        <i class="fas fa-lightbulb mr-2 text-yellow-600"></i>
-                        Giải thích dự đoán
-                    </h3>
-                    <p class="text-sm text-gray-700">${prediction.explanation}</p>
-                    ${prediction.flags && prediction.flags.length > 0 ? `
-                        <div class="mt-3">
-                            <p class="text-xs font-semibold text-gray-600 mb-1">Cảnh báo:</p>
-                            <ul class="list-disc list-inside text-xs text-orange-700 space-y-1">
-                                ${prediction.flags.map(flag => `<li>${flag}</li>`).join('')}
-                            </ul>
+        <!-- Content Quality Check -->
+        ${contentWarnings.length > 0 ? `
+            <div class="admin-quality-warnings ${contentCheck.hasIssues ? 'high-severity' : 'medium-severity'}">
+                <h3>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Cảnh báo nội dung
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    ${contentWarnings.map(warningText => `
+                        <div class="admin-warning-item medium">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p class="message">${warningText}</p>
                         </div>
-                    ` : ''}
+                    `).join('')}
                 </div>
-            ` : ''}
-
-            <!-- Debug Info (Collapsible) -->
-            ${prediction.debug ? `
-                <details class="mb-6">
-                    <summary class="cursor-pointer text-sm text-gray-600 hover:text-gray-800 font-medium">
-                        <i class="fas fa-code mr-1"></i> Chi tiết kỹ thuật
-                    </summary>
-                    <div class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
-                        <pre class="text-xs text-gray-700 whitespace-pre-wrap">${JSON.stringify(prediction.debug, null, 2)}</pre>
-                    </div>
-                </details>
-            ` : ''}
-
-            <!-- Close Button -->
-            <div class="flex justify-end">
-                <button onclick="closeMLModal()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium">
-                    Đóng
-                </button>
+                <div class="admin-alert ${contentCheck.hasIssues ? 'error' : 'warning'}" style="margin-top: 1rem;">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">
+                        <i class="fas fa-user-shield"></i>
+                        Khuyến nghị:
+                    </p>
+                    <ul class="admin-suggestion-list">
+                        ${contentCheck.hasIssues ? 
+                            '<li>Xem xét <strong>TỪ CHỐI</strong> bài đăng này</li>' : 
+                            '<li>Liên hệ người đăng để chỉnh sửa</li>'
+                        }
+                        <li>Kiểm tra kỹ tiêu đề và mô tả trước khi duyệt</li>
+                        <li>Xác minh thông tin liên hệ của người đăng</li>
+                    </ul>
+                </div>
             </div>
+        ` : `
+            <div class="admin-alert success">
+                <i class="fas fa-check-circle"></i>
+                Nội dung bài đăng hợp lệ, không phát hiện vấn đề
+            </div>
+        `}
+
+        <!-- AI Decision -->
+        <div class="admin-decision-box">
+            <h3>
+                <i class="fas fa-robot"></i>
+                Kết quả xét duyệt AI
+            </h3>
+            ${(() => {
+                const hasContentIssues = contentCheck.hasIssues; // score < 70
+                const priceDifferenceHigh = Math.abs(differencePercent) > 30;
+                
+                if (hasContentIssues || priceDifferenceHigh) {
+                    return `
+                        <span class="admin-decision-status auto-reject">
+                            <i class="fas fa-times-circle"></i>
+                            ĐỀ XUẤT TỪ CHỐI
+                        </span>
+                        <p style="margin-top: 0.75rem; font-size: 0.875rem; color: #6b7280;">
+                            ${hasContentIssues ? `Chất lượng nội dung kém (${contentCheck.score}%). ` : ''}
+                            ${priceDifferenceHigh ? `Giá chênh lệch quá lớn (${differencePercent.toFixed(1)}%).` : ''}
+                        </p>
+                    `;
+                } else if (contentWarnings.length > 0 || Math.abs(differencePercent) > 15) {
+                    return `
+                        <span class="admin-decision-status manual-review">
+                            <i class="fas fa-clock"></i>
+                            CẦN KIỂM TRA THỦ CÔNG
+                        </span>
+                        <p style="margin-top: 0.75rem; font-size: 0.875rem; color: #6b7280;">
+                            ${contentWarnings.length > 0 ? `Phát hiện ${contentWarnings.length} cảnh báo về nội dung. ` : ''}
+                            ${Math.abs(differencePercent) > 15 ? `Giá có sự chênh lệch (${differencePercent.toFixed(1)}%).` : ''}
+                        </p>
+                    `;
+                } else {
+                    return `
+                        <span class="admin-decision-status auto-approve">
+                            <i class="fas fa-check-circle"></i>
+                            CÓ THỂ TỰ ĐỘNG DUYỆT
+                        </span>
+                        <p style="margin-top: 0.75rem; font-size: 0.875rem; color: #6b7280;">
+                            Bài đăng đạt tiêu chuẩn, không phát hiện vấn đề.
+                        </p>
+                    `;
+                }
+            })()}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="admin-modal-actions">
+            <button onclick="window.location.href='/properties/${property._id}'" class="admin-modal-btn view">
+                <i class="fas fa-eye"></i>
+                Xem chi tiết
+            </button>
+            <button onclick="closeMLModal()" class="admin-modal-btn secondary">
+                Đóng
+            </button>
         </div>
     `;
 }
@@ -944,16 +1039,13 @@ function renderAmenityBadge(name, hasAmenity) {
             <span class="text-sm ${hasAmenity ? 'text-green-800' : 'text-gray-500'}">${name}</span>
         </div>
     `;
-    
-    // Update modal content
-    modalContent.innerHTML = modalHTML;
 }
 
 /**
  * Close ML Analysis Modal
  */
 function closeMLModal() {
-    document.getElementById('mlModal').classList.add('hidden');
+    document.getElementById('mlModal').classList.remove('active');
 }
 
 /**
@@ -963,10 +1055,11 @@ function getStatusBadge(status) {
     const badges = {
         'pending': '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">⏳ Chờ duyệt</span>',
         'available': '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">✅ Đã duyệt</span>',
-        'inactive': '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Từ chối</span>',
+        'rejected': '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Đã từ chối</span>',
+        'inactive': '<span class="px-3 py-1 bg-gray-400 text-gray-700 rounded-full text-xs font-semibold">⏸️ Tạm ngưng</span>',
         'rented': '<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">🏠 Đã cho thuê</span>'
     };
-    return badges[status] || '<span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">❓ N/A</span>';
+    return badges[status] || '<span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">❓ Không xác định</span>';
 }
 
 /**
@@ -1373,50 +1466,73 @@ async function autoModerateProperty(propertyId) {
     try {
         // Layer 1: Rule-Based Check
         const ruleCheck = checkBasicRules(property);
-        if (!ruleCheck.pass) {
-            showAutoModerationResult(property, {
-                approved: false,
-                layer: 'Rule-Based',
-                reason: ruleCheck.reason,
-                score: ruleCheck.score
-            });
-            return;
-        }
-
-        // Layer 2: Content Quality Check (AI)
+        
+        // Layer 2: Content Quality Check (AI) - Luôn chạy
         const contentCheck = await checkContentQuality(property);
-        if (contentCheck.hasIssues) {
-            showAutoModerationResult(property, {
-                approved: false,
-                layer: 'Content AI',
-                reason: contentCheck.reason,
-                score: contentCheck.score,
-                details: contentCheck.details
-            });
-            return;
-        }
-
-        // Layer 3: Price Validation
+        
+        // Layer 3: Price Validation - Luôn chạy
         const priceCheck = await validatePriceWithAI(property);
-        if (!priceCheck.reasonable) {
-            showAutoModerationResult(property, {
-                approved: false,
-                layer: 'Price AI',
-                reason: priceCheck.reason,
-                score: priceCheck.score,
-                predictedPrice: priceCheck.predictedPrice
-            });
-            return;
+
+        // Calculate final score
+        const finalScore = (ruleCheck.score + contentCheck.score + priceCheck.score) / 3;
+
+        // === LOGIC PHÂN LOẠI THEO YÊU CẦU ===
+        // 1. Điểm < 50: TỰ ĐỘNG TỪ CHỐI (chất lượng quá kém)
+        // 2. Điểm 50-85: DUYỆT THỦ CÔNG (cần admin xem xét)
+        // 3. Điểm > 85: TỰ ĐỘNG DUYỆT (chất lượng tốt)
+        
+        let approved = false;
+        let autoApprove = false;
+        let failedLayer = 'All Layers';
+        let failedReason = 'Đạt tất cả tiêu chí';
+        
+        if (finalScore > 85) {
+            // === TỰ ĐỘNG DUYỆT ===
+            approved = true;
+            autoApprove = true;
+            failedLayer = 'All Layers';
+            failedReason = `Chất lượng xuất sắc (${finalScore.toFixed(1)}% > 85%) - Tự động duyệt`;
+        } else if (finalScore >= 50) {
+            // === DUYỆT THỦ CÔNG ===
+            approved = false;
+            failedLayer = 'Manual Review';
+            failedReason = `Điểm trung bình (${finalScore.toFixed(1)}%) - Cần admin xem xét thủ công`;
+        } else {
+            // === TỰ ĐỘNG TỪ CHỐI ===
+            approved = false;
+            
+            // Xác định layer có vấn đề nghiêm trọng nhất
+            if (ruleCheck.score < 50) {
+                failedLayer = 'Rule-Based';
+                failedReason = `Không đạt tiêu chuẩn cơ bản (${ruleCheck.score.toFixed(0)}%): ${ruleCheck.reason}`;
+            } else if (contentCheck.score < 50) {
+                failedLayer = 'Content AI';
+                failedReason = `Chất lượng nội dung rất kém (${contentCheck.score.toFixed(0)}%): ${contentCheck.reason}`;
+            } else if (priceCheck.score < 50) {
+                failedLayer = 'Price AI';
+                failedReason = `Giá hoàn toàn không hợp lý (${priceCheck.score.toFixed(0)}%): ${priceCheck.reason}`;
+            } else {
+                failedLayer = 'Overall Score';
+                failedReason = `Điểm tổng thể quá thấp (${finalScore.toFixed(1)}% < 50%) - Tự động từ chối`;
+            }
         }
 
-        // All checks passed - Auto Approve
-        const finalScore = (ruleCheck.score + contentCheck.score + priceCheck.score) / 3;
+        // Show result with all analysis data
         showAutoModerationResult(property, {
-            approved: true,
-            layer: 'All Layers',
-            reason: 'Đạt tất cả tiêu chí',
+            approved: approved,
+            layer: failedLayer,
+            reason: failedReason,
             score: finalScore,
-            autoApprove: true
+            details: contentCheck.details,
+            predictedPrice: priceCheck.predictedPrice,
+            deviation: priceCheck.deviation,
+            actualPrice: priceCheck.actualPrice,
+            autoApprove: approved, // Chỉ auto approve nếu đạt cả 3 layers
+            analysis: {
+                ruleCheck: ruleCheck,
+                contentCheck: contentCheck,
+                priceCheck: priceCheck
+            }
         });
 
     } catch (error) {
@@ -1491,52 +1607,83 @@ function checkBasicRules(property) {
  */
 async function validatePriceWithAI(property) {
     try {
+        console.log('💰 Starting price validation for property:', property._id);
         const prediction = await callFlaskPrediction(property);
         const actualPrice = property.price;
         const predictedPrice = prediction.predicted_price_vnd || prediction.predicted_price;
 
+        console.log('💵 Actual price:', actualPrice);
+        console.log('🤖 Predicted price:', predictedPrice);
+
         if (!predictedPrice) {
+            console.warn('⚠️ No predicted price returned from API');
             return {
-                reasonable: false,
-                score: 50,
-                reason: 'Không thể dự đoán giá để so sánh'
+                reasonable: true, // Không reject nếu không có dự đoán
+                score: 70,
+                reason: 'Không thể dự đoán giá để so sánh (bỏ qua bước này)',
+                predictedPrice: null,
+                actualPrice: actualPrice,
+                deviation: null
             };
         }
 
-        // Calculate deviation
-        const deviation = Math.abs(actualPrice - predictedPrice) / predictedPrice;
-        const deviationPercent = deviation * 100;
+        // Calculate deviation (% chênh lệch)
+        const deviation = ((actualPrice - predictedPrice) / predictedPrice) * 100;
+        const absDeviation = Math.abs(deviation);
+
+        console.log('📊 Price deviation:', deviation.toFixed(2) + '%');
 
         // Score based on deviation
         let score;
-        if (deviationPercent <= 20) {
-            score = 100; // Excellent
-        } else if (deviationPercent <= 30) {
-            score = 85; // Good
-        } else if (deviationPercent <= 50) {
-            score = 70; // Acceptable
+        if (absDeviation <= 15) {
+            score = 100; // Excellent - chênh lệch <= 15%
+        } else if (absDeviation <= 25) {
+            score = 90; // Very Good - chênh lệch 15-25%
+        } else if (absDeviation <= 35) {
+            score = 80; // Good - chênh lệch 25-35%
+        } else if (absDeviation <= 50) {
+            score = 70; // Acceptable - chênh lệch 35-50%
         } else {
-            score = 50; // Poor
+            score = 50; // Poor - chênh lệch > 50%
         }
 
-        const reasonable = deviationPercent <= 40; // Accept if within 40%
+        const reasonable = absDeviation <= 40; // Accept if within 40%
+
+        let reason;
+        if (reasonable) {
+            if (absDeviation <= 15) {
+                reason = `Giá rất hợp lý với thị trường (chênh lệch chỉ ${absDeviation.toFixed(1)}%)`;
+            } else if (absDeviation <= 25) {
+                reason = `Giá khá hợp lý với thị trường (chênh lệch ${absDeviation.toFixed(1)}%)`;
+            } else {
+                reason = `Giá chấp nhận được (chênh lệch ${absDeviation.toFixed(1)}%)`;
+            }
+        } else {
+            reason = `Giá chênh lệch quá lớn so với thị trường (${deviation > 0 ? '+' : ''}${deviation.toFixed(1)}%). ` +
+                     `${deviation > 0 ? 'Giá đăng cao hơn dự đoán AI' : 'Giá đăng thấp hơn dự đoán AI'}`;
+        }
+
+        console.log('✅ Price validation result:', { reasonable, score, deviation: deviation.toFixed(1) });
 
         return {
             reasonable,
             score,
             predictedPrice,
             actualPrice,
-            deviation: deviationPercent,
-            reason: reasonable 
-                ? `Giá hợp lý (chênh lệch ${deviationPercent.toFixed(1)}%)` 
-                : `Giá chênh lệch quá lớn (${deviationPercent.toFixed(1)}% so với thị trường)`
+            deviation,
+            reason
         };
     } catch (error) {
-        console.error('Price validation error:', error);
+        console.error('❌ Price validation error:', error);
+        // Không reject nếu API lỗi, chỉ log warning
         return {
-            reasonable: true, // Không reject nếu API lỗi
+            reasonable: true,
             score: 70,
-            reason: 'Không thể kiểm tra giá (bỏ qua bước này)'
+            reason: 'Không thể kết nối đến AI dự đoán giá (bỏ qua bước này)',
+            predictedPrice: null,
+            actualPrice: property.price,
+            deviation: null,
+            error: error.message
         };
     }
 }
@@ -1553,119 +1700,416 @@ function showAutoModerationResult(property, result) {
     const statusText = result.approved ? 'ĐỀ XUẤT DUYỆT' : 'ĐỀ XUẤT TỪ CHỐI';
 
     modalContent.innerHTML = `
-        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-${statusColor}-600 to-${statusColor}-700 p-6 text-white">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold">
-                        <i class="fas fa-robot mr-2"></i>
-                        Xét duyệt tự động
-                    </h2>
-                    <button onclick="closeMLModal()" class="text-white hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
+        <!-- Header với gradient -->
+        <div style="background: linear-gradient(135deg, ${statusColor === 'green' ? '#10b981, #059669' : '#ef4444, #dc2626'}); 
+                    color: white; 
+                    padding: 2rem; 
+                    margin: -1.5rem -1.5rem 0 -1.5rem; 
+                    border-radius: 12px 12px 0 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <i class="fas fa-robot" style="font-size: 1.75rem;"></i>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;">Kết quả xét duyệt tự động</h2>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.15); 
+                                padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+                        <i class="fas fa-${statusIcon}" style="font-size: 3rem;"></i>
+                        <div>
+                            <p style="font-size: 0.875rem; opacity: 0.95; margin: 0;">Kết luận</p>
+                            <p style="font-size: 1.75rem; font-weight: 700; margin: 0.25rem 0 0 0;">${statusText}</p>
+                            <p style="font-size: 0.875rem; opacity: 0.9; margin: 0.25rem 0 0 0;">Điểm: ${result.score ? result.score.toFixed(1) : '0'}/100</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center">
-                    <i class="fas fa-${statusIcon} text-4xl mr-4"></i>
-                    <div>
-                        <p class="text-sm opacity-90">Kết quả</p>
-                        <p class="text-2xl font-bold">${statusText}</p>
+                <button onclick="closeMLModal()" 
+                        style="background: rgba(255,255,255,0.2); 
+                               border: 2px solid rgba(255,255,255,0.3);
+                               color: white; 
+                               cursor: pointer; 
+                               font-size: 1.5rem; 
+                               width: 2.5rem;
+                               height: 2.5rem;
+                               border-radius: 50%;
+                               display: flex;
+                               align-items: center;
+                               justify-content: center;
+                               transition: all 0.2s;
+                               margin-left: 1rem;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div style="padding: 1.5rem;">
+            
+            <!-- Property Info Card -->
+            <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); 
+                        border-left: 4px solid #3b82f6;
+                        padding: 1.25rem; 
+                        border-radius: 8px; 
+                        margin-bottom: 1.5rem;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <i class="fas fa-home" style="color: #3b82f6; font-size: 1.5rem; margin-top: 0.25rem;"></i>
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0;">${property.title}</h3>
+                        <p style="font-size: 0.875rem; color: #64748b; margin: 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-map-marker-alt" style="color: #94a3b8;"></i>
+                            ${formatFullAddress(property.address)}
+                        </p>
+                        <p style="font-size: 1rem; font-weight: 700; color: #10b981; margin: 0.5rem 0 0 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-tag" style="font-size: 0.875rem;"></i>
+                            ${formatPrice(property.price)} VNĐ/tháng
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Content -->
-            <div class="p-6">
-                <!-- Property Info -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="font-semibold text-gray-800 mb-2">${property.title}</h3>
-                    <p class="text-sm text-gray-600">${formatFullAddress(property.address)}</p>
-                    <p class="text-sm text-gray-600 mt-1">Giá: ${formatPrice(property.price)} VNĐ/tháng</p>
+            <!-- Score Progress -->
+            <div style="background: white; 
+                        padding: 1.25rem; 
+                        border-radius: 8px; 
+                        margin-bottom: 1.5rem;
+                        border: 2px solid ${statusColor === 'green' ? '#d1fae5' : '#fee2e2'};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.875rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i class="fas fa-chart-line" style="margin-right: 0.5rem;"></i>
+                        Điểm đánh giá tổng thể
+                    </span>
+                    <span style="font-size: 1.5rem; font-weight: 700; color: ${statusColor === 'green' ? '#059669' : '#dc2626'};">
+                        ${result.score ? result.score.toFixed(1) : '0'}<span style="font-size: 1rem; color: #94a3b8;">/100</span>
+                    </span>
                 </div>
+                <div style="width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 1rem; overflow: hidden; position: relative;">
+                    <div style="background: linear-gradient(90deg, ${statusColor === 'green' ? '#10b981, #059669' : '#ef4444, #dc2626'}); 
+                                height: 1rem; 
+                                border-radius: 9999px; 
+                                width: ${result.score}%; 
+                                transition: width 0.8s ease-out;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                </div>
+            </div>
 
-                <!-- Score -->
-                <div class="mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-gray-700">Điểm tổng thể</span>
-                        <span class="text-lg font-bold text-${statusColor}-600">${result.score.toFixed(1)}/100</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-3">
-                        <div class="bg-${statusColor}-600 h-3 rounded-full transition-all duration-500" 
-                             style="width: ${result.score}%"></div>
+            <!-- Layer Info -->
+            <div style="background: ${statusColor === 'green' ? '#d1fae5' : '#fee2e2'}; 
+                        border-left: 4px solid ${statusColor === 'green' ? '#059669' : '#dc2626'}; 
+                        padding: 1.25rem; 
+                        border-radius: 8px;
+                        margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <i class="fas fa-layer-group" style="color: ${statusColor === 'green' ? '#059669' : '#dc2626'}; font-size: 1.25rem; margin-top: 0.125rem;"></i>
+                    <div style="flex: 1;">
+                        <p style="font-size: 0.75rem; color: ${statusColor === 'green' ? '#065f46' : '#991b1b'}; margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">
+                            Lớp kiểm tra
+                        </p>
+                        <p style="font-weight: 700; color: ${statusColor === 'green' ? '#047857' : '#b91c1c'}; margin: 0 0 0.5rem 0; font-size: 1rem;">
+                            ${result.layer}
+                        </p>
+                        <p style="font-size: 0.875rem; color: ${statusColor === 'green' ? '#065f46' : '#991b1b'}; margin: 0; line-height: 1.5;">
+                            ${result.reason}
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Layer Info -->
-                <div class="mb-6 p-4 border-l-4 border-${statusColor}-600 bg-${statusColor}-50">
-                    <p class="text-sm text-gray-600 mb-1">Lớp kiểm tra</p>
-                    <p class="font-semibold text-gray-800">${result.layer}</p>
-                    <p class="text-sm text-gray-700 mt-2">${result.reason}</p>
+            <!-- Details -->
+            ${result.details ? `
+                <div style="background: #fffbeb; 
+                            border: 2px solid #fcd34d;
+                            border-radius: 8px; 
+                            padding: 1.25rem;
+                            margin-bottom: 1.5rem;">
+                    <h4 style="font-weight: 700; color: #78350f; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Chi tiết phát hiện
+                    </h4>
+                    <ul style="margin: 0; padding: 0; list-style: none;">
+                        ${result.details.map(detail => `
+                            <li style="padding: 0.5rem 0; 
+                                       padding-left: 1.75rem; 
+                                       position: relative; 
+                                       font-size: 0.875rem; 
+                                       color: #92400e;
+                                       border-bottom: 1px solid #fef3c7;
+                                       line-height: 1.5;">
+                                <i class="fas fa-circle" style="position: absolute; left: 0.5rem; top: 0.875rem; font-size: 0.375rem; color: #f59e0b;"></i>
+                                ${detail}
+                            </li>
+                        `).join('')}
+                    </ul>
                 </div>
+            ` : ''}
 
-                <!-- Details -->
-                ${result.details ? `
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-800 mb-3">Chi tiết phát hiện:</h4>
-                        <ul class="space-y-2">
-                            ${result.details.map(detail => `
-                                <li class="flex items-start">
-                                    <i class="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-2"></i>
-                                    <span class="text-sm text-gray-700">${detail}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-
-                <!-- Price Comparison -->
-                ${result.predictedPrice ? `
-                    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-3">So sánh giá:</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">Giá đăng</p>
-                                <p class="text-lg font-bold text-gray-800">${formatPrice(result.actualPrice || property.price)} VNĐ</p>
+            <!-- Detailed Analysis Section -->
+            ${result.analysis ? `
+                <div style="background: white; 
+                            border: 2px solid #e5e7eb;
+                            border-radius: 8px; 
+                            padding: 1.5rem;
+                            margin-bottom: 1.5rem;">
+                    <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
+                        <i class="fas fa-microscope" style="color: #3b82f6;"></i>
+                        Phân tích chi tiết từ AI
+                    </h4>
+                    
+                    <!-- Layer 1: Rule-Based -->
+                    ${result.analysis.ruleCheck ? `
+                        <div style="margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <h5 style="font-weight: 600; color: #475569; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem;">
+                                    <span style="background: ${result.analysis.ruleCheck.pass ? '#d1fae5' : '#fee2e2'}; 
+                                                 color: ${result.analysis.ruleCheck.pass ? '#065f46' : '#991b1b'};
+                                                 width: 1.5rem;
+                                                 height: 1.5rem;
+                                                 border-radius: 50%;
+                                                 display: inline-flex;
+                                                 align-items: center;
+                                                 justify-content: center;
+                                                 font-size: 0.75rem;">
+                                        ${result.analysis.ruleCheck.pass ? '✓' : '✗'}
+                                    </span>
+                                    Layer 1: Kiểm tra quy tắc cơ bản
+                                </h5>
+                                <span style="font-weight: 700; color: ${result.analysis.ruleCheck.pass ? '#059669' : '#dc2626'}; font-size: 0.875rem;">
+                                    ${result.analysis.ruleCheck.score ? result.analysis.ruleCheck.score.toFixed(0) : '0'}%
+                                </span>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Giá dự đoán AI</p>
-                                <p class="text-lg font-bold text-blue-600">${formatPrice(result.predictedPrice)} VNĐ</p>
+                            <div style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid ${result.analysis.ruleCheck.pass ? '#10b981' : '#ef4444'};">
+                                <p style="margin: 0; font-size: 0.8125rem; color: #64748b; line-height: 1.6;">
+                                    ${result.analysis.ruleCheck.reason}
+                                </p>
+                                ${result.analysis.ruleCheck.failedRules && result.analysis.ruleCheck.failedRules.length > 0 ? `
+                                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; list-style: disc;">
+                                        ${result.analysis.ruleCheck.failedRules.map(rule => `
+                                            <li style="color: #dc2626; font-size: 0.8125rem; margin: 0.25rem 0;">${rule}</li>
+                                        `).join('')}
+                                    </ul>
+                                ` : ''}
                             </div>
                         </div>
-                        ${result.deviation !== undefined ? `
-                            <p class="text-sm text-gray-600 mt-2">
-                                Chênh lệch: <span class="font-semibold">${result.deviation.toFixed(1)}%</span>
-                            </p>
-                        ` : ''}
-                    </div>
-                ` : ''}
+                    ` : ''}
 
-                <!-- Actions -->
-                <div class="flex gap-3 pt-4 border-t">
-                    ${result.approved && result.autoApprove ? `
-                        <button onclick="autoApproveProperty('${property._id}')" 
-                                class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            Tự động duyệt bài
-                        </button>
+                    <!-- Layer 2: Content Quality -->
+                    ${result.analysis.contentCheck ? `
+                        <div style="margin-bottom: 1.25rem; padding-bottom: 1.25rem; ${result.analysis.priceCheck ? 'border-bottom: 1px solid #f1f5f9;' : ''}">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <h5 style="font-weight: 600; color: #475569; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem;">
+                                    <span style="background: ${!result.analysis.contentCheck.hasIssues ? '#d1fae5' : '#fee2e2'}; 
+                                                 color: ${!result.analysis.contentCheck.hasIssues ? '#065f46' : '#991b1b'};
+                                                 width: 1.5rem;
+                                                 height: 1.5rem;
+                                                 border-radius: 50%;
+                                                 display: inline-flex;
+                                                 align-items: center;
+                                                 justify-content: center;
+                                                 font-size: 0.75rem;">
+                                        ${!result.analysis.contentCheck.hasIssues ? '✓' : '✗'}
+                                    </span>
+                                    Layer 2: Kiểm tra chất lượng nội dung (AI)
+                                </h5>
+                                <span style="font-weight: 700; color: ${!result.analysis.contentCheck.hasIssues ? '#059669' : '#dc2626'}; font-size: 0.875rem;">
+                                    ${result.analysis.contentCheck.score ? result.analysis.contentCheck.score.toFixed(0) : '0'}%
+                                </span>
+                            </div>
+                            <div style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid ${!result.analysis.contentCheck.hasIssues ? '#10b981' : '#ef4444'};">
+                                <p style="margin: 0; font-size: 0.8125rem; color: #64748b; line-height: 1.6;">
+                                    ${result.analysis.contentCheck.reason}
+                                </p>
+                                ${result.analysis.contentCheck.details && result.analysis.contentCheck.details.length > 0 ? `
+                                    <div style="margin-top: 0.75rem;">
+                                        <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase;">
+                                            Vấn đề phát hiện:
+                                        </p>
+                                        <ul style="margin: 0; padding-left: 1.25rem; list-style: disc;">
+                                            ${result.analysis.contentCheck.details.map(detail => `
+                                                <li style="color: #f59e0b; font-size: 0.8125rem; margin: 0.25rem 0;">${detail}</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
                     ` : ''}
-                    ${!result.approved ? `
-                        <button onclick="rejectProperty('${property._id}')" 
-                                class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors">
-                            <i class="fas fa-times-circle mr-2"></i>
-                            Từ chối bài đăng
-                        </button>
+
+                    <!-- Layer 3: Price Validation -->
+                    ${result.analysis.priceCheck ? `
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <h5 style="font-weight: 600; color: #475569; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem;">
+                                    <span style="background: ${result.analysis.priceCheck.reasonable ? '#d1fae5' : '#fee2e2'}; 
+                                                 color: ${result.analysis.priceCheck.reasonable ? '#065f46' : '#991b1b'};
+                                                 width: 1.5rem;
+                                                 height: 1.5rem;
+                                                 border-radius: 50%;
+                                                 display: inline-flex;
+                                                 align-items: center;
+                                                 justify-content: center;
+                                                 font-size: 0.75rem;">
+                                        ${result.analysis.priceCheck.reasonable ? '✓' : '✗'}
+                                    </span>
+                                    Layer 3: Kiểm tra giá cả (AI)
+                                </h5>
+                                <span style="font-weight: 700; color: ${result.analysis.priceCheck.reasonable ? '#059669' : '#dc2626'}; font-size: 0.875rem;">
+                                    ${result.analysis.priceCheck.score ? result.analysis.priceCheck.score.toFixed(0) : '0'}%
+                                </span>
+                            </div>
+                            <div style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid ${result.analysis.priceCheck.reasonable ? '#10b981' : '#ef4444'};">
+                                <p style="margin: 0; font-size: 0.8125rem; color: #64748b; line-height: 1.6;">
+                                    ${result.analysis.priceCheck.reason}
+                                </p>
+                                ${result.analysis.priceCheck.predictedPrice ? `
+                                    <div style="margin-top: 0.75rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                                        <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                            <p style="font-size: 0.6875rem; color: #94a3b8; margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 600;">
+                                                Giá đăng
+                                            </p>
+                                            <p style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin: 0;">
+                                                ${formatPrice(result.analysis.priceCheck.actualPrice || property.price)}
+                                            </p>
+                                        </div>
+                                        <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                            <p style="font-size: 0.6875rem; color: #94a3b8; margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 600;">
+                                                Giá AI dự đoán
+                                            </p>
+                                            <p style="font-size: 0.9375rem; font-weight: 700; color: #2563eb; margin: 0;">
+                                                ${formatPrice(result.analysis.priceCheck.predictedPrice)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    ${result.analysis.priceCheck.deviation !== null && result.analysis.priceCheck.deviation !== undefined ? `
+                                        <div style="margin-top: 0.75rem; background: ${Math.abs(result.analysis.priceCheck.deviation) > 30 ? '#fef2f2' : '#f0fdf4'}; 
+                                                    padding: 0.5rem; 
+                                                    border-radius: 4px;
+                                                    text-align: center;
+                                                    border: 1px solid ${Math.abs(result.analysis.priceCheck.deviation) > 30 ? '#fecaca' : '#bbf7d0'};">
+                                            <p style="font-size: 0.8125rem; color: ${Math.abs(result.analysis.priceCheck.deviation) > 30 ? '#991b1b' : '#065f46'}; margin: 0;">
+                                                <i class="fas fa-${Math.abs(result.analysis.priceCheck.deviation) > 30 ? 'exclamation-triangle' : 'check-circle'}" 
+                                                   style="margin-right: 0.375rem;"></i>
+                                                Chênh lệch: <strong>${result.analysis.priceCheck.deviation > 0 ? '+' : ''}${result.analysis.priceCheck.deviation.toFixed(1)}%</strong>
+                                                ${Math.abs(result.analysis.priceCheck.deviation) > 30 ? ' (Cao hơn ngưỡng 30%)' : ' (Trong ngưỡng chấp nhận)'}
+                                            </p>
+                                        </div>
+                                    ` : `
+                                        <div style="margin-top: 0.75rem; background: #fef3c7; 
+                                                    padding: 0.5rem; 
+                                                    border-radius: 4px;
+                                                    text-align: center;
+                                                    border: 1px solid #fcd34d;">
+                                            <p style="font-size: 0.8125rem; color: #92400e; margin: 0;">
+                                                <i class="fas fa-info-circle" style="margin-right: 0.375rem;"></i>
+                                                Không có dữ liệu so sánh giá
+                                            </p>
+                                        </div>
+                                    `}
+                                ` : ''}
+                            </div>
+                        </div>
                     ` : ''}
-                    <button onclick="closeMLModal()" 
-                            class="flex-1 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors">
-                        <i class="fas fa-eye mr-2"></i>
-                        Xem xét thủ công
-                    </button>
+
+                    <!-- Overall Conclusion -->
+                    <div style="margin-top: 1.5rem; 
+                                padding: 1rem; 
+                                background: linear-gradient(135deg, ${result.approved ? '#d1fae5, #a7f3d0' : '#fee2e2, #fecaca'}); 
+                                border-radius: 8px;
+                                border: 2px solid ${result.approved ? '#6ee7b7' : '#fca5a5'};">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="fas fa-${result.approved ? 'check-circle' : 'times-circle'}" 
+                               style="font-size: 2rem; color: ${result.approved ? '#059669' : '#dc2626'};"></i>
+                            <div>
+                                <p style="font-weight: 700; color: ${result.approved ? '#065f46' : '#991b1b'}; margin: 0; font-size: 0.9375rem;">
+                                    Kết luận AI
+                                </p>
+                                <p style="font-size: 0.8125rem; color: ${result.approved ? '#047857' : '#b91c1c'}; margin: 0.25rem 0 0 0; line-height: 1.5;">
+                                    ${result.approved 
+                                        ? 'Bài đăng đạt tất cả tiêu chuẩn và có thể được tự động duyệt.' 
+                                        : `Bài đăng không đạt tiêu chuẩn tại lớp kiểm tra "${result.layer}". Cần xem xét thủ công hoặc từ chối.`}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ` : ''}
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="background: #f8fafc; 
+                    padding: 1.5rem; 
+                    margin: 0 -1.5rem -1.5rem -1.5rem; 
+                    border-radius: 0 0 12px 12px; 
+                    border-top: 2px solid #e2e8f0;
+                    display: flex; 
+                    gap: 0.75rem; 
+                    justify-content: flex-end;">
+            ${result.approved && result.autoApprove ? `
+                <button onclick="autoApproveProperty('${property._id}')" 
+                        style="background: linear-gradient(135deg, #10b981, #059669); 
+                               color: white;
+                               padding: 0.875rem 1.75rem;
+                               border-radius: 8px;
+                               font-weight: 600;
+                               font-size: 0.875rem;
+                               cursor: pointer;
+                               border: none;
+                               display: inline-flex;
+                               align-items: center;
+                               gap: 0.5rem;
+                               transition: all 0.2s;
+                               box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(16, 185, 129, 0.4)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.3)'">
+                    <i class="fas fa-check-circle"></i>
+                    Tự động duyệt bài
+                </button>
+            ` : ''}
+            ${!result.approved ? `
+                <button onclick="rejectProperty('${property._id}')" 
+                        style="background: linear-gradient(135deg, #ef4444, #dc2626); 
+                               color: white;
+                               padding: 0.875rem 1.75rem;
+                               border-radius: 8px;
+                               font-weight: 600;
+                               font-size: 0.875rem;
+                               cursor: pointer;
+                               border: none;
+                               display: inline-flex;
+                               align-items: center;
+                               gap: 0.5rem;
+                               transition: all 0.2s;
+                               box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(239, 68, 68, 0.4)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(239, 68, 68, 0.3)'">
+                    <i class="fas fa-times-circle"></i>
+                    Từ chối bài đăng
+                </button>
+            ` : ''}
+            <button onclick="closeMLModal()" 
+                    style="background: linear-gradient(135deg, #64748b, #475569); 
+                           color: white;
+                           padding: 0.875rem 1.75rem;
+                           border-radius: 8px;
+                           font-weight: 600;
+                           font-size: 0.875rem;
+                           cursor: pointer;
+                           border: none;
+                           display: inline-flex;
+                           align-items: center;
+                           gap: 0.5rem;
+                           transition: all 0.2s;
+                           box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.3);"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px -2px rgba(100, 116, 139, 0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(100, 116, 139, 0.3)'">
+                <i class="fas fa-eye"></i>
+                Xem xét thủ công
+            </button>
         </div>
     `;
 
-    modal.classList.remove('hidden');
+    modal.classList.add('active');
 }
 
 /**

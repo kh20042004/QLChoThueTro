@@ -375,11 +375,27 @@
                                             <input 
                                                 type="text" 
                                                 id="addressSearch"
-                                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                                class="w-full pl-12 pr-28 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                                                 placeholder="Nhập địa chỉ (vd: 51/34 Phú Mỹ, Phú Nhuận, TP.HCM)"
                                                 autocomplete="off"
                                                 required
                                             >
+                                            
+                                            <!-- Location Action Buttons -->
+                                            <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                                                <button type="button" 
+                                                        id="currentLocationBtn" 
+                                                        class="location-action-btn"
+                                                        title="Sử dụng vị trí hiện tại">
+                                                    <i class="fas fa-crosshairs"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        id="mapPickerBtn" 
+                                                        class="location-action-btn"
+                                                        title="Chọn vị trí trên bản đồ">
+                                                    <i class="fas fa-map-marked-alt"></i>
+                                                </button>
+                                            </div>
                                             
                                             <!-- Danh sách gợi ý từ Goong Autocomplete -->
                                             <div id="addressSuggestions" class="relative z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto hidden">
@@ -835,10 +851,71 @@
             </div>
         </footer>
 
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm mx-4 animate-fadeIn">
+                <div class="mb-4">
+                    <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Đang đăng tin...</h3>
+                <p class="text-gray-600 text-sm">Vui lòng đợi trong giây lát</p>
+                <div class="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                    <i class="fas fa-shield-alt text-green-500"></i>
+                    <span>Đang kiểm tra và xử lý thông tin</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Floating Buttons -->
         <button id="scrollTopBtn" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-110 opacity-0 invisible">
             <i class="fas fa-arrow-up"></i>
         </button>
+        
+        <!-- Map Location Picker Modal -->
+        <div id="mapPickerModal" class="map-picker-modal">
+            <div class="map-picker-overlay"></div>
+            <div class="map-picker-container">
+                <div class="map-picker-header">
+                    <h3>
+                        <i class="fas fa-map-marker-alt"></i>
+                        Chọn vị trí trên bản đồ
+                    </h3>
+                    <button type="button" class="map-picker-close" id="closeMapModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="map-picker-body">
+                    <div class="map-picker-search">
+                        <input type="text" 
+                               id="mapSearchInput" 
+                               placeholder="Tìm kiếm địa điểm..."
+                               class="map-search-input">
+                        <button type="button" id="searchMapBtn" class="map-search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div id="mapContainer" class="map-container">
+                        <!-- Map sẽ được render ở đây -->
+                    </div>
+                    <div class="map-picker-info">
+                        <div class="selected-location-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="mapSelectedAddress">Di chuyển bản đồ để chọn vị trí</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-picker-footer">
+                    <button type="button" class="map-btn-cancel" id="cancelMapBtn">
+                        <i class="fas fa-times-circle"></i>
+                        Hủy
+                    </button>
+                    <button type="button" class="map-btn-confirm" id="confirmMapBtn">
+                        <i class="fas fa-check-circle"></i>
+                        Xác nhận vị trí
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -890,6 +967,10 @@
 
     <!-- Goong Address Autocomplete -->
     <script src="/js/address-autocomplete.js"></script>
+    
+    <!-- Location Map Picker -->
+    <link rel="stylesheet" href="/css/location-map-picker.css">
+    <script src="/js/location-map-picker.js"></script>
 
 </body>
 </html>

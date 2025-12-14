@@ -1,0 +1,523 @@
+/**
+ * ===================================
+ * ADMIN MODAL CSS
+ * CSS riêng cho các modal trong trang Admin
+ * Tránh conflict với CSS của các trang khác
+ * ===================================
+ */
+
+/* Modal Overlay */
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+}
+
+.admin-modal-overlay.active {
+    display: flex;
+}
+
+/* Modal Container */
+.admin-modal-container {
+    background-color: white;
+    border-radius: 12px;
+    max-width: 56rem; /* Tăng từ 48rem lên 56rem */
+    width: 95%; /* Tăng từ 100% để có padding */
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    position: relative;
+}
+
+/* Modal Content */
+.admin-modal-content {
+    padding: 1.5rem;
+}
+
+/* Modal Header */
+.admin-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.admin-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-modal-title i {
+    color: #2563eb;
+    font-size: 1.75rem;
+}
+
+.admin-modal-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.admin-modal-close:hover {
+    color: #4b5563;
+}
+
+/* Property Info Box */
+.admin-property-info {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-property-info h3 {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.admin-property-info p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0.25rem 0;
+}
+
+/* Price Prediction Box */
+.admin-price-prediction {
+    background: linear-gradient(to right, #eff6ff, #f3f4f6);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #3b82f6;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.admin-price-prediction .label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.admin-price-prediction .price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2563eb;
+    margin: 0.5rem 0;
+}
+
+.admin-price-prediction .unit {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+
+/* Price Comparison */
+.admin-price-comparison {
+    background-color: white;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-price-comparison h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.75rem;
+}
+
+.admin-comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-comparison-item {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 6px;
+}
+
+.admin-comparison-item .label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.admin-comparison-item .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.admin-comparison-item.positive .value {
+    color: #059669;
+}
+
+.admin-comparison-item.negative .value {
+    color: #dc2626;
+}
+
+.admin-comparison-item .percent {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Alert Boxes */
+.admin-alert {
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.admin-alert i {
+    margin-right: 0.25rem;
+}
+
+.admin-alert.success {
+    background-color: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+}
+
+.admin-alert.warning {
+    background-color: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.admin-alert.error {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+.admin-alert.info {
+    background-color: #dbeafe;
+    border: 1px solid #93c5fd;
+    color: #1e40af;
+}
+
+/* Content Quality Warnings */
+.admin-quality-warnings {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-quality-warnings.high-severity {
+    background-color: #fee2e2;
+    border: 2px solid #fca5a5;
+}
+
+.admin-quality-warnings.medium-severity {
+    background-color: #fef3c7;
+    border: 2px solid #fcd34d;
+}
+
+.admin-quality-warnings h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-quality-warnings.high-severity h3 {
+    color: #7f1d1d;
+}
+
+.admin-quality-warnings.high-severity h3 i {
+    color: #dc2626;
+}
+
+.admin-quality-warnings.medium-severity h3 {
+    color: #78350f;
+}
+
+.admin-quality-warnings.medium-severity h3 i {
+    color: #f59e0b;
+}
+
+.admin-warning-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.admin-warning-item i {
+    margin-top: 0.125rem;
+}
+
+.admin-warning-item.high i {
+    color: #dc2626;
+}
+
+.admin-warning-item.medium i {
+    color: #f59e0b;
+}
+
+.admin-warning-item.low i {
+    color: #3b82f6;
+}
+
+.admin-warning-item .message {
+    font-size: 0.875rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+.admin-warning-item.high .message {
+    color: #7f1d1d;
+}
+
+.admin-warning-item.medium .message {
+    color: #78350f;
+}
+
+.admin-warning-item.low .message {
+    color: #1e40af;
+}
+
+/* Decision Box */
+.admin-decision-box {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-decision-box h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-decision-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.admin-decision-status.auto-approve {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.admin-decision-status.manual-review {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.admin-decision-status.auto-reject {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Suggestion List */
+.admin-suggestion-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-suggestion-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.admin-suggestion-list li:before {
+    content: '•';
+    position: absolute;
+    left: 0.5rem;
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.admin-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.admin-modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.admin-modal-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.admin-modal-btn.approve {
+    background-color: #10b981;
+    color: white;
+}
+
+.admin-modal-btn.approve:hover {
+    background-color: #059669;
+}
+
+.admin-modal-btn.reject {
+    background-color: #ef4444;
+    color: white;
+}
+
+.admin-modal-btn.reject:hover {
+    background-color: #dc2626;
+}
+
+.admin-modal-btn.secondary {
+    background-color: #6b7280;
+    color: white;
+}
+
+.admin-modal-btn.secondary:hover {
+    background-color: #4b5563;
+}
+
+.admin-modal-btn.view {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.admin-modal-btn.view:hover {
+    background-color: #2563eb;
+}
+
+/* Loading State */
+.admin-modal-loading {
+    padding: 3rem;
+    text-align: center;
+}
+
+.admin-modal-loading i {
+    font-size: 2.5rem;
+    color: #3b82f6;
+    margin-bottom: 1rem;
+}
+
+.admin-modal-loading p {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Error State */
+.admin-modal-error {
+    padding: 3rem;
+    text-align: center;
+}
+
+.admin-modal-error i {
+    font-size: 2.5rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.admin-modal-error .title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.admin-modal-error .message {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-modal-container {
+        max-width: 100%;
+        margin: 1rem;
+    }
+
+    .admin-modal-title {
+        font-size: 1.25rem;
+    }
+
+    .admin-price-prediction .price {
+        font-size: 2rem;
+    }
+
+    .admin-comparison-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-modal-actions {
+        flex-direction: column;
+    }
+
+    .admin-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Scrollbar Styling */
+.admin-modal-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-modal-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 12px 12px 0;
+}
+
+.admin-modal-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.admin-modal-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

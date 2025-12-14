@@ -5,7 +5,7 @@
  * ===================================
  */
 
-const { Conversation, Message, User, Property } = require('../models');
+const { Conversation, Message, User, Property, Notification } = require('../models');
 
 /**
  * @desc    Lấy danh sách conversations của user
@@ -253,6 +253,28 @@ exports.sendMessage = async (req, res) => {
             lastMessageTime: message.createdAt
           }
         });
+      } else {
+        // Người nhận offline → Tạo notification
+        try {
+          const preview = content ? (content.length > 50 ? content.substring(0, 50) + '...' : content) : 'Đã gửi file đính kèm';
+          await Notification.create({
+            user: receiverId,
+            type: 'message_new',
+            title: `Tin nhắn mới từ ${req.user.name}`,
+            message: preview,
+            link: `/chat?conversation=${conversationId}`,
+            icon: 'fa-comment',
+            color: 'blue',
+            data: {
+              conversationId: conversationId,
+              messageId: message._id,
+              senderId: userId,
+              senderName: req.user.name
+            }
+          });
+        } catch (notifError) {
+          console.error('❌ Error creating message notification:', notifError);
+        }
       }
     }
 
