@@ -9,7 +9,8 @@ const Property = require('../models/Property');
 const Notification = require('../models/Notification');
 const geocodingService = require('../services/geocodingService');
 const { uploadMultipleToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
-// const moderationService = require('../services/moderationService'); // ❌ ĐÃ TẮT ML MODERATION
+const { runAutoModeration } = require('../services/autoModerationService');
+const { sendModerationResultEmail } = require('../services/emailService');
 
 /**
  * @desc    Lấy danh sách tất cả property
@@ -164,17 +165,40 @@ exports.createProperty = async (req, res, next) => {
       });
     }
     
-    if (!street || !province || !district || !ward) {
+    // Kiểm tra địa chỉ: Phải có address đầy đủ HOẶC (street + province + district + ward)
+    // Trim để tránh empty string ""
+    const hasFullAddress = address && address.trim().length > 0;
+    const hasAddressParts = street && street.trim().length > 0 && province && district && ward;
+    
+    if (!hasFullAddress && !hasAddressParts) {
       console.log('❌ Thiếu thông tin địa chỉ');
+      console.log('  - address:', address);
+      console.log('  - street:', street);
+      console.log('  - province:', province);
+      console.log('  - district:', district);
+      console.log('  - ward:', ward);
       return res.status(400).json({
         success: false,
-        error: 'Vui lòng nhập đầy đủ địa chỉ (đường, phường, quận, tỉnh)'
+        error: 'Vui lòng nhập đầy đủ địa chỉ'
       });
+    }
+    
+    // Nếu chỉ có address mà thiếu province/district/ward, extract từ address
+    if (hasFullAddress && (!province || !district || !ward)) {
+      console.log('⚠️ Có address nhưng thiếu province/district/ward, sẽ extract từ address');
+      // Parse address để lấy thông tin (có thể cải thiện sau)
     }
 
     // Tạo địa chỉ đầy đủ TEXT - ưu tiên dùng field 'address' từ frontend (đã có text đầy đủ)
     // Nếu không có thì fallback sang format từ các field riêng lẻ
     const fullAddress = address || `${street}, ${ward}, ${district}, ${province}`;
+
+    // Parse street từ fullAddress nếu street trống
+    let streetValue = street && street.trim() ? street : '';
+    if (!streetValue && fullAddress) {
+      const addressParts = fullAddress.split(',').map(part => part.trim());
+      streetValue = addressParts[0] || '';
+    }
 
     // Tự động lấy tọa độ từ địa chỉ TEXT (không phải ID số)
     let coordinates = null;
@@ -184,10 +208,10 @@ exports.createProperty = async (req, res, next) => {
       // Parse địa chỉ thành các phần (street, ward, district, city)
       // Frontend gửi: "51/34 Phú Mỹ, Phường 22, Quận Bình Thạnh, Thành phố Hồ Chí Minh"
       const addressParts = fullAddress.split(',').map(part => part.trim());
-      const streetText = addressParts[0] || street;
-      const wardText = addressParts[1] || '';
-      const districtText = addressParts[2] || '';
-      const cityText = addressParts[3] || '';
+      const streetText = addressParts[0] || streetValue;
+      const wardText = addressParts[1] || ward || '';
+      const districtText = addressParts[2] || district || '';
+      const cityText = addressParts[3] || province || '';
       
       const geoData = await geocodingService.getCoordinatesFromAddress(
         streetText,
@@ -213,8 +237,10 @@ exports.createProperty = async (req, res, next) => {
     const priceUnit = req.body.priceUnit || 'trieu-thang';
     let finalPrice = parseFloat(price);
     
+    console.log(`💰 DEBUG - Giá gốc từ request: price=${price}, priceUnit=${priceUnit}, parseFloat=${finalPrice}`);
+    
     if (priceUnit === 'trieu-thang') {
-      // Chuyển từ triệu sang VND (6.2 triệu => 6,200,000 VND)
+      // Chuyển từ triệu sang VND (122 triệu => 122,000,000 VND)
       finalPrice = finalPrice * 1000000;
     } else if (priceUnit === 'vnd-thang') {
       // Đã là VND, giữ nguyên
@@ -227,7 +253,7 @@ exports.createProperty = async (req, res, next) => {
       finalPrice = finalPrice * 24000;
     }
     
-    console.log(`💰 Giá: ${price} ${priceUnit} => ${finalPrice} VND/tháng`);
+    console.log(`💰 Giá sau chuyển đổi: ${finalPrice} VND/tháng`);
     
     // Prepare property data với Mongoose schema
     const propertyData = {
@@ -239,7 +265,7 @@ exports.createProperty = async (req, res, next) => {
       bedrooms: parseInt(bedrooms),
       bathrooms: parseInt(bathrooms),
       address: {
-        street: street,
+        street: streetValue, // Dùng streetValue đã parse từ fullAddress
         city: province,
         district: district,
         ward: ward,
@@ -304,22 +330,170 @@ exports.createProperty = async (req, res, next) => {
       });
     }
 
-    // === BỎ ML MODERATION - Tự động duyệt tất cả bài đăng ===
-    // TẤT CẢ bài đăng đều được tự động duyệt (available)
-    propertyData.status = 'available';
-    
-    console.log('✅ Tự động duyệt bài đăng (ML Moderation đã tắt)');
+    // === BÀI ĐĂNG MỚI - TỰ ĐỘNG XÉT DUYỆT ===
+    // Mặc định là pending, sẽ được cập nhật sau khi chạy auto-moderation
+    propertyData.status = 'pending';
+    propertyData.moderationDecision = 'pending_review';
 
     // Create property
-    const property = await Property.create(propertyData);
+    let property = await Property.create(propertyData);
+
+    console.log(`✅ Đã tạo property ${property._id}`);
+
+    // === CHẠY AUTO-MODERATION NGAY SAU KHI TẠO ===
+    try {
+      const moderationResult = await runAutoModeration(property);
+      
+      console.log(`📝 Kết quả moderation:`, JSON.stringify(moderationResult, null, 2));
+      
+      // Cập nhật property với kết quả moderation và lấy document mới
+      property = await Property.findByIdAndUpdate(
+        property._id, 
+        moderationResult,
+        { new: true } // Trả về document sau khi update
+      );
+      
+      console.log(`✅ Đã cập nhật property với status: ${property.status}, decision: ${property.moderationDecision}`);
+      
+      console.log(`🤖 Auto-moderation hoàn thành:`);
+      console.log(`   Status: ${moderationResult.status}`);
+      console.log(`   Decision: ${moderationResult.moderationDecision}`);
+      console.log(`   Score: ${moderationResult.moderationScore?.toFixed(1)}%`);
+      
+      // Tạo thông báo cho user dựa trên kết quả
+      let notificationTitle = '';
+      let notificationMessage = '';
+      let notificationType = '';
+      let notificationIcon = '';
+      let notificationColor = '';
+      
+      if (moderationResult.status === 'available') {
+        notificationTitle = 'Bài đăng đã được duyệt';
+        notificationMessage = `Bài đăng "${property.title}" đã được tự động duyệt và hiển thị công khai! 🎉`;
+        notificationType = 'property_approved';
+        notificationIcon = 'fa-check-circle';
+        notificationColor = 'green';
+      } else if (moderationResult.status === 'rejected') {
+        notificationTitle = 'Bài đăng bị từ chối';
+        notificationMessage = `Bài đăng "${property.title}" không đạt tiêu chuẩn và đã bị từ chối. Lý do: ${moderationResult.failedReason}`;
+        notificationType = 'property_rejected';
+        notificationIcon = 'fa-times-circle';
+        notificationColor = 'red';
+      } else {
+        notificationTitle = 'Bài đăng chờ xem xét';
+        notificationMessage = `Bài đăng "${property.title}" đang chờ quản trị viên xem xét. Điểm: ${moderationResult.moderationScore?.toFixed(1)}/100`;
+        notificationType = 'system';
+        notificationIcon = 'fa-clock';
+        notificationColor = 'yellow';
+      }
+      
+      await Notification.create({
+        user: req.user.id,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
+        icon: notificationIcon,
+        color: notificationColor,
+        link: `/property/${property._id}`,
+        data: {
+          propertyId: property._id,
+          moderationScore: moderationResult.moderationScore
+        },
+        relatedProperty: property._id
+      });
+
+      // === TẠO THÔNG BÁO CHO ADMIN ===
+      try {
+        const User = require('../models/User');
+        const admins = await User.find({ role: 'admin' });
+        
+        let adminNotificationTitle = '';
+        let adminNotificationMessage = '';
+        let adminNotificationIcon = '';
+        let adminNotificationColor = '';
+        
+        if (moderationResult.status === 'available') {
+          adminNotificationTitle = 'Bài đăng tự động duyệt';
+          adminNotificationMessage = `Bài đăng "${property.title}" đã được AI tự động duyệt (Điểm: ${moderationResult.moderationScore?.toFixed(1)}/100)`;
+          adminNotificationIcon = 'fa-robot';
+          adminNotificationColor = 'green';
+        } else if (moderationResult.status === 'rejected') {
+          adminNotificationTitle = 'Bài đăng tự động từ chối';
+          adminNotificationMessage = `Bài đăng "${property.title}" đã bị AI tự động từ chối (Điểm: ${moderationResult.moderationScore?.toFixed(1)}/100). Lý do: ${moderationResult.failedReason}`;
+          adminNotificationIcon = 'fa-robot';
+          adminNotificationColor = 'red';
+        } else if (moderationResult.status === 'pending') {
+          adminNotificationTitle = 'Bài đăng cần xem xét';
+          adminNotificationMessage = `Bài đăng "${property.title}" cần admin xem xét thủ công (Điểm: ${moderationResult.moderationScore?.toFixed(1)}/100)`;
+          adminNotificationIcon = 'fa-exclamation-triangle';
+          adminNotificationColor = 'yellow';
+        }
+        
+        // Tạo thông báo cho tất cả admin
+        const adminNotifications = admins.map(admin => ({
+          user: admin._id,
+          title: adminNotificationTitle,
+          message: adminNotificationMessage,
+          type: 'system',
+          icon: adminNotificationIcon,
+          color: adminNotificationColor,
+          link: `/admin/properties`,
+          data: {
+            propertyId: property._id,
+            landlordId: req.user.id,
+            moderationScore: moderationResult.moderationScore,
+            moderationStatus: moderationResult.status
+          },
+          relatedProperty: property._id
+        }));
+        
+        await Notification.insertMany(adminNotifications);
+        console.log(`📢 Đã tạo ${adminNotifications.length} thông báo cho admin`);
+      } catch (adminNotifError) {
+        console.error('❌ Lỗi khi tạo thông báo cho admin:', adminNotifError.message);
+      }
+
+      // === GỬI EMAIL THÔNG BÁO ===
+      try {
+        const User = require('../models/User');
+        const user = await User.findById(req.user.id);
+        
+        if (user && user.email) {
+          console.log(`📧 Đang gửi email thông báo đến ${user.email}...`);
+          await sendModerationResultEmail(user, property, moderationResult);
+        } else {
+          console.log('⚠️ User không có email, bỏ qua gửi email');
+        }
+      } catch (emailError) {
+        console.error('❌ Lỗi khi gửi email (không ảnh hưởng flow chính):', emailError.message);
+      }
+      
+    } catch (moderationError) {
+      console.error('❌❌❌ LỖI NGHIÊM TRỌNG KHI CHẠY AUTO-MODERATION ❌❌❌');
+      console.error('Error name:', moderationError.name);
+      console.error('Error message:', moderationError.message);
+      console.error('Error stack:', moderationError.stack);
+      
+      // Nếu lỗi, giữ nguyên status pending
+      console.log('⚠️ Property vẫn giữ status pending do lỗi auto-moderation');
+    }
 
     // Log the action
-    console.log(`✅ Người dùng ${req.user.id} vừa tạo tin đăng ${property._id} tại ${fullAddress} (${coordinates})`);
-    console.log(`   Status: ${property.status} (tự động duyệt)`);
+    console.log(`✅ Người dùng ${req.user.id} vừa tạo tin đăng ${property._id} tại ${fullAddress}`);
+
+    // Trả về message phù hợp với status
+    let responseMessage = '';
+    if (property.status === 'available') {
+      responseMessage = '✅ Đăng tin thành công! Tin đăng của bạn đã được tự động duyệt và hiển thị công khai.';
+    } else if (property.status === 'rejected') {
+      responseMessage = '⚠️ Bài đăng không đạt tiêu chuẩn chất lượng. Vui lòng kiểm tra lại thông tin.';
+    } else {
+      responseMessage = '✅ Đăng tin thành công! Tin đăng của bạn đang chờ quản trị viên xét duyệt.';
+    }
 
     res.status(201).json({
       success: true,
-      message: '✅ Đăng tin thành công! Tin đăng của bạn đã được phê duyệt và đang hiển thị công khai.',
+      message: responseMessage,
       data: property
     });
   } catch (error) {

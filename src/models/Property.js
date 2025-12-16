@@ -40,7 +40,7 @@ const PropertySchema = new mongoose.Schema({
   address: {
     street: {
       type: String,
-      required: [true, 'Vui lòng nhập địa chỉ']
+      default: '' // Không required vì có thể dùng address full text
     },
     ward: {
       type: String,

@@ -260,7 +260,8 @@ function getStatusColor(status) {
         'pending': 'warning',
         'available': 'success',
         'rented': 'info',
-        'inactive': 'secondary'
+        'inactive': 'secondary',
+        'rejected': 'danger'
     };
     return colors[status] || 'secondary';
 }
@@ -270,7 +271,8 @@ function getStatusLabel(status) {
         'pending': 'Chờ duyệt',
         'available': 'Có sẵn',
         'rented': 'Đã cho thuê',
-        'inactive': 'Không hoạt động'
+        'inactive': 'Không hoạt động',
+        'rejected': 'Đã từ chối'
     };
     return labels[status] || status;
 }

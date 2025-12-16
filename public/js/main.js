@@ -888,8 +888,8 @@ async function loadFeaturedProperties() {
     if (!container) return; // Không phải trang chủ
     
     try {
-        // Fetch dữ liệu từ API - CHỈ LẤY PHÒNG ĐÃ DUYỆT (status: available)
-        const response = await fetch('/api/properties?limit=6&sort=-createdAt&status=available');
+        // Fetch dữ liệu từ API - CHỈ LẤY PHÒNG ĐÃ DUYỆT (moderationDecision=auto_approved được tự động filter ở backend)
+        const response = await fetch('/api/properties?limit=6&sort=-createdAt');
         
         if (!response.ok) {
             throw new Error('Failed to fetch properties');

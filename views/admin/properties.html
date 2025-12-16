@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-modal.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -278,9 +279,9 @@
     </div>
 
     <!-- AI Price Prediction Modal -->
-    <div id="mlModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div id="mlModalContent">
+    <div id="mlModal" class="admin-modal-overlay">
+        <div class="admin-modal-container">
+            <div id="mlModalContent" class="admin-modal-content">
                 <!-- Content will be injected by JavaScript -->
             </div>
         </div>

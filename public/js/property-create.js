@@ -154,6 +154,11 @@ function changeStep(step) {
     // Cập nhật bước hiện tại
     currentStep = step;
 
+    // Tự động điền thông tin liên hệ khi chuyển đến step 5
+    if (step === 5) {
+        autofillContactInfo();
+    }
+
     // Cập nhật thanh tiến độ
     updateProgressBar();
 
@@ -241,52 +246,69 @@ function validateCurrentStep() {
     } 
     else if (currentStep === 2) {
         // Kiểm tra Step 2: Địa chỉ
-        const street = document.getElementById('street').value.trim();
+        // Kiểm tra xem có địa chỉ đầy đủ từ address search không
+        const address = document.getElementById('address').value.trim();
+        const latitude = document.getElementById('latitude').value;
+        const longitude = document.getElementById('longitude').value;
         
-        // Lấy giá trị từ Choices.js instances
-        let province = '';
-        let district = '';
-        let ward = '';
-        
-        if (provinceChoice) {
-            const provinceSelected = provinceChoice.getValue();
-            province = provinceSelected.value || '';
+        // Nếu có address và coordinates từ Goong API (search, current location, hoặc map picker)
+        if (address && latitude && longitude) {
+            // Đã có địa chỉ đầy đủ từ Goong, tự động parse ra các trường
+            isValid = true;
+            
+            // Parse address components nếu chưa có
+            if (!document.getElementById('province').value || !document.getElementById('district').value) {
+                parseAddressComponents(address);
+            }
         } else {
-            province = document.getElementById('province').value;
-        }
-        
-        if (districtChoice) {
-            const districtSelected = districtChoice.getValue();
-            district = districtSelected.value || '';
-        } else {
-            district = document.getElementById('district').value;
-        }
-        
-        if (wardChoice) {
-            const wardSelected = wardChoice.getValue();
-            ward = wardSelected.value || '';
-        } else {
-            ward = document.getElementById('ward').value;
-        }
+            // Nếu không có từ Goong, kiểm tra nhập thủ công
+            const street = document.getElementById('street').value.trim();
+            
+            // Lấy giá trị từ Choices.js instances
+            let province = '';
+            let district = '';
+            let ward = '';
+            
+            if (provinceChoice) {
+                const provinceSelected = provinceChoice.getValue();
+                province = provinceSelected.value || '';
+            } else {
+                province = document.getElementById('province').value;
+            }
+            
+            if (districtChoice) {
+                const districtSelected = districtChoice.getValue();
+                district = districtSelected.value || '';
+            } else {
+                district = document.getElementById('district').value;
+            }
+            
+            if (wardChoice) {
+                const wardSelected = wardChoice.getValue();
+                ward = wardSelected.value || '';
+            } else {
+                ward = document.getElementById('ward').value;
+            }
 
-        if (!street) {
-            showFieldError('street', 'Vui lòng nhập đường/phố');
-            isValid = false;
-        }
+            if (!street) {
+                showFieldError('street', 'Vui lòng nhập đường/phố hoặc sử dụng tìm kiếm địa chỉ');
+                isValid = false;
+            }
 
-        if (!province || province === '') {
-            showFieldError('province', 'Vui lòng chọn tỉnh/thành phố');
-            isValid = false;
-        }
+            if (!province || province === '') {
+                showFieldError('province', 'Vui lòng chọn tỉnh/thành phố');
+                isValid = false;
+            }
 
-        if (!district || district === '') {
-            showFieldError('district', 'Vui lòng chọn quận/huyện');
-            isValid = false;
-        }
+            if (!district || district === '') {
+                showFieldError('district', 'Vui lòng chọn quận/huyện');
+                isValid = false;
+            }
 
-        if (!ward || ward === '') {
-            showFieldError('ward', 'Vui lòng chọn phường/xã');
-            isValid = false;
+            if (!ward || ward === '') {
+                showFieldError('ward', 'Vui lòng chọn phường/xã');
+                isValid = false;
+            }
         }
     } 
     else if (currentStep === 3) {
@@ -308,6 +330,9 @@ function validateCurrentStep() {
         if (!contactName) {
             showFieldError('contactName', 'Vui lòng nhập tên');
             isValid = false;
+        } else if (!isValidContactName(contactName)) {
+            showFieldError('contactName', 'Tên không hợp lệ (không được chứa ký tự đặc biệt, spam hoặc từ không phù hợp)');
+            isValid = false;
         }
 
         if (!contactPhone) {
@@ -320,6 +345,24 @@ function validateCurrentStep() {
     }
 
     return isValid;
+}
+
+// Helper function to parse address components from full address
+function parseAddressComponents(fullAddress) {
+    // Parse địa chỉ đầy đủ để extract các components
+    // Format thường: "Số nhà Đường, Phường, Quận, Thành phố"
+    const parts = fullAddress.split(',').map(p => p.trim());
+    
+    if (parts.length >= 4) {
+        document.getElementById('street').value = parts[0] || '';
+        document.getElementById('ward').value = parts[1] || '';
+        document.getElementById('district').value = parts[2] || '';
+        document.getElementById('province').value = parts[3] || '';
+    } else if (parts.length >= 3) {
+        document.getElementById('street').value = parts[0] || '';
+        document.getElementById('district').value = parts[1] || '';
+        document.getElementById('province').value = parts[2] || '';
+    }
 }
 
 function showFieldError(fieldId, message) {
@@ -362,6 +405,110 @@ function isValidPhone(phone) {
     // Kiểm tra số điện thoại Việt Nam (10-11 chữ số)
     const phoneRegex = /^(0|\+84)(\d{9,10})$/;
     return phoneRegex.test(phone.replace(/\s+/g, ''));
+}
+
+// ===================================
+// 3.5. TỰ ĐỘNG ĐIỀN THÔNG TIN LIÊN HỆ
+// ===================================
+
+/**
+ * Kiểm tra xem tên có hợp lệ không (không chứa spam, tục tĩu, ký tự đặc biệt)
+ */
+function isValidContactName(name) {
+    if (!name || typeof name !== 'string') return false;
+    
+    const trimmedName = name.trim();
+    
+    // Kiểm tra độ dài hợp lý (2-50 ký tự)
+    if (trimmedName.length < 2 || trimmedName.length > 50) return false;
+    
+    // Danh sách từ cấm (spam, tục tĩu)
+    const bannedWords = [
+        'admin', 'administrator', 'moderator', 'test', 'testing',
+        'spam', 'bot', 'hack', 'hacker', 'fake',
+        'fuck', 'shit', 'damn', 'bitch', 'ass', 'dick',
+        'đụ', 'địt', 'lồn', 'cặc', 'buồi', 'chó', 'vcl', 'vl', 'cc', 'dm', 'đm',
+        'xxx', 'sex', 'porn', 'scam', 'lừa đảo', 'lua dao'
+    ];
+    
+    const lowerName = trimmedName.toLowerCase();
+    for (const word of bannedWords) {
+        if (lowerName.includes(word)) {
+            console.warn('Tên chứa từ không hợp lệ:', word);
+            return false;
+        }
+    }
+    
+    // Kiểm tra ký tự đặc biệt (chỉ cho phép chữ cái, số, khoảng trắng, dấu tiếng Việt)
+    // Cho phép: chữ cái (a-z, A-Z, unicode Việt), số, khoảng trắng, dấu chấm, gạch ngang
+    const validNameRegex = /^[a-zA-ZÀ-ỹĂăÂâĐđÊêÔôƠơƯư0-9\s\.\-]+$/;
+    if (!validNameRegex.test(trimmedName)) {
+        console.warn('Tên chứa ký tự đặc biệt không hợp lệ');
+        return false;
+    }
+    
+    // Kiểm tra không phải toàn ký tự đặc biệt hoặc số
+    const hasLetter = /[a-zA-ZÀ-ỹĂăÂâĐđÊêÔôƠơƯư]/.test(trimmedName);
+    if (!hasLetter) {
+        console.warn('Tên phải chứa ít nhất một chữ cái');
+        return false;
+    }
+    
+    // Kiểm tra không có quá nhiều ký tự lặp liên tiếp (vd: "aaaaa", "11111")
+    const repeatedCharsRegex = /(.)\1{4,}/;
+    if (repeatedCharsRegex.test(trimmedName)) {
+        console.warn('Tên chứa quá nhiều ký tự lặp');
+        return false;
+    }
+    
+    // Kiểm tra không có quá nhiều khoảng trắng liên tiếp
+    if (/\s{3,}/.test(trimmedName)) {
+        console.warn('Tên chứa quá nhiều khoảng trắng');
+        return false;
+    }
+    
+    return true;
+}
+
+function autofillContactInfo() {
+    try {
+        const userData = localStorage.getItem('userData');
+        if (!userData) {
+            console.log('Không tìm thấy userData trong localStorage');
+            return;
+        }
+
+        const user = JSON.parse(userData);
+        console.log('Đang kiểm tra thông tin liên hệ từ userData');
+
+        // Điền tên liên hệ (có validate)
+        const contactNameInput = document.getElementById('contactName');
+        if (contactNameInput && !contactNameInput.value) {
+            const userName = user.fullName || user.name || '';
+            if (isValidContactName(userName)) {
+                contactNameInput.value = userName;
+                console.log('✓ Đã điền tên liên hệ hợp lệ:', userName);
+            } else {
+                console.warn('⚠ Tên từ userData không hợp lệ, bỏ qua tự động điền');
+                // Không điền, để người dùng nhập thủ công
+            }
+        }
+
+        // Điền số điện thoại (có validate)
+        const contactPhoneInput = document.getElementById('contactPhone');
+        if (contactPhoneInput && !contactPhoneInput.value) {
+            const userPhone = user.phone || user.phoneNumber || '';
+            if (userPhone && isValidPhone(userPhone)) {
+                contactPhoneInput.value = userPhone;
+                console.log('✓ Đã điền số điện thoại hợp lệ');
+            } else {
+                console.warn('⚠ Số điện thoại từ userData không hợp lệ, bỏ qua tự động điền');
+            }
+        }
+
+    } catch (error) {
+        console.error('Lỗi khi tự động điền thông tin liên hệ:', error);
+    }
 }
 
 // ===================================
@@ -1026,7 +1173,10 @@ function submitPropertyForm() {
     formData.append('allowSMS', propertyData.contact.allowSms);
     formData.append('allowSMS', document.getElementById('allowSms')?.checked || false);
 
-    // Gửi yêu cầu
+    // Hiển thị loading overlay
+    showLoadingOverlay();
+
+    // Disable nút submit
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.classList.add('is-loading');
     submitBtn.disabled = true;
@@ -1047,6 +1197,7 @@ function submitPropertyForm() {
         return data;
     })
     .then(data => {
+        hideLoadingOverlay();
         showAlert('Đăng tin thành công!', 'success');
         
         // Lưu thông tin đăng tin vào localStorage
@@ -1090,6 +1241,7 @@ function submitPropertyForm() {
     })
     .catch(error => {
         console.error('Lỗi:', error);
+        hideLoadingOverlay();
         showAlert('Lỗi: ' + error.message, 'danger');
         submitBtn.classList.remove('is-loading');
         submitBtn.disabled = false;
@@ -1315,20 +1467,37 @@ const NEARBY_POI_API_URL = `${NGROK_BASE_URL}/nearby-poi`;
 
 // Biến lưu POI data
 let currentPoiData = null;
+let appliedPoiDescription = ''; // ← Lưu đoạn mô tả POI đã apply để có thể xóa sau
 
 /**
  * Map province text → city code cho API
  * Dùng provinceText (tên tỉnh) thay vì provinceValue (ID số)
  */
 function getPoiCityCode(provinceText) {
-    const provinceTextLower = (provinceText || '').toLowerCase();
-    if (provinceTextLower.includes('hồ chí minh') || provinceTextLower.includes('hcm') || provinceTextLower.includes('tp.hcm')) {
+    const provinceTextLower = (provinceText || '').toLowerCase().trim();
+    
+    console.log('🔍 getPoiCityCode debug:', {
+        original: provinceText,
+        lowercase: provinceTextLower,
+        isEmpty: !provinceText
+    });
+    
+    if (provinceTextLower.includes('hồ chí minh') || 
+        provinceTextLower.includes('hcm') || 
+        provinceTextLower.includes('tp.hcm') ||
+        provinceTextLower.includes('sài gòn') ||
+        provinceTextLower.includes('saigon')) {
+        console.log('✅ Matched: HCM');
         return 'HCM';
     } else if (provinceTextLower.includes('hà nội') || provinceTextLower.includes('hanoi')) {
+        console.log('✅ Matched: HaNoi');
         return 'HaNoi';
     } else if (provinceTextLower.includes('đà nẵng') || provinceTextLower.includes('da nang')) {
+        console.log('✅ Matched: DaNang');
         return 'DaNang';
     }
+    
+    console.log('❌ No match found');
     return null; // Không hỗ trợ
 }
 
@@ -1371,7 +1540,9 @@ async function fetchNearbyPOI() {
     // Validate input
     if (!fullAddress || !province) {
         console.warn('⚠️ Chưa đủ thông tin địa chỉ để tìm POI');
-        hideNearbyPoiContainer();
+        resetPoiData(); // ← Dùng resetPoiData thay vì hideNearbyPoiContainer
+        // Xóa mô tả POI cũ khi không có địa chỉ hợp lệ
+        removeOldPoiDescription();
         return;
     }
     
@@ -1384,7 +1555,9 @@ async function fetchNearbyPOI() {
     
     if (!cityCode) {
         console.warn('⚠️ Province không thuộc HCM/Hà Nội/Đà Nẵng, không tìm POI');
-        hideNearbyPoiContainer();
+        resetPoiData(); // ← Dùng resetPoiData thay vì hideNearbyPoiContainer
+        // Xóa mô tả POI cũ khi đổi sang tỉnh không hỗ trợ
+        removeOldPoiDescription();
         return;
     }
     
@@ -1402,7 +1575,8 @@ async function fetchNearbyPOI() {
         const response = await fetch(NEARBY_POI_API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify(payload)
         });
@@ -1509,6 +1683,33 @@ function displayNearbyPoi(data) {
 /**
  * Show/Hide helper functions
  */
+
+/**
+ * Hiển thị loading overlay khi đăng tin
+ */
+function showLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        // Ngăn scroll body
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+/**
+ * Ẩn loading overlay
+ */
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        // Cho phép scroll lại
+        document.body.style.overflow = '';
+    }
+}
+
 function showNearbyPoiLoading() {
     const container = document.getElementById('nearbyPoiContainer');
     const loadingEl = document.getElementById('poiLoading');
@@ -1534,15 +1735,56 @@ function showNearbyPoiError() {
 function hideNearbyPoiContainer() {
     const container = document.getElementById('nearbyPoiContainer');
     container.classList.add('hidden');
+    // KHÔNG xóa currentPoiData ở đây vì có thể user vẫn muốn dùng
+    // currentPoiData = null; // ← Bỏ dòng này
+}
+
+/**
+ * Reset POI data hoàn toàn (khi đổi sang tỉnh không hỗ trợ hoặc xóa địa chỉ)
+ */
+function resetPoiData() {
+    hideNearbyPoiContainer();
     currentPoiData = null;
+    console.log('🔄 Reset POI data');
+}
+
+/**
+ * Xóa mô tả POI cũ khỏi textarea description
+ */
+function removeOldPoiDescription() {
+    if (!appliedPoiDescription) {
+        return; // Không có mô tả POI nào đã apply
+    }
+    
+    const descriptionEl = document.getElementById('description');
+    if (!descriptionEl) {
+        return;
+    }
+    
+    const currentDesc = descriptionEl.value;
+    
+    // Xóa đoạn mô tả POI đã apply (kể cả khoảng trắng xung quanh)
+    const updatedDesc = currentDesc
+        .replace(appliedPoiDescription, '')
+        .replace(/\n\n\n+/g, '\n\n') // Loại bỏ nhiều dòng trống liên tiếp
+        .trim();
+    
+    descriptionEl.value = updatedDesc;
+    appliedPoiDescription = ''; // Reset
+    
+    console.log('🗑️ Removed old POI description');
 }
 
 /**
  * Áp dụng POI vào mô tả (Step 1)
  */
 function applyPoiToDescription() {
+    console.log('📝 applyPoiToDescription called');
+    console.log('Current POI data:', currentPoiData);
+    
     if (!currentPoiData) {
         console.warn('⚠️ Không có POI data để apply');
+        showAlert('⚠️ Vui lòng chọn địa chỉ trước để xem các tiện ích xung quanh', 'warning');
         return;
     }
     
@@ -1553,6 +1795,9 @@ function applyPoiToDescription() {
         return;
     }
     
+    // Xóa mô tả POI cũ trước khi thêm mới (nếu có)
+    removeOldPoiDescription();
+    
     // Build câu mô tả
     const parts = [];
     
@@ -1560,6 +1805,10 @@ function applyPoiToDescription() {
     const topUniversity = currentPoiData.universities?.[0];
     const topHospital = currentPoiData.hospitals?.[0];
     const topMall = currentPoiData.malls?.[0];
+    
+    console.log('Top University:', topUniversity);
+    console.log('Top Hospital:', topHospital);
+    console.log('Top Mall:', topMall);
     
     if (topUniversity) {
         parts.push(`${topUniversity.name} (khoảng ${formatDistance(topUniversity.distance_m)})`);
@@ -1575,6 +1824,7 @@ function applyPoiToDescription() {
     
     if (parts.length === 0) {
         console.warn('⚠️ Không có POI nào để tạo mô tả');
+        showAlert('⚠️ Không tìm thấy tiện ích nào xung quanh địa chỉ này', 'warning');
         return;
     }
     
@@ -1596,6 +1846,9 @@ function applyPoiToDescription() {
         suggestionText += ` Khu vực cũng gần ${parts.slice(2).join(', ')}.`;
     }
     
+    // Lưu lại đoạn text vừa tạo để có thể xóa sau
+    appliedPoiDescription = suggestionText;
+    
     // Append vào description
     const currentDesc = descriptionEl.value.trim();
     if (currentDesc) {
@@ -1608,7 +1861,7 @@ function applyPoiToDescription() {
     
     // Show notification
     if (typeof showAlert === 'function') {
-        showAlert('✅ Đã thêm gợi ý vào mô tả!', 'success');
+        showAlert('Đã thêm gợi ý vào mô tả!', 'success');
     }
     
     // Scroll to description field nếu không ở Step 1
@@ -1625,6 +1878,30 @@ function applyPoiToDescription() {
  * Setup event listeners cho POI
  */
 function setupNearbyPoiListeners() {
+    // Lắng nghe khi thay đổi địa chỉ (address search input)
+    const addressSearchInput = document.getElementById('addressSearch');
+    if (addressSearchInput) {
+        addressSearchInput.addEventListener('input', () => {
+            // Khi user bắt đầu gõ địa chỉ mới, ẩn POI container cũ
+            // (POI mới sẽ được load sau khi chọn địa chỉ)
+            const container = document.getElementById('nearbyPoiContainer');
+            if (container && !container.classList.contains('hidden')) {
+                console.log('🔄 User đang thay đổi địa chỉ, ẩn POI cũ');
+            }
+        });
+    }
+    
+    // Lắng nghe khi clear địa chỉ đã chọn
+    const clearAddressBtn = document.getElementById('clearAddressBtn');
+    if (clearAddressBtn) {
+        clearAddressBtn.addEventListener('click', () => {
+            // Xóa POI container và mô tả POI
+            resetPoiData(); // ← Dùng resetPoiData để xóa hoàn toàn
+            removeOldPoiDescription();
+            console.log('🗑️ Cleared address and POI description');
+        });
+    }
+    
     // Lắng nghe khi blur ô street
     const streetEl = document.getElementById('street');
     if (streetEl) {
@@ -1656,3 +1933,59 @@ function setupNearbyPoiListeners() {
 }
 
 // Gọi setup khi DOM ready (thêm vào cuối file)
+
+/**
+ * Export hàm searchNearbyPlaces để location-map-picker.js có thể gọi
+ * Hàm này sẽ được gọi khi user chọn vị trí từ map hoặc current location
+ */
+window.searchNearbyPlaces = async function(lat, lng) {
+    console.log('🗺️ searchNearbyPlaces called with:', { lat, lng });
+    
+    // Lấy province để xác định city code
+    const province = document.getElementById('province')?.value || '';
+    const cityCode = getPoiCityCode(province);
+    
+    if (!cityCode) {
+        console.warn('⚠️ Cannot determine city code from province');
+        return;
+    }
+    
+    // Show loading
+    showNearbyPoiLoading();
+    
+    try {
+        const payload = {
+            city: cityCode,
+            lat: lat,
+            lng: lng
+        };
+        
+        console.log('📤 POI API payload (from coordinates):', payload);
+        
+        const response = await fetch(NEARBY_POI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        console.log('📥 POI API response:', data);
+        
+        if (!response.ok || data.error) {
+            console.error('❌ POI API error:', data.error || data.message);
+            showNearbyPoiError();
+            return;
+        }
+        
+        // Lưu data và hiển thị
+        currentPoiData = data;
+        displayNearbyPoi(data);
+        
+    } catch (error) {
+        console.error('❌ Error fetching POI from coordinates:', error);
+        showNearbyPoiError();
+    }
+};

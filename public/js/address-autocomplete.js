@@ -257,26 +257,29 @@ function parseAddressComponents(place) {
             ward = comp.long_name;
         } else if (types.includes('administrative_area_level_2')) {
             district = comp.long_name;
-        } else if (types.includes('administrative_area_level_1') || types.includes('locality')) {
+        } else if (types.includes('administrative_area_level_1')) {
+            // Đây là province/city level (HCM, Hà Nội, Đà Nẵng...)
+            province = comp.long_name;
+        } else if (types.includes('locality')) {
             city = comp.long_name;
-            province = comp.long_name; // Dùng chung
         }
     });
     
     // Fallback: parse từ formatted_address
-    if (!street || !ward || !district || !city) {
+    // Format thường: "Tên đường, Phường, Quận, Thành phố"
+    if (!province) {
         const parts = place.address.split(',').map(p => p.trim());
         
         if (parts.length >= 4) {
-            street = parts[0] || street;
-            ward = parts[1] || ward;
-            district = parts[2] || district;
-            city = parts[3] || city;
-            province = parts[3] || province;
+            street = street || parts[0];
+            ward = ward || parts[1];
+            district = district || parts[2];
+            province = parts[parts.length - 1]; // Phần tử cuối cùng thường là tỉnh/thành
         }
     }
     
     console.log('📋 Parsed address:', { street, ward, district, city, province });
+    console.log('📋 Full address components:', components);
     
     // Điền vào hidden fields
     document.getElementById('street').value = street;

@@ -152,7 +152,7 @@ function showSearchSummary(query, summary, count) {
  */
 async function loadProperties() {
     try {
-        const response = await fetch('/api/properties?status=available');
+        const response = await fetch('/api/properties');
         const data = await response.json();
         
         if (data.success) {
