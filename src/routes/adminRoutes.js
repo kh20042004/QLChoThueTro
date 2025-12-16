@@ -19,7 +19,14 @@ const {
   rejectProperty,
   deleteProperty,
   deleteUser,
-  getNotifications
+  getNotifications,
+  getContacts,
+  getContactById,
+  updateContactStatus,
+  assignContact,
+  updateContactPriority,
+  deleteContact,
+  getContactStatistics
 } = require('../controllers/adminController');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -47,5 +54,14 @@ router.delete('/properties/:id', deleteProperty);
 
 // Notification routes
 router.get('/notifications', getNotifications);
+
+// Contact management routes
+router.get('/contacts/statistics', getContactStatistics);
+router.get('/contacts', getContacts);
+router.get('/contacts/:id', getContactById);
+router.put('/contacts/:id/status', updateContactStatus);
+router.put('/contacts/:id/assign', assignContact);
+router.put('/contacts/:id/priority', updateContactPriority);
+router.delete('/contacts/:id', deleteContact);
 
 module.exports = router;

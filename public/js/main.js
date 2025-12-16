@@ -324,43 +324,34 @@ let loadingOverlay = null;
  * @param {string} message - Thông báo hiển thị
  */
 function showLoading(message = 'Đang tải...') {
-    // Tạo overlay nếu chưa có
     if (!loadingOverlay) {
         loadingOverlay = document.createElement('div');
-        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.id = 'loading-overlay';
+        loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        
         loadingOverlay.innerHTML = `
-            <div class="loading-content">
-                <div class="spinner-border text-primary mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="loading-message text-white"></p>
+            <div style="text-align:center;color:white;">
+                <div style="width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite;"></div>
+                <p class="loading-message" style="font-size:16px;margin:0;"></p>
             </div>
         `;
         
-        // Thêm style inline
-        loadingOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        `;
-        
         document.body.appendChild(loadingOverlay);
+        
+        // Add spin animation if not exists
+        if (!document.getElementById('loading-spin-animation')) {
+            const style = document.createElement('style');
+            style.id = 'loading-spin-animation';
+            style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+            document.head.appendChild(style);
+        }
     }
     
-    // Cập nhật message
     const messageEl = loadingOverlay.querySelector('.loading-message');
     if (messageEl) {
         messageEl.textContent = message;
     }
     
-    // Hiển thị
     loadingOverlay.style.display = 'flex';
 }
 
@@ -427,44 +418,86 @@ function throttle(func, limit) {
 /**
  * Show toast notification
  * @param {string} message - Nội dung thông báo
- * @param {string} type - Loại thông báo (success, error, info, warning)
+ * @param {string} type - Loại thông báo (success, error, info, warning, danger)
  */
 function showToast(message, type = 'info') {
-    // Kiểm tra Bootstrap Toast
-    const toastContainer = document.querySelector('.toast-container');
-    
-    if (!toastContainer) {
-        // Tạo container nếu chưa có
-        const container = document.createElement('div');
-        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        document.body.appendChild(container);
+    // Kiểm tra nếu có Bootstrap
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        const toastContainer = document.querySelector('.toast-container');
+        
+        if (!toastContainer) {
+            const container = document.createElement('div');
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(container);
+        }
+        
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        document.querySelector('.toast-container').appendChild(toastEl);
+        
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+        
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    } else {
+        // Fallback: Custom toast không cần Bootstrap
+        let toastContainer = document.getElementById('custom-toast-container');
+        
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'custom-toast-container';
+            toastContainer.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastEl = document.createElement('div');
+        
+        const colors = {
+            'success': { bg: '#10b981', icon: 'check-circle' },
+            'error': { bg: '#ef4444', icon: 'times-circle' },
+            'danger': { bg: '#ef4444', icon: 'times-circle' },
+            'warning': { bg: '#f59e0b', icon: 'exclamation-triangle' },
+            'info': { bg: '#3b82f6', icon: 'info-circle' }
+        };
+        
+        const color = colors[type] || colors.info;
+        
+        toastEl.style.cssText = `background:${color.bg};color:white;padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;gap:12px;min-width:300px;max-width:500px;animation:slideInRight 0.3s ease-out;`;
+        
+        toastEl.innerHTML = `
+            <i class="fas fa-${color.icon}" style="font-size:20px;"></i>
+            <span style="flex:1;">${message}</span>
+            <button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:white;cursor:pointer;font-size:20px;padding:0;width:24px;height:24px;">×</button>
+        `;
+        
+        toastContainer.appendChild(toastEl);
+        
+        setTimeout(() => {
+            toastEl.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => toastEl.remove(), 300);
+        }, 3000);
     }
     
-    // Tạo toast element
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
-    toastEl.setAttribute('role', 'alert');
-    toastEl.setAttribute('aria-live', 'assertive');
-    toastEl.setAttribute('aria-atomic', 'true');
-    
-    toastEl.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                    data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
-    
-    document.querySelector('.toast-container').appendChild(toastEl);
-    
-    // Hiển thị toast
-    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-    toast.show();
-    
-    // Xóa toast sau khi ẩn
-    toastEl.addEventListener('hidden.bs.toast', function() {
-        this.remove();
-    });
+    if (!document.getElementById('toast-animations')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animations';
+        style.textContent = '@keyframes slideInRight{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}';
+        document.head.appendChild(style);
+    }
 }
 
 /**

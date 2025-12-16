@@ -72,6 +72,7 @@ app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/moderation', require('./routes/moderationRoutes'));
+app.use('/api/contacts', require('./routes/contactRoutes'));
 
 // Partials Routes - Phục vụ các file HTML partial
 app.get('/partials/:filename', (req, res) => {
@@ -229,6 +230,10 @@ app.get('/admin/reviews', (req, res) => {
 
 app.get('/admin/reports', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/admin/reports.html'));
+});
+
+app.get('/admin/contacts', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/admin/contacts.html'));
 });
 
 app.get('/admin/settings', (req, res) => {

@@ -10,6 +10,7 @@ const Property = require('../models/Property');
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const Notification = require('../models/Notification');
+const Contact = require('../models/Contact');
 
 /**
  * @desc    Lấy thống kê tổng quan cho dashboard
@@ -560,6 +561,271 @@ exports.getNotifications = async (req, res, next) => {
       count: limitedNotifications.length,
       unreadCount: limitedNotifications.filter(n => !n.isRead).length,
       data: limitedNotifications
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * ===================================
+ * CONTACT MANAGEMENT
+ * ===================================
+ */
+
+/**
+ * @desc    Lấy danh sách liên hệ
+ * @route   GET /api/admin/contacts
+ * @access  Private/Admin
+ */
+exports.getContacts = async (req, res, next) => {
+  try {
+    const {
+      status,
+      priority,
+      category,
+      search,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    if (status) query.status = status;
+    if (priority) query.priority = priority;
+    if (category) query.category = category;
+
+    // Search by name, email, or subject
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    // Get contacts
+    const contacts = await Contact.find(query)
+      .populate('assignedTo', 'name email')
+      .populate('resolvedBy', 'name email')
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Contact.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: contacts.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      data: contacts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Lấy chi tiết liên hệ
+ * @route   GET /api/admin/contacts/:id
+ * @access  Private/Admin
+ */
+exports.getContactById = async (req, res, next) => {
+  try {
+    const contact = await Contact.findById(req.params.id)
+      .populate('assignedTo', 'name email avatar')
+      .populate('resolvedBy', 'name email avatar');
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: contact
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Cập nhật trạng thái liên hệ
+ * @route   PUT /api/admin/contacts/:id/status
+ * @access  Private/Admin
+ */
+exports.updateContactStatus = async (req, res, next) => {
+  try {
+    const { status, adminNote } = req.body;
+
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ'
+      });
+    }
+
+    // Update status
+    if (status) {
+      contact.status = status;
+      
+      // If resolved or closed, save resolved time and user
+      if (status === 'resolved' || status === 'closed') {
+        contact.resolvedAt = new Date();
+        contact.resolvedBy = req.user.id;
+      }
+    }
+
+    // Update admin note
+    if (adminNote !== undefined) {
+      contact.adminNote = adminNote;
+    }
+
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật trạng thái thành công',
+      data: contact
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Gán liên hệ cho admin
+ * @route   PUT /api/admin/contacts/:id/assign
+ * @access  Private/Admin
+ */
+exports.assignContact = async (req, res, next) => {
+  try {
+    const { adminId } = req.body;
+
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ'
+      });
+    }
+
+    // Verify admin exists
+    const admin = await User.findById(adminId);
+    if (!admin || admin.role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin không hợp lệ'
+      });
+    }
+
+    contact.assignedTo = adminId;
+    
+    // Auto change status to in-progress if pending
+    if (contact.status === 'pending') {
+      contact.status = 'in-progress';
+    }
+
+    await contact.save();
+
+    // Populate assignedTo before sending response
+    await contact.populate('assignedTo', 'name email avatar');
+
+    res.status(200).json({
+      success: true,
+      message: 'Gán liên hệ thành công',
+      data: contact
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Cập nhật độ ưu tiên liên hệ
+ * @route   PUT /api/admin/contacts/:id/priority
+ * @access  Private/Admin
+ */
+exports.updateContactPriority = async (req, res, next) => {
+  try {
+    const { priority } = req.body;
+
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ'
+      });
+    }
+
+    contact.priority = priority;
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật độ ưu tiên thành công',
+      data: contact
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Xóa liên hệ
+ * @route   DELETE /api/admin/contacts/:id
+ * @access  Private/Admin
+ */
+exports.deleteContact = async (req, res, next) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy liên hệ'
+      });
+    }
+
+    await contact.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Xóa liên hệ thành công'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Lấy thống kê liên hệ
+ * @route   GET /api/admin/contacts/statistics
+ * @access  Private/Admin
+ */
+exports.getContactStatistics = async (req, res, next) => {
+  try {
+    const statistics = await Contact.getStatistics();
+
+    res.status(200).json({
+      success: true,
+      data: statistics
     });
   } catch (error) {
     next(error);

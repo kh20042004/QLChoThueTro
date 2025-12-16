@@ -109,28 +109,23 @@ function initContactForm() {
 
     showLoading && showLoading('Đang gửi liên hệ...');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('Contact API not available');
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Không thể gửi liên hệ');
+      }
 
       toast && toast('Đã gửi liên hệ thành công! Chúng tôi sẽ phản hồi sớm.', 'success');
       activeForm.reset();
       try { localStorage.removeItem(draftKey); } catch (_) {}
     } catch (err) {
-      // Fallback: lưu tạm vào localStorage nếu API chưa sẵn sàng
-      try {
-        const key = 'contactDrafts';
-        const drafts = JSON.parse(localStorage.getItem(key) || '[]');
-        drafts.push({ id: Date.now(), ...payload });
-        localStorage.setItem(key, JSON.stringify(drafts));
-        toast && toast('Backend liên hệ chưa sẵn sàng. Đã lưu tạm thông tin của bạn.', 'info');
-      } catch (_) {
-        toast && toast('Không thể gửi liên hệ hiện tại. Vui lòng thử lại sau.', 'danger');
-      }
-      activeForm.reset();
+      toast && toast(err.message || 'Không thể gửi liên hệ hiện tại. Vui lòng thử lại sau.', 'danger');
     } finally {
       hideLoading && hideLoading();
     }
