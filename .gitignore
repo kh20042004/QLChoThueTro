@@ -44,3 +44,69 @@ build/
 # Temporary files
 tmp/
 temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist-python/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# ML Models (nếu model quá lớn, chỉ giữ metadata)
+ml-moderation/models/*.pkl
+ml-moderation/models/*.joblib
+ml-moderation/models/*.h5
+ml-moderation/models/*.pb
+ml-moderation/outputs/*.png
+ml-moderation/outputs/*.csv
+
+# ML Training data (nếu file quá lớn)
+# ml-moderation/data/training_data.csv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Database files (nếu dùng SQLite local)
+*.db
+*.sqlite
+*.sqlite3
+
+# Session files
+sessions/
+
+# Cache
+.cache/
+*.cache
+
+# PM2
+.pm2/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Test files
+**/test_*.json
+**/sample_*.txt
+**/sample_*.html
+
+# Documentation (nếu muốn giữ riêng local)
+# *.md
